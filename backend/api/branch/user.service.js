@@ -6,9 +6,9 @@ export const userService = {
   add, // Create (Signup)
   getById, // Read (Profile page)
   update, // Update (Edit profile)
-  remove, // Delete (remove user)
-  query, // List (of users)
-  getByUsername // Used for Login
+  remove,
+  query,
+  getByUsername
 }
 
 async function query(filterBy = {}) {
@@ -78,9 +78,8 @@ async function remove(userId) {
 
 async function update(user) {
   try {
-    // peek only updatable properties
     const userToSave = {
-      _id: ObjectId.createFromHexString(user._id), // needed for the returnd obj
+      _id: ObjectId.createFromHexString(user._id),
       username: user.username
     }
     const collection = await dbService.getCollection('user')
@@ -94,7 +93,6 @@ async function update(user) {
 
 async function add(user) {
   try {
-    // peek only updatable fields!
     const userToAdd = {
       username: user.username,
       password: user.password,
