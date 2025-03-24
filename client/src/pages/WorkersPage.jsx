@@ -5,6 +5,77 @@ import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Select, SelectTrigger, SelectValue, SelectContent, SelectItem} from '@/components/ui/select';
 import toast from 'react-hot-toast';
+import {Popover, PopoverContent, PopoverTrigger} from '@/components/ui/popover';
+import React from 'react';
+
+const colorOptions = [
+	'#FF6B6B', // red
+	'#4ECDC4', // teal
+	'#45B7D1', // blue
+	'#96CEB4', // green
+	'#FFEEAD', // yellow
+	'#D4A5A5', // pink
+	'#9B59B6', // purple
+	'#3498DB', // bright blue
+	'#E67E22', // orange
+	'#2ECC71', // emerald
+	'#F1C40F', // sun yellow
+	'#E74C3C', // crimson
+	'#000000', // black
+	'#FF0000', // red
+	'#00FF00', // green
+	'#0000FF', // blue
+	'#FFFF00', // yellow
+	'#FFA500', // orange
+	'#800080', // purple
+	'#FFC0CB', // pink
+	'#808080', // gray
+	'#008000', // green
+	'#000080', // blue
+	'#800000', // maroon
+];
+
+const ColorPickerPopover = ({value, onChange}) => {
+	const [open, setOpen] = useState(false);
+
+	return (
+		<div className='flex flex-col gap-2'>
+			<Popover
+				open={open}
+				onOpenChange={setOpen}>
+				<PopoverTrigger asChild>
+					<button
+						type='button'
+						className='flex items-center gap-2 p-2 border rounded-md hover:bg-gray-50 w-full'>
+						<div
+							className='w-6 h-6 rounded-full border'
+							style={{backgroundColor: value}}
+						/>
+					</button>
+				</PopoverTrigger>
+				<PopoverContent className='w-[232px] p-3'>
+					<div className='grid grid-cols-4 gap-2'>
+						{colorOptions.map((color) => (
+							<button
+								key={color}
+								onClick={() => {
+									onChange({target: {name: 'color', value: color}});
+									setOpen(false);
+								}}
+								className={`w-12 h-12 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+									value === color
+								}`}
+								style={{backgroundColor: color}}
+								type='button'
+								aria-label={`Select color ${color}`}
+							/>
+						))}
+					</div>
+				</PopoverContent>
+			</Popover>
+		</div>
+	);
+};
 
 export function WorkersPage() {
 	const {workers} = useSelector((storeState) => storeState.workerModule);
@@ -62,7 +133,8 @@ export function WorkersPage() {
 	};
 
 	const handleUpdateWorker = (e, worker) => {
-		e.preventDefault();
+		console.log('Updating worker:', worker);
+		console.log('New color:', e.target.value);
 		const updatedWorker = {...worker, color: e.target.value};
 		updateWorker(updatedWorker);
 	};
@@ -89,10 +161,7 @@ export function WorkersPage() {
 						value={workerToEdit.name}
 						onChange={handleChange}
 					/>
-					<Input
-						type='color'
-						placeholder='צבע'
-						name='color'
+					<ColorPickerPopover
 						value={workerToEdit.color}
 						onChange={handleChange}
 					/>
@@ -132,10 +201,8 @@ export function WorkersPage() {
 
 						<div className='flex items-center gap-2'>
 							<p className='text-sm text-gray-500'>צבע</p>
-							<Input
-								type='color'
+							<ColorPickerPopover
 								value={worker.color}
-								name='color'
 								onChange={(e) => handleUpdateWorker(e, worker)}
 							/>
 						</div>

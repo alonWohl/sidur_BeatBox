@@ -2,6 +2,8 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from '@/c
 import {Button} from '@/components/ui/button';
 import {DragDropContext, Droppable, Draggable} from '@hello-pangea/dnd';
 import {EmployesList} from './EmployesList';
+import {Trash2} from 'lucide-react';
+import {toast} from 'react-hot-toast';
 
 export function BranchSchedule({workers, getAssignedWorker, handleClearBoard, onUpdateSchedule}) {
 	const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
@@ -12,15 +14,35 @@ export function BranchSchedule({workers, getAssignedWorker, handleClearBoard, on
 
 		const {source, destination, draggableId} = result;
 
-		// If dropping from workers list
-		if (source.droppableId === 'workers-list') {
-			const [destDay, destRole, destPosition] = destination.droppableId.split('-');
-			await onUpdateSchedule(
-				draggableId, // This is the worker._id
-				destDay,
-				destRole,
-				parseInt(destPosition)
-			);
+		// If dropping to trash
+		if (destination.droppableId === 'trash') {
+			if (source.droppableId !== 'workers-list') {
+				const [sourceDay, sourceRole, sourcePosition] = source.droppableId.split('-');
+				await onUpdateSchedule(null, sourceDay, sourceRole, parseInt(sourcePosition));
+			}
+			return;
+		}
+
+		const [destDay, destRole, destPosition] = destination.droppableId.split('-');
+
+		try {
+			if (draggableId.startsWith('inside_table_')) {
+				// Moving from within the table
+				const [sourceDay, sourceRole, sourcePosition] = source.droppableId.split('-');
+				const workerId = draggableId.split('_').pop(); // Get the last part which is the workerId
+
+				// First remove from original position
+				await onUpdateSchedule(null, sourceDay, sourceRole, parseInt(sourcePosition));
+
+				// Then add to new position
+				await onUpdateSchedule(workerId, destDay, destRole, parseInt(destPosition));
+			} else {
+				// Moving from workers list
+				await onUpdateSchedule(draggableId, destDay, destRole, parseInt(destPosition));
+			}
+		} catch (error) {
+			console.error('Error in drag end:', error);
+			toast.error('שגיאה בעדכון המשמרת');
 		}
 	};
 
@@ -42,12 +64,32 @@ export function BranchSchedule({workers, getAssignedWorker, handleClearBoard, on
 						style={{
 							backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : worker ? worker.color : '',
 							minWidth: '80px',
+
 							maxWidth: '120px',
 							padding: snapshot.isDraggingOver ? '2px' : '4px',
 							boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none',
 						}}>
-						{worker && !snapshot.isDraggingOver && (
-							<span className='text-white text-sm'>{worker.name}</span>
+						{worker && (
+							<Draggable
+								key={`${day}-${role}-${position}-${worker._id}`}
+								draggableId={`inside_table_${day}_${role}_${position}_${worker._id}`}
+								index={0}>
+								{(dragProvided, dragSnapshot) => (
+									<div
+										ref={dragProvided.innerRef}
+										{...dragProvided.draggableProps}
+										{...dragProvided.dragHandleProps}
+										className={`text-white text-sm font-medium rounded h-full flex items-center justify-center ${
+											dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
+										}`}
+										style={{
+											...dragProvided.draggableProps.style,
+											backgroundColor: worker.color,
+										}}>
+										{worker.name}
+									</div>
+								)}
+							</Draggable>
 						)}
 						{provided.placeholder}
 					</TableCell>
@@ -62,6 +104,7 @@ export function BranchSchedule({workers, getAssignedWorker, handleClearBoard, on
 				<div className='flex justify-between items-center w-full mb-4'>
 					<h2 className='text-xl font-bold'>סידור עבודה</h2>
 					<Button
+						className='cursor-pointer hover:bg-[#BE202E] hover:text-white'
 						onClick={handleClearBoard}
 						variant='outline'>
 						נקה סידור
@@ -76,7 +119,7 @@ export function BranchSchedule({workers, getAssignedWorker, handleClearBoard, on
 						<div
 							ref={provided.innerRef}
 							{...provided.droppableProps}
-							className='flex flex-wrap gap-2 justify-center w-full'>
+							className='flex flex-wrap gap-2 text-white w-full'>
 							{workers.map((worker, index) => (
 								<Draggable
 									key={worker._id}
@@ -171,6 +214,39 @@ export function BranchSchedule({workers, getAssignedWorker, handleClearBoard, on
 						<p>גרור עובד לתא הרצוי</p>
 					</div>
 				</div>
+
+				{/* Add Trash Zone */}
+				<Droppable droppableId='trash'>
+					{(provided, snapshot) => (
+						<div
+							ref={provided.innerRef}
+							{...provided.droppableProps}
+							className={`fixed bottom-8 right-8 p-6 rounded-lg border-2 border-dashed transition-all flex items-center gap-3 ${
+								snapshot.isDraggingOver
+									? 'bg-red-50 border-red-500 scale-110'
+									: 'bg-white border-gray-300 hover:border-gray-400'
+							}`}
+							style={{
+								minWidth: '200px',
+								zIndex: 50,
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+								transition: 'all 0.2s ease',
+							}}>
+							<div className='flex items-center gap-3 justify-center'>
+								<Trash2
+									className={`w-6 h-6 ${snapshot.isDraggingOver ? 'text-red-500' : 'text-gray-400'}`}
+								/>
+								<span
+									className={`${
+										snapshot.isDraggingOver ? 'text-red-500' : 'text-gray-400'
+									} font-medium`}>
+									גרור לכאן למחיקה
+								</span>
+							</div>
+							{provided.placeholder}
+						</div>
+					)}
+				</Droppable>
 			</div>
 		</DragDropContext>
 	);
