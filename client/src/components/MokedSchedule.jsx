@@ -12,9 +12,9 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
 
   const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
   const timeSlots = [
-    { name: 'בוקר', role: 'morning', rows: 3 },
-    { name: 'אמצע', role: 'noon', rows: 3 },
-    { name: 'ערב', role: 'evening', rows: 3 }
+    { name: 'בוקר', role: 'morning', positions: 3 },
+    { name: 'אמצע', role: 'noon', positions: 3 },
+    { name: 'ערב', role: 'evening', positions: 3 }
   ]
 
   const handleDragStart = useCallback(() => {
@@ -68,24 +68,80 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
     [onUpdateSchedule]
   )
 
+  const renderCell = (day, role, position) => {
+    const worker = getAssignedWorker(day, role, position)
+    const cellId = `${day}-${role}-${position}`
+
+    return (
+      <Droppable key={cellId} droppableId={cellId}>
+        {(provided, snapshot) => (
+          <TableCell
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={`text-center h-10 border border-gray-200 p-0 ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+            style={{
+              backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : worker ? worker.color : '',
+              minWidth: '70px',
+              maxWidth: '100px',
+              padding: snapshot.isDraggingOver ? '1px' : '2px',
+              boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none'
+            }}>
+            {worker && (
+              <Draggable
+                key={`${day}-${role}-${position}-${worker._id}`}
+                draggableId={`inside_table_${day}_${role}_${position}_${worker._id}`}
+                index={0}>
+                {(dragProvided, dragSnapshot) => (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          ref={dragProvided.innerRef}
+                          {...dragProvided.draggableProps}
+                          {...dragProvided.dragHandleProps}
+                          onClick={() => handleWorkerClick(day, role, position)}
+                          className={`text-white text-xs font-medium rounded h-full flex items-center justify-center cursor-pointer hover:brightness-90 transition-all ${
+                            dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
+                          }`}
+                          style={{
+                            ...dragProvided.draggableProps.style,
+                            backgroundColor: worker.color
+                          }}>
+                          {worker.name}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent dir="rtl" className="text-xs" sideOffset={5}>
+                        <p>לחץ להסרה</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </Draggable>
+            )}
+            {provided.placeholder}
+          </TableCell>
+        )}
+      </Droppable>
+    )
+  }
+
   return (
     <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex flex-col h-full items-center gap-4 p-2 sm:p-4 relative container mx-auto">
-        {/* Workers List with Droppable */}
+      <div className="flex flex-col items-center justify-center gap-2 p-2 container mx-auto">
+        {/* Workers List */}
         <Droppable droppableId="workers-list" direction="horizontal">
           {(provided) => (
-            <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap gap-1.5 sm:gap-2 w-full mb-2 sm:mb-4">
+            <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-1.5 text-white w-full">
               {workers.map((worker, index) => (
-                <Draggable key={worker._id} draggableId={worker._id.toString()} index={index}>
+                <Draggable key={worker._id} draggableId={worker._id} index={index}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
-                      className={`p-1.5 sm:p-2 rounded w-16 sm:w-20 text-sm sm:text-base text-center ${snapshot.isDragging ? 'shadow-xl' : ''}`}
+                      className={`p-1.5 rounded cursor-pointer text-xs w-16 text-center ${snapshot.isDragging ? 'shadow-xl' : ''}`}
                       style={{
                         backgroundColor: worker.color,
-                        color: 'white',
                         ...provided.draggableProps.style
                       }}>
                       {worker.name}
@@ -99,98 +155,47 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
         </Droppable>
 
         <div
-          className="h-full w-full overflow-x-auto -mx-2 sm:mx-0"
+          className="w-full overflow-x-auto -mx-2"
           id="schedule-table-for-share"
           style={{ backgroundColor: isSharing ? '#ffffff' : 'transparent' }}>
           <Table dir="rtl" className="min-w-[600px]">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-right bg-gray-50 font-bold text-sm sm:text-base sticky right-0 z-10">משמרת</TableHead>
+                <TableHead className="text-center font-medium text-xs sticky right-0 z-10 bg-gray-50">משמרת</TableHead>
                 {days.map((day) => (
-                  <TableHead key={day} className="text-center bg-gray-50 font-bold text-sm sm:text-base whitespace-nowrap">
+                  <TableHead key={day} className="text-center font-medium text-xs whitespace-nowrap">
                     {day}
                   </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
+
             <TableBody>
-              {timeSlots.flatMap((slot) =>
-                Array.from({ length: slot.rows }).map((_, position) => (
-                  <TableRow key={`${slot.name}-${position}`}>
-                    {position === 0 && (
-                      <TableCell
-                        className="text-center font-medium bg-gray-50 border border-gray-200 text-sm sm:text-base sticky right-0 z-10"
-                        style={{ verticalAlign: 'middle' }}
-                        rowSpan={slot.rows}>
-                        {slot.name}
-                      </TableCell>
-                    )}
-
-                    {days.map((day) => {
-                      const assignedWorker = getAssignedWorker(day, slot.role, position + 1)
-                      const cellId = `${day}-${slot.role}-${position + 1}`
-
-                      return (
-                        <Droppable key={cellId} droppableId={cellId}>
-                          {(provided, snapshot) => (
-                            <td
-                              ref={provided.innerRef}
-                              {...provided.droppableProps}
-                              className={`text-center border border-gray-200 p-0 transition-colors duration-200 ${
-                                snapshot.isDraggingOver ? 'bg-blue-100 border-blue-400' : ''
-                              }`}
-                              style={{
-                                backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : assignedWorker ? assignedWorker.color : '',
-                                height: '36px sm:h-40px',
-                                minWidth: '70px sm:min-w-[80px]',
-                                maxWidth: '100px sm:max-w-[120px]',
-                                padding: snapshot.isDraggingOver ? '1px sm:2px' : '2px sm:4px',
-                                boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none'
-                              }}>
-                              {assignedWorker && (
-                                <Draggable
-                                  key={`${day}-${slot.role}-${position}-${assignedWorker._id}`}
-                                  draggableId={`inside_table_${day}_${slot.role}_${position}_${assignedWorker._id}`}
-                                  index={0}>
-                                  {(dragProvided, dragSnapshot) => (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div
-                                            ref={dragProvided.innerRef}
-                                            {...dragProvided.draggableProps}
-                                            {...dragProvided.dragHandleProps}
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              handleWorkerClick(day, slot.role, position + 1)
-                                            }}
-                                            className={`text-white text-xs sm:text-sm font-medium rounded h-full flex items-center justify-center cursor-pointer hover:brightness-90 transition-all ${
-                                              dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
-                                            }`}
-                                            style={{
-                                              ...dragProvided.draggableProps.style,
-                                              backgroundColor: assignedWorker.color
-                                            }}>
-                                            {assignedWorker.name}
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top" className="bg-gray-800 text-white text-xs sm:text-sm" sideOffset={5}>
-                                          <p>לחץ להסרת העובד</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
-                                </Draggable>
-                              )}
-                              {provided.placeholder}
-                            </td>
-                          )}
-                        </Droppable>
-                      )
-                    })}
+              {timeSlots.map((timeSlot) => (
+                <React.Fragment key={timeSlot.role}>
+                  {/* Main row with the shift name */}
+                  <TableRow>
+                    <TableCell
+                      rowSpan={timeSlot.positions}
+                      className="text-center font-medium bg-gray-50 border-l text-xs sticky right-0 z-10 whitespace-nowrap">
+                      {timeSlot.name}
+                    </TableCell>
+                    {days.map((day) => renderCell(day, timeSlot.role, 1))}
                   </TableRow>
-                ))
-              )}
+
+                  {/* Additional rows for positions 2 and 3 */}
+                  {Array.from({ length: timeSlot.positions - 1 }, (_, index) => (
+                    <TableRow key={`${timeSlot.role}-${index + 2}`}>{days.map((day) => renderCell(day, timeSlot.role, index + 2))}</TableRow>
+                  ))}
+
+                  {/* Add separator after each time slot except the last one */}
+                  {timeSlot.role !== timeSlots[timeSlots.length - 1].role && (
+                    <TableRow>
+                      <TableCell colSpan={days.length + 1} className="h-1 p-0 bg-gray-300"></TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
+              ))}
             </TableBody>
           </Table>
         </div>
