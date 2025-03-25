@@ -31,7 +31,7 @@ async function query(filterBy = { txt: '', branch: '' }) {
 
 async function getById(workerId) {
   try {
-    const criteria = { _id: ObjectId.createFromHexString(workerId) }
+    const criteria = { _id: new ObjectId(workerId) }
 
     const collection = await dbService.getCollection('worker')
     const worker = await collection.findOne(criteria)
@@ -49,7 +49,7 @@ async function remove(workerId) {
 
   try {
     const criteria = {
-      _id: ObjectId.createFromHexString(workerId)
+      _id: new ObjectId(workerId)
     }
 
     const collection = await dbService.getCollection('worker')
@@ -69,7 +69,6 @@ async function add(worker) {
 
   try {
     const collection = await dbService.getCollection('worker')
-
     await collection.insertOne(worker)
 
     return worker
@@ -82,7 +81,7 @@ async function add(worker) {
 async function update(worker) {
   const workerToSave = { name: worker.name, color: worker.color }
   try {
-    const criteria = { _id: ObjectId.createFromHexString(worker._id) }
+    const criteria = { _id: new ObjectId(worker._id) }
     const collection = await dbService.getCollection('worker')
 
     await collection.updateOne(criteria, { $set: workerToSave })

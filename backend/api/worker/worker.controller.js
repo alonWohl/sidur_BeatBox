@@ -38,6 +38,7 @@ export async function addWorker(req, res) {
 export async function updateWorker(req, res) {
   try {
     const worker = {
+      _id: req.params.id,
       name: req.body.name || '',
       color: req.body.color
     }
