@@ -1,8 +1,8 @@
-import { userService } from '../services/user'
+import { userService } from '../services/branch'
 // import { socketService } from '../services/socket.service'
 import { store } from '../store/store'
+import { toast } from 'react-hot-toast'
 
-import { showErrorMsg } from '../services/event-bus.service'
 import { LOADING_DONE, LOADING_START } from './system.reducer'
 import { REMOVE_USER, SET_USER, SET_USERS, SET_WATCHED_USER } from './user.reducer'
 
@@ -76,7 +76,7 @@ export async function loadUser(userId) {
     const user = await userService.getById(userId)
     store.dispatch({ type: SET_WATCHED_USER, user })
   } catch (err) {
-    showErrorMsg('Cannot load user')
+    toast.error('שגיאה בטעינת המשתמש')
     console.log('Cannot load user', err)
   }
 }

@@ -5,8 +5,6 @@ import { makeId } from '../../services/util.service.js'
 import { dbService } from '../../services/db.service.js'
 import { asyncLocalStorage } from '../../services/als.service.js'
 
-const PAGE_SIZE = 3
-
 export const workerService = {
   remove,
   query,
@@ -22,10 +20,6 @@ async function query(filterBy = { txt: '', branch: '' }) {
 
     const collection = await dbService.getCollection('worker')
     var workerCursor = await collection.find(criteria, { sort })
-
-    if (filterBy.pageIdx !== undefined) {
-      workerCursor.skip(filterBy.pageIdx * PAGE_SIZE).limit(PAGE_SIZE)
-    }
 
     const workers = workerCursor.toArray()
     return workers

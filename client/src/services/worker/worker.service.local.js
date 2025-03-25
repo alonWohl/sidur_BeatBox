@@ -1,6 +1,6 @@
 import { storageService } from '../async-storage.service'
 import { makeId, getRandomColor } from '../util.service'
-import { userService } from '../user'
+import { userService } from '../branch'
 
 const STORAGE_KEY = 'worker'
 _createDemoWorkers()

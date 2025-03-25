@@ -7,7 +7,7 @@ export async function getWorkers(req, res) {
   try {
     const filterBy = {
       name: req.query.name || '',
-      branch: loggedinUser.isAdmin ? req.query.branch || '' : loggedinUser.username
+      branch: loggedinUser.isAdmin ? req.query.branch || '' : loggedinUser.branch
     }
     const workers = await workerService.query(filterBy)
     res.json(workers)
@@ -22,7 +22,7 @@ export async function addWorker(req, res) {
 
   const worker = {
     name: req.body.name || '',
-    color: req.body.color || '#000000'
+    color: req.body.color
   }
 
   try {
@@ -39,7 +39,7 @@ export async function updateWorker(req, res) {
   try {
     const worker = {
       name: req.body.name || '',
-      color: req.body.color || '#000000'
+      color: req.body.color
     }
 
     const updatedWorker = await workerService.update(worker)

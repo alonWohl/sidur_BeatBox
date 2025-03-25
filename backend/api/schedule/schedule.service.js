@@ -49,6 +49,7 @@ async function getScheduleByBranchId(branchId) {
 }
 
 async function getScheduleByBranchName(branchName) {
+  console.log('🚀 ~ getScheduleByBranchName ~ branchName:', branchName)
   try {
     const criteria = { branch: branchName }
     const collection = await dbService.getCollection('schedule')

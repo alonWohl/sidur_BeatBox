@@ -5,7 +5,7 @@ import { logger } from './logger.service.js'
 
 export async function initApp() {
   try {
-    const existingUsers = await dbService.getCollection('user')
+    const existingUsers = await dbService.getCollection('branch')
     const existingSchedules = await dbService.getCollection('schedule')
     existingSchedules.deleteMany()
     existingUsers.deleteMany()
@@ -54,7 +54,7 @@ export async function initApp() {
       logger.info(`Created user: ${savedUser.username}`)
 
       const scheduleData = {
-        branchId: savedUser._id,
+        branch: savedUser.username,
         days: [
           { name: 'ראשון', dayId: 1, shifts: [] },
           { name: 'שני', dayId: 2, shifts: [] },

@@ -17,7 +17,7 @@ function getScheduleByBranchId(branchId) {
   return httpService.get(`schedule/${branchId}`)
 }
 function getScheduleByBranchName(branchName) {
-  return httpService.get(`admin/schedule/${branchName}`)
+  return httpService.get(`schedule/${branchName}`)
 }
 
 async function remove(scheduleId) {
