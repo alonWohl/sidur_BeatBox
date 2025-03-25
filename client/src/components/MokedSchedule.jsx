@@ -70,7 +70,7 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
 
   return (
     <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex flex-col items-center gap-4 p-2 sm:p-4 h-full relative container mx-auto">
+      <div className="flex flex-col h-full items-center gap-4 p-2 sm:p-4 relative container mx-auto">
         {/* Workers List with Droppable */}
         <Droppable droppableId="workers-list" direction="horizontal">
           {(provided) => (
@@ -99,7 +99,7 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
         </Droppable>
 
         <div
-          className="w-full overflow-x-auto -mx-2 sm:mx-0"
+          className="h-full w-full overflow-x-auto -mx-2 sm:mx-0"
           id="schedule-table-for-share"
           style={{ backgroundColor: isSharing ? '#ffffff' : 'transparent' }}>
           <Table dir="rtl" className="min-w-[600px]">

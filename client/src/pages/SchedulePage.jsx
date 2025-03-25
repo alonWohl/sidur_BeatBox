@@ -191,23 +191,21 @@ export function SchedulePage({ filterBy }) {
         </Button>
       </div>
 
-      <div className="mt-10">
-        {filterBy?.branch || branchName === 'moked' ? (
-          <MokedSchedule
-            getAssignedWorker={getAssignedWorker}
-            onUpdateSchedule={handleUpdateSchedule}
-            isSharing={isSharing}
-            handleWorkerClick={handleWorkerClick}
-          />
-        ) : (
-          <BranchSchedule
-            getAssignedWorker={getAssignedWorker}
-            onUpdateSchedule={handleUpdateSchedule}
-            isSharing={isSharing}
-            handleWorkerClick={handleWorkerClick}
-          />
-        )}
-      </div>
+      {filterBy?.branch || branchName === 'moked' ? (
+        <MokedSchedule
+          getAssignedWorker={getAssignedWorker}
+          onUpdateSchedule={handleUpdateSchedule}
+          isSharing={isSharing}
+          handleWorkerClick={handleWorkerClick}
+        />
+      ) : (
+        <BranchSchedule
+          getAssignedWorker={getAssignedWorker}
+          onUpdateSchedule={handleUpdateSchedule}
+          isSharing={isSharing}
+          handleWorkerClick={handleWorkerClick}
+        />
+      )}
     </div>
   )
 }
