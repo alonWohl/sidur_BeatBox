@@ -1,67 +1,78 @@
 import { ObjectId } from 'mongodb'
 
 import { logger } from '../../services/logger.service.js'
-import { makeId } from '../../services/util.service.js'
 import { dbService } from '../../services/db.service.js'
 import { asyncLocalStorage } from '../../services/als.service.js'
-
-const PAGE_SIZE = 3
 
 export const scheduleService = {
   remove,
   query,
-  getScheduleByBranchId,
-  getScheduleByBranchName,
   add,
   update,
   getEmptySchedule
 }
 
 async function query(filterBy = { branch: '' }) {
-  const { loggedinUser } = asyncLocalStorage.getStore()
   try {
-    if (!loggedinUser.isAdmin) filterBy.branch = loggedinUser.username
-    const criteria = _buildCriteria(filterBy)
-    const sort = _buildSort(filterBy)
+    const collection = await dbService.getCollection('branch')
 
-    const collection = await dbService.getCollection('schedule')
-    var scheduleCursor = await collection.find(criteria, { sort })
+    if (filterBy.branch.isAdmin) {
+      const branches = await collection.find({}).toArray()
+      return branches.map((branch) => ({
+        branchName: branch.name,
+        branchId: branch._id,
+        schedule: branch.schedule
+      }))
+    }
 
-    const schedules = scheduleCursor.toArray()
-    return schedules
+    const branch = await collection.findOne({
+      username: filterBy.branch.username
+    })
+
+    if (!branch) {
+      throw new Error('Branch not found')
+    }
+
+    return [
+      {
+        branchName: branch.name,
+        branchId: branch._id,
+        schedule: branch.schedule
+      }
+    ]
   } catch (err) {
     logger.error('cannot find schedules', err)
     throw err
   }
 }
 
-async function getScheduleByBranchId(branchId) {
-  try {
-    const criteria = { branch: branchId }
+// async function getScheduleByBranchId(branchId) {
+//   try {
+//     const criteria = { branch: branchId }
 
-    const collection = await dbService.getCollection('schedule')
-    const schedule = await collection.findOne(criteria)
+//     const collection = await dbService.getCollection('schedule')
+//     const schedule = await collection.findOne(criteria)
 
-    schedule.createdAt = schedule._id.getTimestamp()
-    return schedule
-  } catch (err) {
-    logger.error(`while finding schedule ${branchId}`, err)
-    throw err
-  }
-}
+//     schedule.createdAt = schedule._id.getTimestamp()
+//     return schedule
+//   } catch (err) {
+//     logger.error(`while finding schedule ${branchId}`, err)
+//     throw err
+//   }
+// }
 
-async function getScheduleByBranchName(branchName) {
-  console.log('🚀 ~ getScheduleByBranchName ~ branchName:', branchName)
-  try {
-    const criteria = { branch: branchName }
-    const collection = await dbService.getCollection('schedule')
-    const schedule = await collection.findOne(criteria)
-    return schedule
-  } catch (err) {
-    logger.error(`while finding schedule ${branchName}`, err)
-    throw err
-  }
-}
+// async function getScheduleByBranchName(branchName) {
+//   console.log('🚀 ~ getScheduleByBranchName ~ branchName:', branchName)
+//   try {
+//     const criteria = { branch: branchName }
+//     const collection = await dbService.getCollection('schedule')
+//     const schedule = await collection.findOne(criteria)
+//     return schedule
+//   } catch (err) {
+//     logger.error(`while finding schedule ${branchName}`, err)
+//     throw err
+//   }
+// }
 
 async function remove(scheduleId) {
   const { loggedinUser } = asyncLocalStorage.getStore()
@@ -94,17 +105,43 @@ async function add(schedule) {
   }
 }
 
-async function update(schedule) {
-  const scheduleToSave = { branch: schedule.branch, days: schedule.days }
-
+async function update(schedule, loggedInUser) {
   try {
-    const criteria = { _id: ObjectId.createFromHexString(schedule._id) }
-    const collection = await dbService.getCollection('schedule')
-    await collection.updateOne(criteria, { $set: scheduleToSave })
+    const collection = await dbService.getCollection('branch')
 
-    return schedule
+    // Find the branch
+    const branch = await collection.findOne({
+      _id: ObjectId.createFromHexString(schedule.branchId)
+    })
+
+    if (!branch) {
+      throw new Error('Branch not found')
+    }
+
+    // Check permissions
+    if (!loggedInUser.isAdmin && loggedInUser.username !== branch.username) {
+      throw new Error('Unauthorized to update this schedule')
+    }
+
+    // Update the schedule
+    await collection.updateOne(
+      { _id: ObjectId.createFromHexString(schedule.branchId) },
+      {
+        $set: {
+          'schedule.days': schedule.days
+        }
+      }
+    )
+
+    return {
+      branchName: branch.name,
+      branchId: branch._id,
+      schedule: {
+        days: schedule.days
+      }
+    }
   } catch (err) {
-    logger.error(`cannot update schedule ${schedule._id}`, err)
+    logger.error(`cannot update schedule for branch ${schedule.branchId}`, err)
     throw err
   }
 }

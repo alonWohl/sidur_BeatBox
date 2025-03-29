@@ -11,7 +11,7 @@ import { setupAsyncLocalStorage } from './middlewares/setupAls.middleware.js'
 
 import { authRoutes } from './api/auth/auth.routes.js'
 import { userRoutes } from './api/branch/user.routes.js'
-import { workerRoutes } from './api/worker/worker.routes.js'
+// import { workerRoutes } from './api/worker/worker.routes.js'
 import { scheduleRoutes } from './api/schedule/schedule.routes.js'
 const app = express()
 const server = http.createServer(app)
@@ -34,7 +34,7 @@ app.all('*', setupAsyncLocalStorage)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/user', userRoutes)
-app.use('/api/worker', workerRoutes)
+// app.use('/api/worker', workerRoutes)
 app.use('/api/schedule', scheduleRoutes)
 
 setupSocketAPI(server)

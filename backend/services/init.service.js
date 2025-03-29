@@ -1,79 +1,102 @@
 import { dbService } from './db.service.js'
 import { authService } from '../api/auth/auth.service.js'
-import { scheduleService } from '../api/schedule/schedule.service.js'
+import { userService } from '../api/branch/user.service.js'
 import { logger } from './logger.service.js'
 
 export async function initApp() {
   try {
-    const existingUsers = await dbService.getCollection('branch')
-    const existingSchedules = await dbService.getCollection('schedule')
-    existingSchedules.deleteMany()
-    existingUsers.deleteMany()
+    const branchCollection = await dbService.getCollection('branch')
+    await branchCollection.deleteMany()
 
-    if (existingUsers.length > 0) {
-      logger.info('Database already initialized')
-      return
-    }
-
-    const users = [
+    const branches = [
       {
+        name: 'מוקד',
         username: 'moked',
         password: '123456',
-        branch: 'מוקד',
         isAdmin: true
       },
       {
+        name: 'ראש העין',
         username: 'rosh',
-        password: '123456',
-        branch: 'ראש העין'
+        password: '123456'
       },
       {
+        name: 'פתח תקווה',
         username: 'pt',
-        password: '123456',
-        branch: 'פתח תקווה'
+        password: '123456'
       },
       {
+        name: 'תל אביב',
         username: 'tlv',
-        password: '123456',
-        branch: 'תל אביב'
+        password: '123456'
       },
       {
+        name: 'ראשון לציון',
         username: 'rishon',
-        password: '123456',
-        branch: 'ראשון לציון'
+        password: '123456'
       }
     ]
 
-    if (existingSchedules.length > 0) {
-      logger.info('Schedules already initialized')
-      return
+    const defaultSchedule = {
+      days: [
+        { name: 'ראשון', dayId: 1, shifts: [] },
+        { name: 'שני', dayId: 2, shifts: [] },
+        { name: 'שלישי', dayId: 3, shifts: [] },
+        { name: 'רביעי', dayId: 4, shifts: [] },
+        { name: 'חמישי', dayId: 5, shifts: [] },
+        { name: 'שישי', dayId: 6, shifts: [] },
+        { name: 'שבת', dayId: 7, shifts: [] }
+      ]
     }
 
-    for (const userData of users) {
-      const savedUser = await authService.signup(userData)
-      logger.info(`Created user: ${savedUser.username}`)
+    for (const branchData of branches) {
+      try {
+        // Step 1: Create the basic auth user
+        const savedBranch = await authService.signup(branchData)
+        logger.info(`Created branch auth: ${savedBranch.name}`)
 
-      const scheduleData = {
-        branch: savedUser.username,
-        branchId: savedUser._id,
-        days: [
-          { name: 'ראשון', dayId: 1, shifts: [] },
-          { name: 'שני', dayId: 2, shifts: [] },
-          { name: 'שלישי', dayId: 3, shifts: [] },
-          { name: 'רביעי', dayId: 4, shifts: [] },
-          { name: 'חמישי', dayId: 5, shifts: [] },
-          { name: 'שישי', dayId: 6, shifts: [] },
-          { name: 'שבת', dayId: 7, shifts: [] }
-        ]
+        // Step 2: Update with full branch data
+        const branchFullData = {
+          _id: savedBranch._id,
+          employees: [],
+          schedule: defaultSchedule
+        }
+
+        await userService.update(branchFullData)
+        logger.info(`Updated branch data: ${savedBranch.name}`)
+      } catch (error) {
+        logger.error(`Failed to initialize branch ${branchData.name}:`, error)
+
+        continue
       }
-
-      await scheduleService.add(scheduleData)
-      logger.info(`Created schedule for branch: ${savedUser.username}`)
     }
 
     logger.info('Database initialization completed successfully')
   } catch (error) {
     logger.error('Failed to initialize database:', error)
+    throw error
+  }
+}
+
+export async function shouldInitialize() {
+  try {
+    const collection = await dbService.getCollection('branch')
+    const count = await collection.countDocuments()
+    return count === 0
+  } catch (error) {
+    logger.error('Failed to check initialization status:', error)
+    return false
+  }
+}
+
+export async function resetDatabase() {
+  try {
+    const collection = await dbService.getCollection('branch')
+    await collection.deleteMany({})
+    await initApp()
+    logger.info('Database reset completed successfully')
+  } catch (error) {
+    logger.error('Failed to reset database:', error)
     throw error
   }
 }

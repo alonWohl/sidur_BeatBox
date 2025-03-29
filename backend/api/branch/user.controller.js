@@ -38,7 +38,11 @@ export async function deleteUser(req, res) {
 
 export async function updateUser(req, res) {
   try {
-    const user = req.body
+    const user = {
+      _id: req.body._id,
+      employees: req.body.employees,
+      schedule: req.body.schedule
+    }
     const savedUser = await userService.update(user)
     res.send(savedUser)
   } catch (err) {

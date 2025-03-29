@@ -28,7 +28,7 @@ async function login(username, password) {
   return user
 }
 
-async function signup({ username, password, branch, branchId, isAdmin }) {
+async function signup({ username, password, name, isAdmin }) {
   const saltRounds = 10
 
   logger.debug(`auth.service - signup with username: ${username}`)
@@ -38,13 +38,13 @@ async function signup({ username, password, branch, branchId, isAdmin }) {
   if (userExist) return Promise.reject('Username already taken')
 
   const hash = await bcrypt.hash(password, saltRounds)
-  return userService.add({ username, password: hash, branch, branchId, isAdmin })
+  return userService.add({ username, password: hash, name, isAdmin })
 }
 
 function getLoginToken(user) {
   const userInfo = {
     _id: user._id,
-    branch: user.branch,
+    name: user.name,
     username: user.username,
     isAdmin: user.isAdmin
   }
