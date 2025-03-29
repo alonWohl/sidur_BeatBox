@@ -12,15 +12,15 @@ export async function loadSchedules(filterBy) {
   }
 }
 
-export async function loadSchedule(branchName) {
-  try {
-    const schedule = await scheduleService.getScheduleByBranchName(branchName)
-    store.dispatch(getCmdSetSchedule(schedule))
-  } catch (err) {
-    console.log('Cannot load schedule', err)
-    throw err
-  }
-}
+// export async function loadSchedule(branchId) {
+//   try {
+//     const schedule = await scheduleService.getScheduleByBranchId(branchName)
+//     store.dispatch(getCmdSetSchedule(schedule))
+//   } catch (err) {
+//     console.log('Cannot load schedule', err)
+//     throw err
+//   }
+// }
 
 export async function removeSchedule(scheduleId) {
   try {
@@ -59,16 +59,16 @@ export async function updateSchedule(schedule) {
   }
 }
 
-export async function addWorkerMsg(workerId, txt) {
-  try {
-    const msg = await scheduleService.addScheduleMsg(scheduleId, txt)
-    store.dispatch(getCmdAddScheduleMsg(msg))
-    return msg
-  } catch (err) {
-    console.log('Cannot add schedule msg', err)
-    throw err
-  }
-}
+// export async function addWorkerMsg(workerId, txt) {
+//   try {
+//     const msg = await scheduleService.addScheduleMsg(scheduleId, txt)
+//     store.dispatch(getCmdAddScheduleMsg(msg))
+//     return msg
+//   } catch (err) {
+//     console.log('Cannot add schedule msg', err)
+//     throw err
+//   }
+// }
 
 // Command Creators:
 function getCmdSetSchedules(schedules) {
@@ -101,12 +101,12 @@ function getCmdUpdateSchedule(schedule) {
     schedule
   }
 }
-function getCmdAddScheduleMsg(msg) {
-  return {
-    type: ADD_SCHEDULE_MSG,
-    msg
-  }
-}
+// function getCmdAddScheduleMsg(msg) {
+//   return {
+//     type: ADD_SCHEDULE_MSG,
+//     msg
+//   }
+// }
 
 // // unitTestActions()
 // async function unitTestActions() {

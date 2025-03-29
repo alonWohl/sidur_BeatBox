@@ -58,7 +58,7 @@ export function Login() {
       setIsSubmitting(true)
       await login(user)
       toast.success('התחברת בהצלחה')
-      navigate(`/schedule/${user.username}`)
+      navigate(`/schedule/`)
 
       // Simplified redirect logic
       // const loggedInUser = await userService.getLoggedInUser()

@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router'
 import { Header } from './components/Header'
 import { Login } from './pages/Login'
-import { WorkersPage } from './pages/WorkersPage'
+import { EmployeesPage } from './pages/EmployeesPage'
 import { SchedulePage } from './pages/SchedulePage'
 import { AdminPage } from './pages/AdminPage'
 import { Toaster } from 'react-hot-toast'
@@ -14,11 +14,11 @@ function App() {
       <Header />
       <main className="h-[calc(100vh-178px)]">
         <Routes>
-          {!user && <Route path="/" element={<Navigate to="/login" />} />}
+          {/* {!user && <Route path="/" element={<Navigate to="/login" />} />} */}
           {!user && <Route path="/login" element={<Login />} />}
-          {user && <Route path="/worker" element={<WorkersPage />} />}
-          {user && <Route path="/schedule/:branchName" element={<SchedulePage />} />}
-          {user && <Route path="/" element={<Navigate to={`/schedule/${user?.username}`} />} />}
+          {user && <Route path="/schedule/" element={<SchedulePage />} />}
+          {user && <Route path="/employee" element={<EmployeesPage />} />}
+          {/* {user && <Route path="/" element={<Navigate to={`/schedule/${user?.username}`} />} />} */}
           {/* <Route path="/admin" element={<AdminPage />} /> */}
         </Routes>
       </main>

@@ -1,10 +1,10 @@
 const { DEV, VITE_LOCAL } = import.meta.env
 
 import { makeId } from '../util.service'
-import { workerService as local } from './worker.service.local'
-import { workerService as remote } from './worker.service.remote'
+import { employeeService as local } from './employee.service.local.js'
+import { employeeService as remote } from './employee.service.remote.js'
 
-function getEmptyWorker() {
+function getEmptyEmployee() {
   return {
     name: makeId()
   }
@@ -20,9 +20,9 @@ function getDefaultFilter() {
 
 const service = VITE_LOCAL === 'true' ? local : remote
 
-export const workerService = { getEmptyWorker, getDefaultFilter, ...service }
+export const employeeService = { getEmptyEmployee, getDefaultFilter, ...service }
 
 //* Easy access to this service from the dev tools console
 //* when using script - dev / dev:local
 
-if (DEV) window.workerService = workerService
+if (DEV) window.employeeService = employeeService

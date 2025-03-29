@@ -2,7 +2,7 @@ import logo from '../assets/images/logo.webp'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { logout } from '@/store/user.actions'
-import { Button } from '@/components/ui/button'
+
 import { useNavigate } from 'react-router'
 
 export function Header() {
@@ -27,12 +27,12 @@ export function Header() {
             {user && (
               <>
                 <Link
-                  to="/worker"
+                  to="/employee"
                   className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                   עובדים
                 </Link>
                 <Link
-                  to={`/schedule/${user?.username}`}
+                  to={`/schedule/`}
                   className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                   משמרות
                 </Link>
@@ -44,7 +44,7 @@ export function Header() {
               <div className="flex items-center gap-4 border-r pr-4 mr-4 rtl:border-l rtl:pl-4 rtl:ml-4 rtl:border-r-0 rtl:pr-0">
                 <div className="text-sm">
                   <span className="text-gray-500">סניף: </span>
-                  <span className="font-medium text-gray-900">{user.branch}</span>
+                  <span className="font-medium text-gray-900">{user.name}</span>
                 </div>
                 <button
                   onClick={handleLogout}

@@ -26,7 +26,7 @@ function _saveLocalUser(user) {
   user = {
     _id: user._id,
     username: user.username,
-    branch: user.branch,
+    name: user.name,
     isAdmin: user.isAdmin
   }
   sessionStorage.setItem(STORAGE_KEY_LOGGEDIN_USER, JSON.stringify(user))

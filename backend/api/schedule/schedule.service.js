@@ -13,11 +13,16 @@ export const scheduleService = {
 }
 
 async function query(filterBy = { branch: '' }) {
+  const { loggedinUser } = asyncLocalStorage.getStore()
   try {
     const collection = await dbService.getCollection('branch')
 
-    if (filterBy.branch.isAdmin) {
-      const branches = await collection.find({}).toArray()
+    if (loggedinUser.isAdmin) {
+      const filter = {
+        username: { $regex: filterBy.username, $options: 'i' }
+      }
+
+      const branches = await collection.find(filter).toArray()
       return branches.map((branch) => ({
         branchName: branch.name,
         branchId: branch._id,
@@ -26,20 +31,18 @@ async function query(filterBy = { branch: '' }) {
     }
 
     const branch = await collection.findOne({
-      username: filterBy.branch.username
+      username: filterBy.username
     })
 
     if (!branch) {
       throw new Error('Branch not found')
     }
 
-    return [
-      {
-        branchName: branch.name,
-        branchId: branch._id,
-        schedule: branch.schedule
-      }
-    ]
+    return {
+      branchName: branch.name,
+      branchId: branch._id,
+      schedule: branch.schedule
+    }
   } catch (err) {
     logger.error('cannot find schedules', err)
     throw err

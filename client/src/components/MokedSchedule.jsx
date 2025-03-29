@@ -7,8 +7,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { toast } from 'react-hot-toast'
 
 export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, handleWorkerClick }) {
-  const { schedule } = useSelector((storeState) => storeState.scheduleModule)
-  const { workers } = useSelector((storeState) => storeState.workerModule)
+  const { user } = useSelector((storeState) => storeState.userModule)
   const [isDragging, setIsDragging] = useState(false)
 
   const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
@@ -182,30 +181,6 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
           </Table>
         </div>
       </div>
-
-      {/* Trash Zone - always visible */}
-      {/* <Droppable droppableId="trash">
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className={`fixed bottom-8 right-8 p-6 rounded-lg border-2 border-dashed transition-all flex items-center gap-3 ${
-              snapshot.isDraggingOver ? 'bg-red-50 border-red-500 scale-110' : 'bg-white border-gray-300 hover:border-gray-400'
-            }`}
-            style={{
-              minWidth: '200px',
-              zIndex: 50,
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              transition: 'all 0.2s ease'
-            }}>
-            <div className="flex items-center gap-3 justify-center">
-              <Trash2 className={`w-6 h-6 ${snapshot.isDraggingOver ? 'text-red-500' : 'text-gray-400'}`} />
-              <span className={`${snapshot.isDraggingOver ? 'text-red-500' : 'text-gray-400'} font-medium`}>גרור לכאן למחיקה</span>
-            </div>
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable> */}
     </DragDropContext>
   )
 }

@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
-import { loadWorkers, removeWorker, updateWorker, addWorker } from '../store/worker.actions'
+import { loadEmployees, removeEmployee, updateEmployee, addEmployee } from '../store/employee.actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
@@ -70,20 +70,19 @@ const ColorPickerPopover = ({ value, onChange }) => {
   )
 }
 
-export function WorkersPage() {
-  const { workers } = useSelector((storeState) => storeState.workerModule)
-  const [workerToEdit, setWorkerToEdit] = useState({ name: '', color: '#000000', branch: '' })
+export function EmployeesPage() {
+  const [employeeToEdit, setEmployeeToEdit] = useState({ name: '', color: '#000000', branch: '' })
   const { user } = useSelector((storeState) => storeState.userModule)
-
+  const employees = useSelector((storeState) => storeState.employeeModule.employees)
   useEffect(() => {
-    loadWorkers()
+    loadEmployees()
   }, [])
 
-  const handleAddWorker = async (e) => {
+  const handleAddEmployee = async (e) => {
     e.preventDefault()
 
-    const isDuplicate = workers.some((worker) => {
-      return worker.color.toLowerCase() === workerToEdit.color.toLowerCase()
+    const isDuplicate = employees.some((employee) => {
+      return employee.color.toLowerCase() === employeeToEdit.color.toLowerCase()
     })
 
     if (isDuplicate) {
@@ -91,18 +90,18 @@ export function WorkersPage() {
       return
     }
 
-    if (workerToEdit.name.length < 2) {
+    if (employeeToEdit.name.length < 2) {
       toast.error('שם העובד חייב להכיל לפחות 2 תווים')
       return
     }
 
-    if (workers.some((worker) => worker.name === workerToEdit.name)) {
+    if (employees.some((employee) => employee.name === employeeToEdit.name)) {
       toast.error('שם העובד כבר קיים')
       return
     }
     try {
-      await addWorker(workerToEdit)
-      setWorkerToEdit({ name: '', color: '', branch: '' })
+      await addEmployee(employeeToEdit)
+      setEmployeeToEdit({ name: '', color: '', branch: '' })
       toast.success('עובד נוסף בהצלחה')
     } catch (error) {
       console.log(error)
@@ -112,40 +111,40 @@ export function WorkersPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setWorkerToEdit({ ...workerToEdit, [name]: value })
+    setEmployeeToEdit({ ...employeeToEdit, [name]: value })
   }
 
-  const handleUpdateWorker = (e, worker) => {
-    const updatedWorker = { ...worker, color: e.target.value }
-    updateWorker(updatedWorker)
+  const handleUpdateEmployee = (e, employee) => {
+    const updatedEmployee = { ...employee, color: e.target.value }
+    updateEmployee(updatedEmployee)
   }
 
-  const handleRemoveWorker = (workerId) => {
-    removeWorker(workerId)
+  const handleRemoveEmployee = (employeeId) => {
+    removeEmployee(employeeId)
   }
 
   const handleBranchChange = (value) => {
-    setWorkerToEdit({ ...workerToEdit, branch: value })
+    setEmployeeToEdit({ ...employeeToEdit, branch: value })
   }
 
   return (
     <div className="flex flex-col h-full items-center p-4">
-      <form className="flex flex-col items-center gap-2 mt-8 sm:mt-16 w-full max-w-md" onSubmit={handleAddWorker}>
+      <form className="flex flex-col items-center gap-2 mt-8 sm:mt-16 w-full max-w-md" onSubmit={handleAddEmployee}>
         <h2 className="text-lg sm:text-xl font-semibold">הוסף עובד</h2>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-2 sm:mt-4 w-full">
           <Input
             type="text"
             placeholder="שם"
             name="name"
-            value={workerToEdit.name}
+            value={employeeToEdit.name}
             onChange={handleChange}
             className="text-sm sm:text-base"
             tabIndex={1}
             autoFocus
           />
-          <ColorPickerPopover value={workerToEdit.color} onChange={handleChange} />
+          <ColorPickerPopover value={employeeToEdit.color} onChange={handleChange} />
           {user?.isAdmin && (
-            <Select name="branch" value={workerToEdit.branch} onValueChange={handleBranchChange} className="w-full sm:w-auto">
+            <Select name="branch" value={employeeToEdit.branch} onValueChange={handleBranchChange} className="w-full sm:w-auto">
               <SelectTrigger className="text-sm sm:text-base">
                 <SelectValue placeholder="בחר סניף" />
               </SelectTrigger>
@@ -163,20 +162,20 @@ export function WorkersPage() {
       </form>
 
       <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 container mt-8 sm:mt-16 w-full max-w-6xl">
-        {workers.length === 0 && <li className="text-center text-gray-500 col-span-full text-sm sm:text-base">אין עובדים</li>}
-        {workers.map((worker) => (
-          <li key={worker._id} className="flex flex-col p-3 sm:p-4 gap-2 sm:gap-3 bg-white rounded-lg shadow-sm border">
-            <h2 className="text-sm sm:text-md font-bold truncate" style={{ color: worker.color }}>
-              {worker.name}
+        {employees.length === 0 && <li className="text-center text-gray-500 col-span-full text-sm sm:text-base">אין עובדים</li>}
+        {employees.map((employee) => (
+          <li key={employee.id} className="flex flex-col p-3 sm:p-4 gap-2 sm:gap-3 bg-white rounded-lg shadow-sm border">
+            <h2 className="text-sm sm:text-md font-bold truncate" style={{ color: employee.color }}>
+              {employee.name}
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500">סניף: {worker.branch}</p>
+            <p className="text-xs sm:text-sm text-gray-500">סניף: {employee.branch}</p>
 
             <div className="flex items-center gap-2">
               <p className="text-xs sm:text-sm text-gray-500">צבע</p>
-              <ColorPickerPopover value={worker.color} onChange={(e) => handleUpdateWorker(e, worker)} />
+              <ColorPickerPopover value={employee.color} onChange={(e) => handleUpdateEmployee(e, employee)} />
             </div>
 
-            <Button onClick={() => handleRemoveWorker(worker._id)} className="text-xs sm:text-sm mt-auto" variant="destructive">
+            <Button onClick={() => handleRemoveEmployee(employee.id)} className="text-xs sm:text-sm mt-auto" variant="destructive">
               הסר
             </Button>
           </li>

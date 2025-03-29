@@ -6,8 +6,10 @@ export async function getSchedules(req, res) {
 
   try {
     const filterBy = {
-      branch: loggedinUser
+      username: req.query.username || loggedinUser.username || ''
     }
+
+    console.log('🚀 ~ getSchedules ~ filterBy:', filterBy)
 
     const schedules = await scheduleService.query(filterBy)
 
