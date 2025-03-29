@@ -2,48 +2,37 @@ import { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { MokedSchedule } from '@/components/MokedSchedule'
 import { BranchSchedule } from '@/components/BranchSchedule'
-import { useParams } from 'react-router'
+
 import { loadWorkers } from '@/store/worker.actions'
 import domtoimage from 'dom-to-image-more'
-import { scheduleService } from '@/services/schedule/schedule.service.remote'
 import { toast } from 'react-hot-toast'
 import { Loader2, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { setFilterBy } from '@/store/system.reducer'
+import { loadSchedule, updateSchedule } from '@/store/schedule.actions'
+import { useParams } from 'react-router'
 
-export function SchedulePage({ filterBy }) {
+export function SchedulePage() {
   const { branchName } = useParams()
   const { workers } = useSelector((storeState) => storeState.workerModule)
-  const { user } = useSelector((storeState) => storeState.userModule)
 
-  const [schedule, setSchedule] = useState(null)
+  const { user } = useSelector((storeState) => storeState.userModule)
+  const { filterBy } = useSelector((storeState) => storeState.systemModule)
+
+  const { schedule } = useSelector((storeState) => storeState.scheduleModule)
+
   const [isUpdating, setIsUpdating] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
 
   useEffect(() => {
-    loadWorkers(filterBy)
-    loadSchedule()
-  }, [branchName, filterBy])
+    setFilterBy({ branch: branchName })
+  }, [branchName])
 
-  const loadSchedule = async () => {
-    if (filterBy) {
-      try {
-        const schedules = await scheduleService.query(filterBy)
-        setSchedule(schedules)
-      } catch (err) {
-        console.error('Failed to load schedule:', err)
-        toast.error('שגיאה בטעינת הסידור')
-      }
-    }
-    if (branchName) {
-      try {
-        const schedules = await scheduleService.getScheduleByBranchName(branchName)
-        setSchedule(schedules)
-      } catch (err) {
-        console.error('Failed to load schedule:', err)
-        toast.error('שגיאה בטעינת הסידור')
-      }
-    }
-  }
+  useEffect(() => {
+    loadWorkers(filterBy)
+    loadSchedule(filterBy.branch)
+  }, [filterBy])
 
   const handleShare = async () => {
     setIsSharing(true)
@@ -72,12 +61,11 @@ export function SchedulePage({ filterBy }) {
     }
   }
 
-  const handleUpdateSchedule = async (workerId, day, role, position) => {
+  const handleUpdateSchedule = async (schedule, workerId, day, role, position) => {
     if (!schedule) return
 
     try {
       setIsUpdating(true)
-      console.log('Updating schedule with:', { workerId, day, role, position })
 
       const updatedSchedule = JSON.parse(JSON.stringify(schedule))
       const dayIndex = updatedSchedule.days.findIndex((d) => d.name === day)
@@ -88,8 +76,6 @@ export function SchedulePage({ filterBy }) {
       }
 
       const shiftIndex = updatedSchedule.days[dayIndex].shifts.findIndex((shift) => shift.role === role && shift.position === position)
-
-      console.log('Current shifts:', updatedSchedule.days[dayIndex].shifts)
 
       if (shiftIndex !== -1) {
         if (updatedSchedule.days[dayIndex].shifts[shiftIndex].workerId === workerId) {
@@ -105,9 +91,7 @@ export function SchedulePage({ filterBy }) {
         })
       }
 
-      console.log('Updated schedule:', updatedSchedule)
-      await scheduleService.update(updatedSchedule)
-      await loadSchedule()
+      await updateSchedule(updatedSchedule)
     } catch (error) {
       console.error('Error updating schedule:', error)
       toast.error('שגיאה בעדכון המשמרת')
@@ -116,7 +100,7 @@ export function SchedulePage({ filterBy }) {
     }
   }
 
-  const handleClearBoard = async () => {
+  const handleClearBoard = async (schedule) => {
     if (!schedule) return
 
     try {
@@ -126,8 +110,7 @@ export function SchedulePage({ filterBy }) {
         shifts: []
       }))
 
-      const savedSchedule = await scheduleService.update(clearedSchedule)
-      setSchedule(savedSchedule)
+      await updateSchedule(clearedSchedule)
       toast.success('הסידור נוקה בהצלחה')
     } catch (err) {
       console.error('Failed to clear schedule:', err)
@@ -135,7 +118,7 @@ export function SchedulePage({ filterBy }) {
     }
   }
 
-  const getAssignedWorker = (day, role, position) => {
+  const getAssignedWorker = (schedule, day, role, position) => {
     if (!schedule) return null
 
     const dayObj = schedule.days?.find((d) => d.name === day)
@@ -147,13 +130,17 @@ export function SchedulePage({ filterBy }) {
     return workers.find((w) => w._id === shift.workerId)
   }
 
-  const handleWorkerClick = async (day, role, position) => {
+  const handleWorkerClick = async (schedule, day, role, position) => {
     try {
-      await handleUpdateSchedule(null, day, role, position)
+      await handleUpdateSchedule(schedule, null, day, role, position)
     } catch (error) {
       console.error('Error removing worker:', error)
       toast.error('שגיאה בהסרת העובד')
     }
+  }
+
+  const onSetFilterBy = (value) => {
+    setFilterBy({ branch: value })
   }
 
   const LoadingOverlay = () => (
@@ -181,24 +168,44 @@ export function SchedulePage({ filterBy }) {
 
       <h2 className="text-xl text-center font-bold mt-4">סידור עבודה</h2>
 
-      <div className="container mx-auto flex justify-end gap-4 items-center w-full mt-4">
-        <Button className="cursor-pointer hover:bg-[#BE202E] hover:text-white" onClick={handleClearBoard} variant="outline">
-          נקה סידור
-        </Button>
-        <Button onClick={handleShare} className="flex items-center gap-2 bg-green-500 hover:bg-green-600" disabled={isSharing}>
-          {isSharing ? <span className="animate-spin">⏳</span> : <Share2 className="w-4 h-4" />}
-          {isSharing ? 'מכין לשיתוף...' : 'שתף בווצאפ'}
-        </Button>
+      <div className="container mx-auto w-full mt-4">
+        <div className="flex items-center justify-between gap-2">
+          {user.isAdmin && (
+            <Select onValueChange={onSetFilterBy} value={filterBy.branch}>
+              <SelectTrigger>
+                <SelectValue placeholder="בחר סניף" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="moked">מוקד</SelectItem>
+                <SelectItem value="tlv">תל אביב</SelectItem>
+                <SelectItem value="pt">פתח תקווה</SelectItem>
+                <SelectItem value="rishon">רשאון לציון</SelectItem>
+                <SelectItem value="rosh">ראש העין</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+
+          <div className="flex gap-2 justify-end w-full">
+            <Button className="cursor-pointer hover:bg-[#BE202E] hover:text-white" onClick={() => handleClearBoard(schedule)} variant="outline">
+              נקה סידור
+            </Button>
+            <Button onClick={handleShare} className="flex items-center gap-2 bg-green-500 hover:bg-green-600" disabled={isSharing}>
+              {isSharing ? <span className="animate-spin">⏳</span> : <Share2 className="w-4 h-4" />}
+              {isSharing ? 'מכין לשיתוף...' : 'שתף בווצאפ'}
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {filterBy?.branch || branchName === 'moked' ? (
+      {filterBy.branch === 'moked' && (
         <MokedSchedule
           getAssignedWorker={getAssignedWorker}
           onUpdateSchedule={handleUpdateSchedule}
           isSharing={isSharing}
           handleWorkerClick={handleWorkerClick}
         />
-      ) : (
+      )}
+      {filterBy.branch !== 'moked' && (
         <BranchSchedule
           getAssignedWorker={getAssignedWorker}
           onUpdateSchedule={handleUpdateSchedule}

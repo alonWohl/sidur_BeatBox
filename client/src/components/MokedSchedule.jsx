@@ -7,6 +7,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { toast } from 'react-hot-toast'
 
 export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, handleWorkerClick }) {
+  const { schedule } = useSelector((storeState) => storeState.scheduleModule)
   const { workers } = useSelector((storeState) => storeState.workerModule)
   const [isDragging, setIsDragging] = useState(false)
 
@@ -28,48 +29,29 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
 
       const { source, destination, draggableId } = result
 
-      // If dropping to trash
-      if (destination.droppableId === 'trash') {
-        if (draggableId.startsWith('inside_table_')) {
-          const [sourceDay, sourceRole, sourcePosition] = source.droppableId.split('-')
-          await onUpdateSchedule(null, sourceDay, sourceRole, parseInt(sourcePosition))
-        }
-        return
-      }
-
       const [destDay, destRole, destPosition] = destination.droppableId.split('-')
 
       try {
         if (draggableId.startsWith('inside_table_')) {
           const [sourceDay, sourceRole, sourcePosition] = source.droppableId.split('-')
-          const workerId = draggableId.split('_').pop() // Get the last part which is the workerId
+          const workerId = draggableId.split('_').pop()
 
-          console.log('Moving worker:', {
-            workerId,
-            sourceDay,
-            sourceRole,
-            sourcePosition,
-            destDay,
-            destRole,
-            destPosition
-          })
+          await onUpdateSchedule(schedule, null, sourceDay, sourceRole, parseInt(sourcePosition))
 
-          await onUpdateSchedule(null, sourceDay, sourceRole, parseInt(sourcePosition))
-
-          await onUpdateSchedule(workerId, destDay, destRole, parseInt(destPosition))
+          await onUpdateSchedule(schedule, workerId, destDay, destRole, parseInt(destPosition))
         } else {
-          await onUpdateSchedule(draggableId, destDay, destRole, parseInt(destPosition))
+          await onUpdateSchedule(schedule, draggableId, destDay, destRole, parseInt(destPosition))
         }
       } catch (error) {
         console.error('Error in drag end:', error)
         toast.error('שגיאה בעדכון המשמרת')
       }
     },
-    [onUpdateSchedule]
+    [onUpdateSchedule, schedule]
   )
 
   const renderCell = (day, role, position) => {
-    const worker = getAssignedWorker(day, role, position)
+    const worker = getAssignedWorker(schedule, day, role, position)
     const cellId = `${day}-${role}-${position}`
 
     return (
@@ -99,7 +81,7 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
                           ref={dragProvided.innerRef}
                           {...dragProvided.draggableProps}
                           {...dragProvided.dragHandleProps}
-                          onClick={() => handleWorkerClick(day, role, position)}
+                          onClick={() => handleWorkerClick(schedule, day, role, position)}
                           className={`text-white text-xs font-medium rounded h-full flex items-center justify-center cursor-pointer hover:brightness-90 transition-all ${
                             dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
                           }`}

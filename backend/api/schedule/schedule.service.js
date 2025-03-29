@@ -18,7 +18,9 @@ export const scheduleService = {
 }
 
 async function query(filterBy = { branch: '' }) {
+  const { loggedinUser } = asyncLocalStorage.getStore()
   try {
+    if (!loggedinUser.isAdmin) filterBy.branch = loggedinUser.username
     const criteria = _buildCriteria(filterBy)
     const sort = _buildSort(filterBy)
 

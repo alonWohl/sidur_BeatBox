@@ -6,6 +6,8 @@ import { useSelector } from 'react-redux'
 
 export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, handleWorkerClick }) {
   const { workers } = useSelector((storeState) => storeState.workerModule)
+  console.log('🚀 ~ BranchSchedule ~ workers:', workers)
+  const { schedule } = useSelector((storeState) => storeState.scheduleModule)
   const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
 
   const handleDragEnd = async (result) => {
@@ -16,7 +18,7 @@ export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing,
     if (destination.droppableId === 'trash') {
       if (source.droppableId !== 'workers-list') {
         const [sourceDay, sourceRole, sourcePosition] = source.droppableId.split('-')
-        await onUpdateSchedule(null, sourceDay, sourceRole, parseInt(sourcePosition))
+        await onUpdateSchedule(schedule, null, sourceDay, sourceRole, parseInt(sourcePosition))
       }
       return
     }
@@ -30,11 +32,11 @@ export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing,
         const workerId = draggableId.split('_').pop() // Get the last part which is the workerId
 
         // First remove from original position
-        await onUpdateSchedule(null, sourceDay, sourceRole, parseInt(sourcePosition))
+        await onUpdateSchedule(schedule, null, sourceDay, sourceRole, parseInt(sourcePosition))
 
-        await onUpdateSchedule(workerId, destDay, destRole, parseInt(destPosition))
+        await onUpdateSchedule(schedule, workerId, destDay, destRole, parseInt(destPosition))
       } else {
-        await onUpdateSchedule(draggableId, destDay, destRole, parseInt(destPosition))
+        await onUpdateSchedule(schedule, draggableId, destDay, destRole, parseInt(destPosition))
       }
     } catch (error) {
       console.error('Error in drag end:', error)
@@ -43,7 +45,7 @@ export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing,
   }
 
   const renderCell = (day, role, position) => {
-    const worker = getAssignedWorker(day, role, position)
+    const worker = getAssignedWorker(schedule, day, role, position)
     const cellId = `${day}-${role}-${position}`
 
     return (
@@ -73,7 +75,7 @@ export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing,
                           ref={dragProvided.innerRef}
                           {...dragProvided.draggableProps}
                           {...dragProvided.dragHandleProps}
-                          onClick={() => handleWorkerClick(day, role, position)}
+                          onClick={() => handleWorkerClick(schedule, day, role, position)}
                           className={`text-white text-xs sm:text-sm font-medium rounded h-full flex items-center justify-center cursor-pointer hover:brightness-90 transition-all ${
                             dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
                           }`}

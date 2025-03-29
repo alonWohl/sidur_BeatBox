@@ -55,6 +55,7 @@ export async function initApp() {
 
       const scheduleData = {
         branch: savedUser.username,
+        branchId: savedUser._id,
         days: [
           { name: 'ראשון', dayId: 1, shifts: [] },
           { name: 'שני', dayId: 2, shifts: [] },

@@ -13,7 +13,7 @@ export const workerService = {
   update
 }
 
-async function query(filterBy = { txt: '', branch: '' }) {
+async function query(filterBy = { branch: '' }) {
   try {
     const criteria = _buildCriteria(filterBy)
     const sort = _buildSort(filterBy)
@@ -65,7 +65,7 @@ async function remove(workerId) {
 
 async function add(worker) {
   const { loggedinUser } = asyncLocalStorage.getStore()
-  worker.branch = loggedinUser.branch
+  worker.branch = worker.branch || loggedinUser.username
 
   try {
     const collection = await dbService.getCollection('worker')
@@ -95,7 +95,6 @@ async function update(worker) {
 
 function _buildCriteria(filterBy) {
   const criteria = {
-    name: { $regex: filterBy.name, $options: 'i' },
     branch: { $regex: filterBy.branch, $options: 'i' }
   }
 

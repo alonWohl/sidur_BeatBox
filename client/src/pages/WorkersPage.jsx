@@ -101,12 +101,7 @@ export function WorkersPage() {
       return
     }
     try {
-      await addWorker({
-        name: workerToEdit.name,
-        color: workerToEdit.color,
-        branch: user.branch
-      })
-      console.log('🚀 ~ handleAddWorker ~ user:', user)
+      await addWorker(workerToEdit)
       setWorkerToEdit({ name: '', color: '', branch: '' })
       toast.success('עובד נוסף בהצלחה')
     } catch (error) {

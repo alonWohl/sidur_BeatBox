@@ -6,9 +6,9 @@ export async function getWorkers(req, res) {
 
   try {
     const filterBy = {
-      name: req.query.name || '',
-      branch: loggedinUser.isAdmin ? req.query.branch || '' : loggedinUser.branch
+      branch: req.query.branch || loggedinUser.username
     }
+
     const workers = await workerService.query(filterBy)
     res.json(workers)
   } catch (err) {
@@ -26,7 +26,7 @@ export async function addWorker(req, res) {
   }
 
   try {
-    worker.branch = loggedinUser.branch
+    worker.branch = req.body.branch || loggedinUser.username
     const addedWorker = await workerService.add(worker)
     res.json(addedWorker)
   } catch (err) {

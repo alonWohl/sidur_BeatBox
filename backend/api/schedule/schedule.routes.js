@@ -10,7 +10,7 @@ const router = express.Router()
 // We can add a middleware for the entire router:
 // router.use(requireAuth)
 
-router.get('/', log, requireAdmin, getSchedules)
+router.get('/', log, requireAuth, requireAdmin, getSchedules)
 router.get('/:branch', log, requireAuth, getScheduleByBranchName)
 router.post('/', log, requireAuth, addSchedule)
 router.put('/:id', requireAuth, updateSchedule)

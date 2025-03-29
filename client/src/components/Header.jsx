@@ -25,21 +25,18 @@ export function Header() {
           {/* Navigation */}
           <nav className="flex items-center space-x-8 rtl:space-x-reverse">
             {user && (
-              <Link
-                to="/worker"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                עובדים
-              </Link>
-            )}
-            <Link
-              to={`/schedule/${user?.username}`}
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-              משמרות
-            </Link>
-            {user?.username === 'moked' && (
-              <Link to="/admin" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                ניהול
-              </Link>
+              <>
+                <Link
+                  to="/worker"
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                  עובדים
+                </Link>
+                <Link
+                  to={`/schedule/${user?.username}`}
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                  משמרות
+                </Link>
+              </>
             )}
 
             {/* User Section */}
