@@ -2,15 +2,14 @@ import { logger } from '../../services/logger.service.js'
 import { scheduleService } from './schedule.service.js'
 
 export async function getSchedules(req, res) {
-  const { loggedinUser } = req
+  const { username: branchUsername } = req.query
 
   try {
     const filterBy = {
-      username: req.query.username || loggedinUser.username || ''
+      username: branchUsername
     }
 
     const schedules = await scheduleService.query(filterBy)
-    console.log('🚀 ~ getSchedules ~ schedules:', schedules)
 
     res.json(schedules)
   } catch (err) {

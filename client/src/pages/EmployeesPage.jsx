@@ -9,30 +9,26 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import React from 'react'
 
 const colorOptions = [
-  '#FF6B6B', // red
-  '#4ECDC4', // teal
-  '#45B7D1', // blue
-  '#96CEB4', // green
-  '#FFEEAD', // yellow
-  '#D4A5A5', // pink
-  '#9B59B6', // purple
-  '#3498DB', // bright blue
-  '#E67E22', // orange
-  '#2ECC71', // emerald
-  '#F1C40F', // sun yellow
-  '#E74C3C', // crimson
-  '#000000', // black
-  '#FF0000', // red
-  '#00FF00', // green
-  '#0000FF', // blue
-  '#FFFF00', // yellow
-  '#FFA500', // orange
-  '#800080', // purple
-  '#FFC0CB', // pink
-  '#808080', // gray
-  '#008000', // green
-  '#000080', // blue
-  '#800000' // maroon
+  '#FF3366', // bright pink
+  '#FF6B2B', // vibrant orange
+  '#4834DF', // royal blue
+  '#2ECC71', // emerald green
+  '#9B59B6', // amethyst purple
+  '#E74C3C', // crimson red
+  '#1ABC9C', // turquoise
+  '#F39C12', // golden orange
+  '#3498DB', // clear blue
+  '#D35400', // burnt orange
+  '#8E44AD', // deep purple
+  '#16A085', // green sea
+  '#C0392B', // dark red
+  '#2980B9', // belize blue
+  '#E67E22', // carrot orange
+  '#27AE60', // nephritis green
+  '#E84393', // hot pink
+  '#00B894', // mint green
+  '#6C5CE7', // soft purple
+  '#00CEC9' // robin's egg blue
 ]
 
 const ColorPickerPopover = ({ value, onChange }) => {
@@ -71,8 +67,8 @@ const ColorPickerPopover = ({ value, onChange }) => {
 }
 
 export function EmployeesPage() {
-  const [employeeToEdit, setEmployeeToEdit] = useState({ name: '', color: '#000000', branch: '' })
   const { user } = useSelector((storeState) => storeState.userModule)
+  const [employeeToEdit, setEmployeeToEdit] = useState({ name: '', color: '#000000', branch: user?.name })
   const employees = useSelector((storeState) => storeState.employeeModule.employees)
   useEffect(() => {
     loadEmployees()
@@ -80,15 +76,6 @@ export function EmployeesPage() {
 
   const handleAddEmployee = async (e) => {
     e.preventDefault()
-
-    const isDuplicate = employees.some((employee) => {
-      return employee.color.toLowerCase() === employeeToEdit.color.toLowerCase()
-    })
-
-    if (isDuplicate) {
-      toast.error('צבע זה כבר קיים')
-      return
-    }
 
     if (employeeToEdit.name.length < 2) {
       toast.error('שם העובד חייב להכיל לפחות 2 תווים')
@@ -99,13 +86,14 @@ export function EmployeesPage() {
       toast.error('שם העובד כבר קיים')
       return
     }
+
     try {
       await addEmployee(employeeToEdit)
       setEmployeeToEdit({ name: '', color: '', branch: '' })
       toast.success('עובד נוסף בהצלחה')
-    } catch (error) {
-      console.log(error)
-      toast.error(error.message)
+    } catch (err) {
+      const errorMessage = err.response?.data?.err || err.message || 'שגיאה בהוספת עובד'
+      toast.error(errorMessage)
     }
   }
 
@@ -114,9 +102,14 @@ export function EmployeesPage() {
     setEmployeeToEdit({ ...employeeToEdit, [name]: value })
   }
 
-  const handleUpdateEmployee = (e, employee) => {
+  const handleUpdateEmployee = async (e, employee) => {
     const updatedEmployee = { ...employee, color: e.target.value }
-    updateEmployee(updatedEmployee)
+    try {
+      await updateEmployee(updatedEmployee)
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message || 'שגיאה בעדכון עובד'
+      toast.error(errorMessage)
+    }
   }
 
   const handleRemoveEmployee = (employeeId) => {
@@ -149,11 +142,11 @@ export function EmployeesPage() {
                 <SelectValue placeholder="בחר סניף" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="moked">מוקד</SelectItem>
-                <SelectItem value="tlv">תל אביב</SelectItem>
-                <SelectItem value="pt">פתח תקווה</SelectItem>
-                <SelectItem value="rishon">רשאון לציון</SelectItem>
-                <SelectItem value="rosh">ראש העין</SelectItem>
+                <SelectItem value="מוקד">מוקד</SelectItem>
+                <SelectItem value="תל אביב">תל אביב</SelectItem>
+                <SelectItem value="פתח תקווה">פתח תקווה</SelectItem>
+                <SelectItem value="רשאון לציון">רשאון לציון</SelectItem>
+                <SelectItem value="ראש העין">ראש העין</SelectItem>
               </SelectContent>
             </Select>
           )}

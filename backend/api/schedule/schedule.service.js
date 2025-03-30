@@ -18,18 +18,6 @@ async function query(filterBy = { branch: '', username: '' }) {
   try {
     const collection = await dbService.getCollection('branch')
 
-    if (loggedinUser.isAdmin) {
-      // const filter = {
-      //   username: { $regex: filterBy.username, $options: 'i' }
-      // }
-      // const branches = await collection.find(filter).toArray()
-      // return branches.map((branch) => ({
-      //   branchName: branch.name,
-      //   branchId: branch._id,
-      //   schedule: branch.schedule
-      // }))
-    }
-
     const branch = await collection.findOne({
       username: filterBy.username
     })

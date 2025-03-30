@@ -34,15 +34,11 @@ export async function removeEmployee(employeeId) {
 
 export async function addEmployee(employee) {
   try {
-    if (employee.name.length < 2) {
-      throw new Error('שם העובד חייב להכיל לפחות 2 תווים')
-    }
-
     const savedEmployee = await employeeService.save(employee)
     store.dispatch(getCmdAddEmployee(savedEmployee))
     return savedEmployee
   } catch (err) {
-    console.log('Cannot add employee', err)
+    console.log('Error form actions ---> Cannot add employee', err)
     throw err
   }
 }

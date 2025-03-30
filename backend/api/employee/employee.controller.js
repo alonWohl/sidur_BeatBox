@@ -39,14 +39,13 @@ export async function addEmployee(req, res) {
     res.json(employee)
   } catch (err) {
     logger.error('Failed to add employee', err)
-    res.status(400).send({ err: 'Failed to add employee' })
+    res.status(400).send({ err: err.message })
   }
 }
 
 export async function updateEmployee(req, res) {
   const { loggedinUser } = req
   const { id } = req.params
-  console.log('🚀 ~ updateEmployee ~ id:', id)
 
   const employeeToUpdate = {
     id: id,
@@ -54,12 +53,13 @@ export async function updateEmployee(req, res) {
     color: req.body.color,
     branch: req.body.branch || loggedinUser.name
   }
+
   try {
     const employee = await employeeService.update(employeeToUpdate)
     res.json(employee)
   } catch (err) {
     logger.error('Failed to update employee', err)
-    res.status(400).send({ err: 'Failed to update employee' })
+    res.status(400).send({ err: err.message })
   }
 }
 
