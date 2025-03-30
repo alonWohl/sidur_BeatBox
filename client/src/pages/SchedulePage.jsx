@@ -32,6 +32,19 @@ export function SchedulePage() {
     loadEmployees(filterBy)
   }, [filterBy])
 
+  useEffect(() => {
+    const preventDefault = (e) => {
+      e.preventDefault()
+    }
+
+    // Prevent scrolling during drag
+    document.addEventListener('touchmove', preventDefault, { passive: false })
+
+    return () => {
+      document.removeEventListener('touchmove', preventDefault)
+    }
+  }, [])
+
   const handleShare = async () => {
     setIsSharing(true)
     try {
@@ -69,14 +82,6 @@ export function SchedulePage() {
       setIsUpdating(true)
       const scheduleToUpdate = JSON.parse(JSON.stringify(schedule))
       const positionNum = parseInt(position)
-
-      console.log('Starting update with:', {
-        employeeId,
-        day,
-        role,
-        position: positionNum,
-        scheduleId: schedule.id
-      })
 
       // Find or create the day
       let dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
@@ -137,7 +142,6 @@ export function SchedulePage() {
         )
       } else {
         // Add new employee
-        console.log('Current shifts before update:', scheduleToUpdate.days[dayIndex].shifts)
 
         // Remove any existing employee in that position
         scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
@@ -244,16 +248,16 @@ export function SchedulePage() {
   }
 
   return (
-    <div className="flex flex-col h-full relative animate-in fade-in duration-300 px-4">
+    <div className="flex flex-col h-full relative animate-in fade-in duration-300 px-4 space-y-6">
       {isUpdating && <LoadingOverlay />}
 
       <h2 className="text-xl text-center font-bold mt-4">סידור עבודה</h2>
 
-      <div className="container mx-auto w-full my-8">
-        <div className="flex items-center justify-between gap-2">
+      <div className="container mx-auto w-full sm:my-8 ">
+        <div className="flex flexitems-center gap-2 px-2">
           {user.isAdmin && (
-            <Select onValueChange={onSetFilterBy} value={filterBy.username}>
-              <SelectTrigger>
+            <Select onValueChange={onSetFilterBy} value={filterBy.username} className="w-full sm:w-auto">
+              <SelectTrigger className="h-8 sm:h-10 text-sm sm:text-base">
                 <SelectValue placeholder="בחר סניף" />
               </SelectTrigger>
               <SelectContent>
@@ -266,13 +270,19 @@ export function SchedulePage() {
             </Select>
           )}
 
-          <div className="flex gap-2 justify-end w-full">
-            <Button className="cursor-pointer hover:bg-[#BE202E] hover:text-white" onClick={() => handleClearBoard(schedules)} variant="outline">
+          <div className="flex gap-1 sm:gap-2 justify-end w-full">
+            <Button
+              className="cursor-pointer hover:bg-[#BE202E] hover:text-white h-8 sm:h-10 text-sm sm:text-base px-2 sm:px-4"
+              onClick={() => handleClearBoard(schedules)}
+              variant="outline">
               נקה סידור
             </Button>
-            <Button onClick={handleShare} className="flex items-center gap-2 bg-green-500 hover:bg-green-600" disabled={isSharing}>
-              {isSharing ? <span className="animate-spin">⏳</span> : <Share2 className="w-4 h-4" />}
-              {isSharing ? 'מכין לשיתוף...' : 'שתף בווצאפ'}
+            <Button
+              onClick={handleShare}
+              className="flex items-center gap-1 sm:gap-2 bg-green-500 hover:bg-green-600 h-8 sm:h-10 text-sm sm:text-base px-2 sm:px-4"
+              disabled={isSharing}>
+              {isSharing ? <span className="animate-spin">⏳</span> : <Share2 className="w-3 h-3 sm:w-4 sm:h-4" />}
+              <span className="whitespace-nowrap">{isSharing ? 'מכין...' : 'שתף'}</span>
             </Button>
           </div>
         </div>

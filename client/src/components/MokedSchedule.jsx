@@ -83,12 +83,16 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className={`text-center h-10 border border-gray-200 ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+              className={`text-center h-8 border border-gray-200 
+                ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}
+                touch-manipulation`}
               style={{
                 backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : employee ? employee.color : '',
                 minWidth: '80px',
                 padding: snapshot.isDraggingOver ? '1px' : '1px',
-                boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none'
+                boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none',
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'none'
               }}>
               {employee && (
                 <Draggable
@@ -138,7 +142,7 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <DragDropContext onDragEnd={handleDragEnd} enableDefaultSensors={true} touchTimeout={150}>
       <div className="flex flex-col items-center justify-center gap-8 p-1 container mx-auto">
         <EmployeesList employees={employees} />
 

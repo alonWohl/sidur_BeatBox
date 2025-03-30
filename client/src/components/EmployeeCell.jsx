@@ -10,11 +10,19 @@ export function EmployeeCell({ employee, dragProvided, dragSnapshot, onClick, sh
             {...dragProvided.draggableProps}
             {...dragProvided.dragHandleProps}
             onClick={onClick}
-            className={`text-white text-sm font-medium h-full flex items-center justify-center cursor-pointer hover:brightness-90 ${
-              dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
-            }`}
+            className={`text-white text-sm font-medium h-full flex items-center justify-center 
+              cursor-grab active:cursor-grabbing
+              touch-manipulation
+              select-none
+              ${dragSnapshot.isDragging ? 'opacity-75 bg-blue-500 shadow-lg scale-105' : ''}`}
             style={{
               backgroundColor: employee.color,
+              transform: dragSnapshot.isDragging
+                ? `${dragProvided.draggableProps.style.transform} scale(1.05)`
+                : dragProvided.draggableProps.style.transform,
+              transition: dragSnapshot.isDragging ? 'none' : 'transform 0.2s ease',
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'none',
               ...dragProvided.draggableProps.style
             }}>
             {employee.name}
