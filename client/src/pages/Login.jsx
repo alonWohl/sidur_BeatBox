@@ -6,7 +6,6 @@ import { login } from '@/store/user.actions'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { UserCircle2 } from 'lucide-react'
-import { userService } from '@/services/branch'
 
 export function Login() {
   const [user, setUser] = useState({ username: '', password: '' })
@@ -58,7 +57,7 @@ export function Login() {
       setIsSubmitting(true)
       await login(user)
       toast.success('התחברת בהצלחה')
-      navigate(`/schedule/`)
+      navigate(`/`)
 
       // Simplified redirect logic
       // const loggedInUser = await userService.getLoggedInUser()

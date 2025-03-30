@@ -3,13 +3,15 @@ import { employeeService } from './employee.service.js'
 
 export async function getEmployees(req, res) {
   const { loggedinUser } = req
-  const filterBy = { username: loggedinUser.username }
+  const filterBy = {
+    username: loggedinUser.isAdmin ? req.query.username || loggedinUser.username : loggedinUser.username
+  }
   try {
     const employees = await employeeService.query(filterBy)
     res.json(employees)
   } catch (err) {
     logger.error('Failed to get employees', err)
-    res.status(400).send({ err: 'Failed to get employees' })
+    res.status(400).send({ err: err.message })
   }
 }
 
@@ -21,7 +23,7 @@ export async function getEmployee(req, res) {
     res.json(employee)
   } catch (err) {
     logger.error('Failed to get employee', err)
-    res.status(400).send({ err: 'Failed to get employee' })
+    res.status(400).send({ err: err.message })
   }
 }
 
@@ -72,6 +74,6 @@ export async function deleteEmployee(req, res) {
     res.end()
   } catch (err) {
     logger.error('Failed to delete employee', err)
-    res.status(400).send({ err: 'Failed to delete employee' })
+    res.status(400).send({ err: err.message })
   }
 }

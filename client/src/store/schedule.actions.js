@@ -49,8 +49,9 @@ export async function addSchedule(schedule) {
 
 export async function updateSchedule(schedule) {
   try {
-    const savedSchedule = await scheduleService.save(schedule)
-    store.dispatch(getCmdUpdateSchedule(savedSchedule))
+    const scheduleToSave = structuredClone(schedule)
+    store.dispatch(getCmdUpdateSchedule(scheduleToSave))
+    const savedSchedule = await scheduleService.save(scheduleToSave)
     return savedSchedule
   } catch (err) {
     console.log('Cannot save schedule', err)

@@ -7,6 +7,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import toast from 'react-hot-toast'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import React from 'react'
+import { Trash } from 'lucide-react'
 
 const colorOptions = [
   '#FF3366', // bright pink
@@ -68,7 +69,7 @@ const ColorPickerPopover = ({ value, onChange }) => {
 
 export function EmployeesPage() {
   const { user } = useSelector((storeState) => storeState.userModule)
-  const [employeeToEdit, setEmployeeToEdit] = useState({ name: '', color: '#000000', branch: user?.name })
+  const [employeeToEdit, setEmployeeToEdit] = useState({ name: '', color: '', branch: user?.name })
   const employees = useSelector((storeState) => storeState.employeeModule.employees)
   useEffect(() => {
     loadEmployees()
@@ -107,7 +108,7 @@ export function EmployeesPage() {
     try {
       await updateEmployee(updatedEmployee)
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'שגיאה בעדכון עובד'
+      const errorMessage = err.response?.data?.err || err.message || 'שגיאה בעדכון עובד'
       toast.error(errorMessage)
     }
   }
@@ -170,6 +171,7 @@ export function EmployeesPage() {
 
             <Button onClick={() => handleRemoveEmployee(employee.id)} className="text-xs sm:text-sm mt-auto" variant="destructive">
               הסר
+              <Trash className="w-4 h-4" />
             </Button>
           </li>
         ))}

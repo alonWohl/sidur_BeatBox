@@ -139,7 +139,7 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex flex-col items-center justify-center gap-4 p-1 container mx-auto">
+      <div className="flex flex-col items-center justify-center gap-8 p-1 container mx-auto">
         <EmployeesList employees={employees} />
 
         <div

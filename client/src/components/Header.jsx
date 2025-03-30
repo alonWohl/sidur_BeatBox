@@ -18,9 +18,11 @@ export function Header() {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo/Brand */}
-          <div className="logo w-[150px]">
-            <img src={logo} alt="Sidur BeatBox" className="mix-blend-multiply" />
-          </div>
+          <Link to="/">
+            <div className="logo max-w-[150px]">
+              <img src={logo} alt="Sidur BeatBox" className="mix-blend-multiply w-full" />
+            </div>
+          </Link>
 
           {/* Navigation */}
           <nav className="flex items-center space-x-8 rtl:space-x-reverse">

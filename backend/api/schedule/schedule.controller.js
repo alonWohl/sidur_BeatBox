@@ -2,11 +2,11 @@ import { logger } from '../../services/logger.service.js'
 import { scheduleService } from './schedule.service.js'
 
 export async function getSchedules(req, res) {
-  const { username: branchUsername } = req.query
+  const { loggedinUser } = req
 
   try {
     const filterBy = {
-      username: branchUsername
+      username: loggedinUser.isAdmin ? req.query.username || loggedinUser.username : loggedinUser.username
     }
 
     const schedules = await scheduleService.query(filterBy)
@@ -14,7 +14,7 @@ export async function getSchedules(req, res) {
     res.json(schedules)
   } catch (err) {
     logger.error('Failed to get schedules', err)
-    res.status(400).send({ err: 'Failed to get schedules' })
+    res.status(400).send({ err: err.message })
   }
 }
 

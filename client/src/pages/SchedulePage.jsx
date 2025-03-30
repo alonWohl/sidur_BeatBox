@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { MokedSchedule } from '@/components/MokedSchedule'
 import { BranchSchedule } from '@/components/BranchSchedule'
@@ -16,16 +16,19 @@ export function SchedulePage() {
   const { user } = useSelector((storeState) => storeState.userModule)
 
   const { filterBy } = useSelector((storeState) => storeState.systemModule)
+  console.log('🚀 ~ SchedulePage ~ filterBy:', filterBy)
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
+  console.log('🚀 ~ SchedulePage ~ schedules:', schedules)
 
   const { employees } = useSelector((storeState) => storeState.employeeModule)
+  console.log('🚀 ~ SchedulePage ~ employees:', employees)
 
   const [isUpdating, setIsUpdating] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
 
   useEffect(() => {
     loadSchedules(filterBy)
-    loadEmployees()
+    loadEmployees(filterBy)
   }, [filterBy])
 
   const handleShare = async () => {
@@ -240,12 +243,12 @@ export function SchedulePage() {
   }
 
   return (
-    <div className="flex flex-col h-full relative animate-in fade-in duration-300 ">
+    <div className="flex flex-col h-full relative animate-in fade-in duration-300 px-4">
       {isUpdating && <LoadingOverlay />}
 
       <h2 className="text-xl text-center font-bold mt-4">סידור עבודה</h2>
 
-      <div className="container mx-auto w-full mb-4">
+      <div className="container mx-auto w-full my-8">
         <div className="flex items-center justify-between gap-2">
           {user.isAdmin && (
             <Select onValueChange={onSetFilterBy} value={filterBy.username}>

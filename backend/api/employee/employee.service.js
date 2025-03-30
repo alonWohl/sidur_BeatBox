@@ -27,12 +27,15 @@ async function query(filterBy = { username: '' }) {
 }
 
 async function getById(employeeId) {
-  const collection = await dbService.getCollection('branch')
   try {
-    const filter = {
-      employees: { $elemMatch: { id: employeeId } }
+    const { loggedinUser } = asyncLocalStorage.getStore()
+    const collection = await dbService.getCollection('branch')
+    const criteria = {
+      username: loggedinUser.username,
+      'employees.id': employeeId
     }
-    const branch = await collection.findOne(filter)
+    const branch = await collection.findOne(criteria)
+    if (!branch) throw new Error('Branch not found')
     return branch.employees.find((employee) => employee.id === employeeId)
   } catch (err) {
     logger.error('Cannot find employee', err)
@@ -117,6 +120,10 @@ async function validateEmployee(collection, loggedinUser, employee, isUpdate = f
   const colorExists = await isColorExists(collection, loggedinUser.username, employee.color, isUpdate ? employee.id : null)
   if (colorExists) {
     throw new Error('צבע זה כבר קיים במערכת')
+  }
+
+  if (!employee.color) {
+    throw new Error('אנא בחר צבע')
   }
 
   if (isColorTooLight(employee.color)) {
