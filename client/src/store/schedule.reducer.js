@@ -35,7 +35,6 @@ export function scheduleReducer(state = initialState, action) {
       newState = { ...state, schedules: [...state.schedules, action.schedule] }
       break
     case UPDATE_SCHEDULE:
-      console.log('🚀 ~ scheduleReducer ~ action:', action)
       newState = {
         ...state,
         schedules: { ...state.schedules, ...action.schedule }

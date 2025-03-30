@@ -16,6 +16,7 @@ export function SchedulePage() {
   const { user } = useSelector((storeState) => storeState.userModule)
 
   const { filterBy } = useSelector((storeState) => storeState.systemModule)
+  console.log('🚀 ~ SchedulePage ~ filterBy:', filterBy)
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
 
   const { employees } = useSelector((storeState) => storeState.employeeModule)
@@ -60,30 +61,68 @@ export function SchedulePage() {
 
     try {
       setIsUpdating(true)
-
       const scheduleToUpdate = JSON.parse(JSON.stringify(schedule))
-      console.log('🚀 ~ handleUpdateSchedule ~ scheduleToUpdate:', scheduleToUpdate)
-      const dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
 
-      if (dayIndex === -1) {
-        console.log('Day not found:', day)
-        return
-      }
+      // Case 1: Moving/Swapping employees within the schedule
+      if (employeeId?.type === 'move') {
+        const { sourceDay, sourceRole, sourcePosition, employeeId: actualEmployeeId } = employeeId
 
-      const shiftIndex = scheduleToUpdate.days[dayIndex].shifts.findIndex((shift) => shift.role === role && shift.position === position)
+        // Find days in schedule
+        const sourceDayIndex = scheduleToUpdate.days.findIndex((d) => d.name === sourceDay)
+        const destDayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
 
-      if (shiftIndex !== -1) {
-        if (scheduleToUpdate.days[dayIndex].shifts[shiftIndex].employeeId === employeeId) {
-          scheduleToUpdate.days[dayIndex].shifts.splice(shiftIndex, 1)
-        } else {
-          scheduleToUpdate.days[dayIndex].shifts[shiftIndex].employeeId = employeeId
-        }
-      } else {
-        scheduleToUpdate.days[dayIndex].shifts.push({
+        if (sourceDayIndex === -1 || destDayIndex === -1) return
+
+        // Get employees at both positions
+        const sourceEmployee = scheduleToUpdate.days[sourceDayIndex].shifts?.find(
+          (shift) => shift.role === sourceRole && shift.position === sourcePosition
+        )
+        const destEmployee = scheduleToUpdate.days[destDayIndex].shifts?.find((shift) => shift.role === role && shift.position === position)
+
+        if (!sourceEmployee) return
+
+        // Remove employees from their current positions
+        scheduleToUpdate.days[sourceDayIndex].shifts =
+          scheduleToUpdate.days[sourceDayIndex].shifts?.filter((shift) => !(shift.role === sourceRole && shift.position === sourcePosition)) || []
+
+        scheduleToUpdate.days[destDayIndex].shifts =
+          scheduleToUpdate.days[destDayIndex].shifts?.filter((shift) => !(shift.role === role && shift.position === position)) || []
+
+        // Add employees to their new positions
+        scheduleToUpdate.days[destDayIndex].shifts.push({
           role,
           position,
-          employeeId
+          employeeId: sourceEmployee.employeeId
         })
+
+        if (destEmployee) {
+          scheduleToUpdate.days[sourceDayIndex].shifts.push({
+            role: sourceRole,
+            position: sourcePosition,
+            employeeId: destEmployee.employeeId
+          })
+        }
+      }
+      // Case 2: Removing an employee
+      else if (employeeId === null || employeeId === 'undefined') {
+        const dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
+        if (dayIndex !== -1) {
+          scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
+            (shift) => !(shift.role === role && shift.position === position)
+          )
+        }
+      }
+      // Case 3: Adding a new employee
+      else {
+        const dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
+        if (dayIndex !== -1) {
+          // Remove any existing employee in that position
+          scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
+            (shift) => !(shift.role === role && shift.position === position)
+          )
+          // Add the new employee
+          scheduleToUpdate.days[dayIndex].shifts.push({ role, position, employeeId })
+        }
       }
 
       await updateSchedule(scheduleToUpdate)
@@ -125,9 +164,9 @@ export function SchedulePage() {
     return employees.find((w) => w.id === shift.employeeId)
   }
 
-  const handleEmployeeClick = async (schedule, day, role, position) => {
+  const handleEmployeeClick = async (day, role, position) => {
     try {
-      await handleUpdateSchedule(schedule, null, day, role, position)
+      await handleUpdateSchedule(schedules, null, day, role, position)
     } catch (error) {
       console.error('Error removing employee:', error)
       toast.error('שגיאה בהסרת העובד')
@@ -181,7 +220,7 @@ export function SchedulePage() {
           )}
 
           <div className="flex gap-2 justify-end w-full">
-            <Button className="cursor-pointer hover:bg-[#BE202E] hover:text-white" onClick={() => handleClearBoard(schedule)} variant="outline">
+            <Button className="cursor-pointer hover:bg-[#BE202E] hover:text-white" onClick={() => handleClearBoard(schedules)} variant="outline">
               נקה סידור
             </Button>
             <Button onClick={handleShare} className="flex items-center gap-2 bg-green-500 hover:bg-green-600" disabled={isSharing}>

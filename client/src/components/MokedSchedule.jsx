@@ -25,23 +25,42 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
 
   const handleDragEnd = useCallback(
     async (result) => {
-      setIsDragging(false)
       if (!result.destination) return
+      setIsDragging(false)
 
       const { source, destination, draggableId } = result
 
-      const [destDay, destRole, destPosition] = destination.droppableId.split('-')
-
       try {
         if (draggableId.startsWith('inside_table_')) {
-          const [sourceDay, sourceRole, sourcePosition] = source.droppableId.split('-')
-          const employeeId = draggableId.split('_').pop()
+          // Parse source information
+          const [, , sourceDay, sourceRole, sourcePos] = draggableId.split('_')
+          const [destDay, destRole, destPosition] = destination.droppableId.split('-')
 
-          await onUpdateSchedule(schedules, null, sourceDay, sourceRole, parseInt(sourcePosition))
+          // Find the actual employee from current schedule
+          const currentSchedule = Array.isArray(schedules) ? schedules[0] : schedules
+          const sourceShift = currentSchedule?.days
+            ?.find((d) => d.name === sourceDay)
+            ?.shifts?.find((s) => s.role === sourceRole && s.position === parseInt(sourcePos))
 
-          await onUpdateSchedule(schedules, employeeId, destDay, destRole, parseInt(destPosition))
+          if (!sourceShift) return
+
+          const moveInfo = {
+            type: 'move',
+            sourceDay,
+            sourceRole,
+            sourcePosition: parseInt(sourcePos),
+            employeeId: sourceShift.employeeId,
+            destDay,
+            destRole,
+            destPosition: parseInt(destPosition)
+          }
+
+          await onUpdateSchedule(currentSchedule, moveInfo, destDay, destRole, parseInt(destPosition))
         } else {
-          await onUpdateSchedule(schedules, draggableId, destDay, destRole, parseInt(destPosition))
+          // Adding from employees list
+          const [destDay, destRole, destPosition] = destination.droppableId.split('-')
+          const currentSchedule = Array.isArray(schedules) ? schedules[0] : schedules
+          await onUpdateSchedule(currentSchedule, draggableId, destDay, destRole, parseInt(destPosition))
         }
       } catch (error) {
         console.error('Error in drag end:', error)
@@ -71,7 +90,7 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
             }}>
             {employee && (
               <Draggable
-                key={`${day}-${role}-${position}-${employee.id}`}
+                key={`${day}-${role}-${position}-${employee._id}`}
                 draggableId={`inside_table_${day}_${role}_${position}_${employee._id}`}
                 index={0}>
                 {(dragProvided, dragSnapshot) => (
@@ -82,7 +101,7 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
                           ref={dragProvided.innerRef}
                           {...dragProvided.draggableProps}
                           {...dragProvided.dragHandleProps}
-                          onClick={() => handleEmployeeClick(schedules, day, role, position)}
+                          onClick={() => handleEmployeeClick(day, role, position)}
                           className={`text-white text-xs font-medium rounded h-full flex items-center justify-center cursor-pointer hover:brightness-90 transition-all ${
                             dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
                           }`}
