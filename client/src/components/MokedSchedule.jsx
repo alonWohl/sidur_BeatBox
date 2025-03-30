@@ -6,8 +6,10 @@ import { useSelector } from 'react-redux'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { toast } from 'react-hot-toast'
 
-export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, handleWorkerClick }) {
-  const { user } = useSelector((storeState) => storeState.userModule)
+export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleEmployeeClick }) {
+  const { schedules } = useSelector((storeState) => storeState.scheduleModule)
+  const { employees } = useSelector((storeState) => storeState.employeeModule)
+
   const [isDragging, setIsDragging] = useState(false)
 
   const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
@@ -33,24 +35,24 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
       try {
         if (draggableId.startsWith('inside_table_')) {
           const [sourceDay, sourceRole, sourcePosition] = source.droppableId.split('-')
-          const workerId = draggableId.split('_').pop()
+          const employeeId = draggableId.split('_').pop()
 
-          await onUpdateSchedule(schedule, null, sourceDay, sourceRole, parseInt(sourcePosition))
+          await onUpdateSchedule(schedules, null, sourceDay, sourceRole, parseInt(sourcePosition))
 
-          await onUpdateSchedule(schedule, workerId, destDay, destRole, parseInt(destPosition))
+          await onUpdateSchedule(schedules, employeeId, destDay, destRole, parseInt(destPosition))
         } else {
-          await onUpdateSchedule(schedule, draggableId, destDay, destRole, parseInt(destPosition))
+          await onUpdateSchedule(schedules, draggableId, destDay, destRole, parseInt(destPosition))
         }
       } catch (error) {
         console.error('Error in drag end:', error)
         toast.error('שגיאה בעדכון המשמרת')
       }
     },
-    [onUpdateSchedule, schedule]
+    [onUpdateSchedule, schedules]
   )
 
   const renderCell = (day, role, position) => {
-    const worker = getAssignedWorker(schedule, day, role, position)
+    const employee = getAssignedEmployee(schedules, day, role, position)
     const cellId = `${day}-${role}-${position}`
 
     return (
@@ -61,16 +63,16 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
             {...provided.droppableProps}
             className={`text-center h-10 border border-gray-200 p-0 ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
             style={{
-              backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : worker ? worker.color : '',
+              backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : employee ? employee.color : '',
               minWidth: '70px',
               maxWidth: '100px',
               padding: snapshot.isDraggingOver ? '1px' : '2px',
               boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none'
             }}>
-            {worker && (
+            {employee && (
               <Draggable
-                key={`${day}-${role}-${position}-${worker._id}`}
-                draggableId={`inside_table_${day}_${role}_${position}_${worker._id}`}
+                key={`${day}-${role}-${position}-${employee.id}`}
+                draggableId={`inside_table_${day}_${role}_${position}_${employee._id}`}
                 index={0}>
                 {(dragProvided, dragSnapshot) => (
                   <TooltipProvider>
@@ -80,15 +82,15 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
                           ref={dragProvided.innerRef}
                           {...dragProvided.draggableProps}
                           {...dragProvided.dragHandleProps}
-                          onClick={() => handleWorkerClick(schedule, day, role, position)}
+                          onClick={() => handleEmployeeClick(schedules, day, role, position)}
                           className={`text-white text-xs font-medium rounded h-full flex items-center justify-center cursor-pointer hover:brightness-90 transition-all ${
                             dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
                           }`}
                           style={{
                             ...dragProvided.draggableProps.style,
-                            backgroundColor: worker.color
+                            backgroundColor: employee.color
                           }}>
-                          {worker.name}
+                          {employee.name}
                         </div>
                       </TooltipTrigger>
                       <TooltipContent dir="rtl" className="text-xs" sideOffset={5}>
@@ -113,8 +115,8 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
         <Droppable droppableId="workers-list" direction="horizontal">
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-1.5 text-white w-full">
-              {workers.map((worker, index) => (
-                <Draggable key={worker._id} draggableId={worker._id} index={index}>
+              {employees.map((employee, index) => (
+                <Draggable key={employee.id} draggableId={employee.id} index={index}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
@@ -122,10 +124,10 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
                       {...provided.dragHandleProps}
                       className={`p-1.5 rounded cursor-pointer text-xs w-16 text-center ${snapshot.isDragging ? 'shadow-xl' : ''}`}
                       style={{
-                        backgroundColor: worker.color,
+                        backgroundColor: employee.color,
                         ...provided.draggableProps.style
                       }}>
-                      {worker.name}
+                      {employee.name}
                     </div>
                   )}
                 </Draggable>
@@ -137,7 +139,7 @@ export function MokedSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, 
 
         <div
           className="w-full overflow-x-auto -mx-2"
-          id="schedule-table-for-share"
+          id="schedules-table-for-share"
           style={{ backgroundColor: isSharing ? '#ffffff' : 'transparent' }}>
           <Table dir="rtl" className="min-w-[600px]">
             <TableHeader>

@@ -1,7 +1,6 @@
 import { employeeService } from '../services/employee'
 import { store } from './store'
 import { ADD_EMPLOYEE, REMOVE_EMPLOYEE, SET_EMPLOYEES, SET_EMPLOYEE, UPDATE_EMPLOYEE } from './employee.reducer'
-import toast from 'react-hot-toast'
 
 export async function loadEmployees(filterBy) {
   try {
@@ -27,7 +26,6 @@ export async function removeEmployee(employeeId) {
   try {
     await employeeService.remove(employeeId)
     store.dispatch(getCmdRemoveEmployee(employeeId))
-    loadEmployees()
   } catch (err) {
     console.log('Cannot remove employee', err)
     throw err
@@ -53,6 +51,7 @@ export async function updateEmployee(employee) {
   try {
     const savedEmployee = await employeeService.save(employee)
     store.dispatch(getCmdUpdateEmployee(savedEmployee))
+
     return savedEmployee
   } catch (err) {
     console.log('Cannot save employee', err)

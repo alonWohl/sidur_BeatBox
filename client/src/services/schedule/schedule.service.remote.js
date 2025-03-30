@@ -25,13 +25,13 @@ async function remove(scheduleId) {
 }
 
 async function update(schedule) {
-  return httpService.put(`schedule/${schedule._id}`, schedule)
+  return httpService.put(`schedule/${schedule.branchId}`, schedule)
 }
 
 async function save(schedule) {
   var savedSchedule
-  if (schedule._id) {
-    savedSchedule = await httpService.put(`schedule/${schedule._id}`, schedule)
+  if (schedule.branchId) {
+    savedSchedule = await httpService.put(`schedule/${schedule.branchId}`, schedule)
   } else {
     savedSchedule = await httpService.post('schedule', schedule)
   }

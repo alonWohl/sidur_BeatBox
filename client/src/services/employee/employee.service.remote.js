@@ -21,8 +21,8 @@ async function remove(employeeId) {
 
 async function save(employee) {
   var savedEmployee
-  if (employee._id) {
-    savedEmployee = await httpService.put(`employee/${employee._id}`, employee)
+  if (employee.id) {
+    savedEmployee = await httpService.put(`employee/${employee.id}`, employee)
   } else {
     savedEmployee = await httpService.post('employee', employee)
   }

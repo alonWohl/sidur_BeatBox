@@ -7,8 +7,12 @@ export const ADD_SCHEDULE_MSG = 'ADD_SCHEDULE_MSG'
 export const SET_ERROR = 'SET_ERROR'
 
 const initialState = {
+  schedule: {
+    branchId: '',
+    branchName: '',
+    days: []
+  },
   schedules: [],
-  schedule: null,
   error: null
 }
 
@@ -23,16 +27,19 @@ export function scheduleReducer(state = initialState, action) {
       newState = { ...state, schedule: action.schedule }
       break
     case REMOVE_SCHEDULE:
-      const lastRemovedSchedule = state.schedules.find((schedule) => schedule._id === action.scheduleId)
-      schedules = state.schedules.filter((schedule) => schedule._id !== action.scheduleId)
+      const lastRemovedSchedule = state.find((schedule) => schedule.id === action.scheduleId)
+      schedules = state.schedules.filter((schedule) => schedule.id !== action.scheduleId)
       newState = { ...state, schedules, lastRemovedSchedule }
       break
     case ADD_SCHEDULE:
       newState = { ...state, schedules: [...state.schedules, action.schedule] }
       break
     case UPDATE_SCHEDULE:
-      schedules = state.schedules.map((schedule) => (schedule._id === action.schedule._id ? action.schedule : schedule))
-      newState = { ...state, schedules }
+      console.log('🚀 ~ scheduleReducer ~ action:', action)
+      newState = {
+        ...state,
+        schedules: { ...state.schedules, ...action.schedule }
+      }
       break
     case ADD_SCHEDULE_MSG:
       newState = { ...state, schedule: { ...state.schedule, msgs: [...(state.schedule.msgs || []), action.msg] } }

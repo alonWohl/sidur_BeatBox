@@ -4,9 +4,9 @@ import { toast } from 'react-hot-toast'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useSelector } from 'react-redux'
 
-export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing, handleWorkerClick }) {
-  const { workers } = useSelector((storeState) => storeState.workerModule)
-  console.log('🚀 ~ BranchSchedule ~ workers:', workers)
+export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleEmployeeClick }) {
+  const { employees } = useSelector((storeState) => storeState.employeeModule)
+
   const { schedule } = useSelector((storeState) => storeState.scheduleModule)
   const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
 
@@ -15,26 +15,18 @@ export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing,
 
     const { source, destination, draggableId } = result
 
-    if (destination.droppableId === 'trash') {
-      if (source.droppableId !== 'workers-list') {
-        const [sourceDay, sourceRole, sourcePosition] = source.droppableId.split('-')
-        await onUpdateSchedule(schedule, null, sourceDay, sourceRole, parseInt(sourcePosition))
-      }
-      return
-    }
-
     const [destDay, destRole, destPosition] = destination.droppableId.split('-')
 
     try {
       if (draggableId.startsWith('inside_table_')) {
         // Moving from within the table
         const [sourceDay, sourceRole, sourcePosition] = source.droppableId.split('-')
-        const workerId = draggableId.split('_').pop() // Get the last part which is the workerId
+        const employeeId = draggableId.split('_').pop() // Get the last part which is the employeeId
 
         // First remove from original position
         await onUpdateSchedule(schedule, null, sourceDay, sourceRole, parseInt(sourcePosition))
 
-        await onUpdateSchedule(schedule, workerId, destDay, destRole, parseInt(destPosition))
+        await onUpdateSchedule(schedule, employeeId, destDay, destRole, parseInt(destPosition))
       } else {
         await onUpdateSchedule(schedule, draggableId, destDay, destRole, parseInt(destPosition))
       }
@@ -45,7 +37,7 @@ export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing,
   }
 
   const renderCell = (day, role, position) => {
-    const worker = getAssignedWorker(schedule, day, role, position)
+    const employee = getAssignedEmployee(schedule, day, role, position)
     const cellId = `${day}-${role}-${position}`
 
     return (
@@ -56,16 +48,16 @@ export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing,
             {...provided.droppableProps}
             className={`text-center h-10 sm:h-12 border border-gray-200 p-0 ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
             style={{
-              backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : worker ? worker.color : '',
+              backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : employee ? employee.color : '',
               minWidth: '70px',
               maxWidth: '100px',
               padding: snapshot.isDraggingOver ? '1px sm:2px' : '2px sm:4px',
               boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none'
             }}>
-            {worker && (
+            {employee && (
               <Draggable
-                key={`${day}-${role}-${position}-${worker._id}`}
-                draggableId={`inside_table_${day}_${role}_${position}_${worker._id}`}
+                key={`${day}-${role}-${position}-${employee._id}`}
+                draggableId={`inside_table_${day}_${role}_${position}_${employee._id}`}
                 index={0}>
                 {(dragProvided, dragSnapshot) => (
                   <TooltipProvider>
@@ -75,15 +67,15 @@ export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing,
                           ref={dragProvided.innerRef}
                           {...dragProvided.draggableProps}
                           {...dragProvided.dragHandleProps}
-                          onClick={() => handleWorkerClick(schedule, day, role, position)}
+                          onClick={() => handleEmployeeClick(schedule, day, role, position)}
                           className={`text-white text-xs sm:text-sm font-medium rounded h-full flex items-center justify-center cursor-pointer hover:brightness-90 transition-all ${
                             dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
                           }`}
                           style={{
                             ...dragProvided.draggableProps.style,
-                            backgroundColor: worker.color
+                            backgroundColor: employee.color
                           }}>
-                          {worker.name}
+                          {employee.name}
                         </div>
                       </TooltipTrigger>
                       <TooltipContent dir="rtl" className="text-xs sm:text-sm" sideOffset={5}>
@@ -104,12 +96,12 @@ export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing,
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="flex flex-col items-center justify-center gap-2 sm:gap-4 p-2 sm:p-4 container mx-auto">
-        {/* Workers List */}
-        <Droppable droppableId="workers-list" direction="horizontal">
+        {/* Employees List */}
+        <Droppable droppableId="employees-list" direction="horizontal">
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-1.5 sm:gap-2 text-white w-full">
-              {workers.map((worker, index) => (
-                <Draggable key={worker._id} draggableId={worker._id} index={index}>
+              {employees.map((employee, index) => (
+                <Draggable key={employee._id} draggableId={employee._id} index={index}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
@@ -119,10 +111,10 @@ export function BranchSchedule({ getAssignedWorker, onUpdateSchedule, isSharing,
                         snapshot.isDragging ? 'shadow-xl' : ''
                       }`}
                       style={{
-                        backgroundColor: worker.color,
+                        backgroundColor: employee.color,
                         ...provided.draggableProps.style
                       }}>
-                      {worker.name}
+                      {employee.name}
                     </div>
                   )}
                 </Draggable>

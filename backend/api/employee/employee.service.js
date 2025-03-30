@@ -57,15 +57,20 @@ async function add(employee) {
   }
 }
 
-async function update(employeeId, employee) {
+async function update(employee) {
   const { loggedinUser } = asyncLocalStorage.getStore()
   const collection = await dbService.getCollection('branch')
+  const employeeToUpdate = {
+    id: employee.id,
+    name: employee.name,
+    color: employee.color
+  }
   try {
     const updatedEmployee = await collection.updateOne(
-      { _id: new ObjectId(loggedinUser._id), 'employees.id': employeeId },
-      { $set: { 'employees.$.name': employee.name, 'employees.$.color': employee.color } }
+      { username: loggedinUser.username, 'employees.id': employeeToUpdate.id },
+      { $set: { 'employees.$.name': employeeToUpdate.name, 'employees.$.color': employeeToUpdate.color } }
     )
-    return updatedEmployee
+    return employeeToUpdate
   } catch (err) {
     logger.error('Cannot update employee', err)
     throw err

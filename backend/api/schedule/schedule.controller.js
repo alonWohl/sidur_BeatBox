@@ -9,8 +9,6 @@ export async function getSchedules(req, res) {
       username: req.query.username || loggedinUser.username || ''
     }
 
-    console.log('🚀 ~ getSchedules ~ filterBy:', filterBy)
-
     const schedules = await scheduleService.query(filterBy)
 
     res.json(schedules)
@@ -58,14 +56,28 @@ export async function getSchedules(req, res) {
 // }
 
 export async function updateSchedule(req, res) {
+  const { id } = req.params
+
   const { body: schedule } = req
 
   try {
-    const updatedSchedule = await scheduleService.update(schedule)
+    const updatedSchedule = await scheduleService.update(id, schedule)
     res.json(updatedSchedule)
   } catch (err) {
     logger.error('Failed to update schedule', err)
     res.status(400).send({ err: 'Failed to update schedule' })
+  }
+}
+
+export async function addSchedule(req, res) {
+  const { body: schedule } = req
+
+  try {
+    const addedSchedule = await scheduleService.add(schedule)
+    res.json(addedSchedule)
+  } catch (err) {
+    logger.error('Failed to add schedule', err)
+    res.status(400).send({ err: 'Failed to add schedule' })
   }
 }
 

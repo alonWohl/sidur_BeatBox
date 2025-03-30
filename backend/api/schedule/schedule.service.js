@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb'
 import { logger } from '../../services/logger.service.js'
 import { dbService } from '../../services/db.service.js'
 import { asyncLocalStorage } from '../../services/als.service.js'
+import { makeId } from '../../services/util.service.js'
 
 export const scheduleService = {
   remove,
@@ -18,16 +19,15 @@ async function query(filterBy = { branch: '' }) {
     const collection = await dbService.getCollection('branch')
 
     if (loggedinUser.isAdmin) {
-      const filter = {
-        username: { $regex: filterBy.username, $options: 'i' }
-      }
-
-      const branches = await collection.find(filter).toArray()
-      return branches.map((branch) => ({
-        branchName: branch.name,
-        branchId: branch._id,
-        schedule: branch.schedule
-      }))
+      // const filter = {
+      //   username: { $regex: filterBy.username, $options: 'i' }
+      // }
+      // const branches = await collection.find(filter).toArray()
+      // return branches.map((branch) => ({
+      //   branchName: branch.name,
+      //   branchId: branch._id,
+      //   schedule: branch.schedule
+      // }))
     }
 
     const branch = await collection.findOne({
@@ -38,11 +38,14 @@ async function query(filterBy = { branch: '' }) {
       throw new Error('Branch not found')
     }
 
-    return {
-      branchName: branch.name,
+    const schedule = {
+      id: makeId(),
       branchId: branch._id,
-      schedule: branch.schedule
+      branchName: branch.name,
+      days: branch.schedule.days
     }
+
+    return schedule
   } catch (err) {
     logger.error('cannot find schedules', err)
     throw err
@@ -97,9 +100,10 @@ async function remove(scheduleId) {
 }
 
 async function add(schedule) {
+  const { loggedinUser } = asyncLocalStorage.getStore()
   try {
-    const collection = await dbService.getCollection('schedule')
-    await collection.insertOne(schedule)
+    const collection = await dbService.getCollection('branch')
+    await collection.updateOne({ username: loggedinUser.username }, { $push: { schedule: schedule } })
 
     return schedule
   } catch (err) {
@@ -108,43 +112,39 @@ async function add(schedule) {
   }
 }
 
-async function update(schedule, loggedInUser) {
+async function update(branchId, schedule) {
+  const { loggedinUser } = asyncLocalStorage.getStore()
   try {
     const collection = await dbService.getCollection('branch')
 
-    // Find the branch
     const branch = await collection.findOne({
-      _id: ObjectId.createFromHexString(schedule.branchId)
+      _id: new ObjectId(branchId)
     })
 
     if (!branch) {
       throw new Error('Branch not found')
     }
 
-    // Check permissions
-    if (!loggedInUser.isAdmin && loggedInUser.username !== branch.username) {
+    if (!loggedinUser.isAdmin && loggedinUser.username !== branch.username) {
       throw new Error('Unauthorized to update this schedule')
     }
 
-    // Update the schedule
-    await collection.updateOne(
-      { _id: ObjectId.createFromHexString(schedule.branchId) },
+    const scheduleToUpdate = {
+      days: schedule.days
+    }
+
+    const updatedSchedule = await collection.updateOne(
+      { _id: new ObjectId(branchId) },
       {
         $set: {
-          'schedule.days': schedule.days
+          'schedule.days': scheduleToUpdate.days
         }
       }
     )
 
-    return {
-      branchName: branch.name,
-      branchId: branch._id,
-      schedule: {
-        days: schedule.days
-      }
-    }
+    return scheduleToUpdate
   } catch (err) {
-    logger.error(`cannot update schedule for branch ${schedule.branchId}`, err)
+    logger.error(`cannot update schedule for branch ${branchId}`, err)
     throw err
   }
 }

@@ -2,6 +2,7 @@ import { dbService } from './db.service.js'
 import { authService } from '../api/auth/auth.service.js'
 import { userService } from '../api/branch/user.service.js'
 import { logger } from './logger.service.js'
+import { makeId } from './util.service.js'
 
 export async function initApp() {
   try {
@@ -51,16 +52,15 @@ export async function initApp() {
 
     for (const branchData of branches) {
       try {
-        // Step 1: Create the basic auth user
         const savedBranch = await authService.signup(branchData)
         logger.info(`Created branch auth: ${savedBranch.name}`)
 
-        // Step 2: Update with full branch data
         const branchFullData = {
           _id: savedBranch._id,
           employees: [],
           schedule: defaultSchedule
         }
+        // branchFullData.schedule.id = makeId()
 
         await userService.update(branchFullData)
         logger.info(`Updated branch data: ${savedBranch.name}`)

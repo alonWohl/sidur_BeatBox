@@ -51,7 +51,6 @@ export async function updateSchedule(schedule) {
   try {
     const savedSchedule = await scheduleService.save(schedule)
     store.dispatch(getCmdUpdateSchedule(savedSchedule))
-    store.dispatch(getCmdSetSchedule(savedSchedule))
     return savedSchedule
   } catch (err) {
     console.log('Cannot save schedule', err)

@@ -45,14 +45,17 @@ export async function addEmployee(req, res) {
 
 export async function updateEmployee(req, res) {
   const { loggedinUser } = req
+  const { id } = req.params
+  console.log('🚀 ~ updateEmployee ~ id:', id)
 
   const employeeToUpdate = {
+    id: id,
     name: req.body.name,
     color: req.body.color,
     branch: req.body.branch || loggedinUser.name
   }
   try {
-    const employee = await employeeService.update(loggedinUser.branchId, req.params.id, employeeToUpdate)
+    const employee = await employeeService.update(employeeToUpdate)
     res.json(employee)
   } catch (err) {
     logger.error('Failed to update employee', err)

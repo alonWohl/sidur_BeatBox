@@ -22,15 +22,15 @@ export function employeeReducer(state = initialState, action) {
       newState = { ...state, employee: action.employee }
       break
     case REMOVE_EMPLOYEE:
-      const lastRemovedEmployee = state.employees.find((employee) => employee._id === action.employeeId)
-      employees = state.employees.filter((employee) => employee._id !== action.employeeId)
+      const lastRemovedEmployee = state.employees.find((employee) => employee.id === action.employeeId)
+      employees = state.employees.filter((employee) => employee.id !== action.employeeId)
       newState = { ...state, employees, lastRemovedEmployee }
       break
     case ADD_EMPLOYEE:
       newState = { ...state, employees: [...state.employees, action.employee] }
       break
     case UPDATE_EMPLOYEE:
-      employees = state.employees.map((employee) => (employee._id === action.employee._id ? action.employee : employee))
+      employees = state.employees.map((employee) => (employee.id === action.employee.id ? action.employee : employee))
       newState = { ...state, employees }
       break
     case SET_ERROR:
