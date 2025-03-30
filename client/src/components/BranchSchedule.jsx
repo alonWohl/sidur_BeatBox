@@ -3,11 +3,15 @@ import { useSelector } from 'react-redux'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { toast } from 'react-hot-toast'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { EmployeesList } from '@/components/EmployeesList'
 import { EmployeeCell } from '@/components/EmployeeCell'
 
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+const ROLES = {
+  manager: { name: 'אחמ"ש', positions: 1 },
+  waiters: { name: 'מלצרים', positions: 5 },
+  cooks: { name: 'טבחים', positions: 6 }
+}
 
 export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleEmployeeClick }) {
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
@@ -71,15 +75,16 @@ export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharin
       return (
         <Droppable key={cellId} droppableId={cellId}>
           {(provided, snapshot) => (
-            <TableCell
+            <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className={`text-center h-10 sm:h-12 border border-gray-200 p-0 ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+              className={`text-center border border-gray-200 ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
               style={{
                 backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : employee ? employee.color : '',
-                minWidth: '70px',
-                maxWidth: '100px',
-                padding: snapshot.isDraggingOver ? '1px sm:2px' : '2px sm:4px',
+                height: '40px',
+                width: '100%',
+                padding: 0,
+                margin: 0,
                 boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none'
               }}>
               {employee && (
@@ -98,7 +103,7 @@ export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharin
                 </Draggable>
               )}
               {provided.placeholder}
-            </TableCell>
+            </div>
           )}
         </Droppable>
       )
@@ -106,70 +111,66 @@ export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharin
     [getAssignedEmployee, currentSchedule, handleEmployeeClick]
   )
 
+  const renderRoleRows = (role, roleConfig) => {
+    return Array.from({ length: roleConfig.positions }, (_, index) => {
+      const position = index + 1
+      return (
+        <TableRow key={`${role}-${position}`}>
+          <TableCell
+            className={`text-center font-medium bg-gray-50 border-l text-sm sm:text-base sticky right-0 z-10 ${position === 1 ? '' : 'border-t-0'}`}>
+            {position === 1 ? roleConfig.name : ''}
+          </TableCell>
+          {DAYS.map((day) => (
+            <TableCell key={`${day}-${role}-${position}`} className={`${position === 1 ? '' : 'border-t-0'}`}>
+              {renderCell(day, role, position)}
+            </TableCell>
+          ))}
+        </TableRow>
+      )
+    })
+  }
+
   if (!currentSchedule) {
     return <div>Loading schedule...</div>
   }
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex flex-col items-center justify-center gap-2 sm:gap-4 p-2 sm:p-4 container mx-auto">
+      <div className="flex flex-col p-1 container mx-auto">
         <EmployeesList employees={employees} />
 
-        <div
-          className="w-full overflow-x-auto -mx-2 sm:mx-0"
-          id="schedule-table-for-share"
-          style={{ backgroundColor: isSharing ? '#ffffff' : 'transparent' }}>
-          <Table dir="rtl" className="min-w-[600px]">
+        <div className="w-full overflow-x-auto" id="schedule-table-for-share" style={{ backgroundColor: isSharing ? '#ffffff' : 'transparent' }}>
+          <Table className="w-full border-collapse" dir="rtl">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center font-medium text-sm sm:text-base sticky right-0 z-10 bg-gray-50">תפקיד</TableHead>
+                <th className="text-center text-base sticky right-0 z-10 bg-gray-50 w-28 border border-gray-200 p-2">תפקיד</th>
                 {DAYS.map((day) => (
-                  <TableHead key={day} className="text-center font-medium text-sm sm:text-base whitespace-nowrap">
+                  <th key={day} className="text-center text-base whitespace-nowrap border border-gray-200 p-2" style={{ width: '120px' }}>
                     {day}
-                  </TableHead>
+                  </th>
                 ))}
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {/* Shift Manager */}
-              <TableRow>
-                <TableCell className="text-center font-medium bg-gray-50 border-l text-sm sm:text-base sticky right-0 z-10 whitespace-nowrap">
-                  אחמ"ש
-                </TableCell>
-                {DAYS.map((day) => renderCell(day, 'אחמש', 1))}
-              </TableRow>
-
-              {/* Waiters */}
-              <TableRow>
-                <TableCell
-                  rowSpan={5}
-                  className="text-center font-medium bg-gray-50 border-l text-sm sm:text-base sticky right-0 z-10 whitespace-nowrap">
-                  מלצרים
-                </TableCell>
-                {DAYS.map((day) => renderCell(day, 'מלצרים', 1))}
-              </TableRow>
-              {[2, 3, 4, 5].map((position) => (
-                <TableRow key={`waiter-${position}`}>{DAYS.map((day) => renderCell(day, 'מלצרים', position))}</TableRow>
-              ))}
+              {/* Manager Section */}
+              {renderRoleRows('אחמש', ROLES.manager)}
 
               {/* Separator */}
               <TableRow>
-                <TableCell colSpan={DAYS.length + 1} className="h-1 p-0 bg-gray-300" />
+                <TableCell colSpan={DAYS.length + 1} className="h-0.5 p-0 bg-gray-300" />
               </TableRow>
 
-              {/* Cooks */}
+              {/* Waiters Section */}
+              {renderRoleRows('מלצרים', ROLES.waiters)}
+
+              {/* Separator */}
               <TableRow>
-                <TableCell
-                  rowSpan={3}
-                  className="text-center font-medium bg-gray-50 border-l text-sm sm:text-base sticky right-0 z-10 whitespace-nowrap">
-                  טבחים
-                </TableCell>
-                {DAYS.map((day) => renderCell(day, 'טבחים', 1))}
+                <TableCell colSpan={DAYS.length + 1} className="h-0.5 p-0 bg-gray-300" />
               </TableRow>
-              {[2, 3].map((position) => (
-                <TableRow key={`cook-${position}`}>{DAYS.map((day) => renderCell(day, 'טבחים', position))}</TableRow>
-              ))}
+
+              {/* Cooks Section */}
+              {renderRoleRows('טבחים', ROLES.cooks)}
             </TableBody>
           </Table>
         </div>

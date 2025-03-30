@@ -10,7 +10,7 @@ export function EmployeeCell({ employee, dragProvided, dragSnapshot, onClick, sh
             {...dragProvided.draggableProps}
             {...dragProvided.dragHandleProps}
             onClick={onClick}
-            className={`text-white text-xs sm:text-sm font-medium rounded h-full flex items-center justify-center cursor-pointer hover:brightness-90 transition-all ${
+            className={`text-white text-sm font-medium h-full flex items-center justify-center cursor-pointer hover:brightness-90 ${
               dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
             }`}
             style={{

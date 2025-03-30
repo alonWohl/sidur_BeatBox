@@ -1,3 +1,4 @@
+import { userService } from '@/services/branch'
 import { store } from './store'
 
 export const LOADING_START = 'LOADING_START'
@@ -8,7 +9,7 @@ const initialState = {
   isLoading: false,
   filterBy: {
     branch: '',
-    username: null
+    username: userService.getLoggedinUser()?.username
   }
 }
 

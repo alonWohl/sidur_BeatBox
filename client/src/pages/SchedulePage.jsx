@@ -17,7 +17,7 @@ export function SchedulePage() {
 
   const { filterBy } = useSelector((storeState) => storeState.systemModule)
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
-  console.log('🚀 ~ SchedulePage ~ schedules:', schedules)
+
   const { employees } = useSelector((storeState) => storeState.employeeModule)
 
   const [isUpdating, setIsUpdating] = useState(false)

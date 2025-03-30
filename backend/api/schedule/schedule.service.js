@@ -13,7 +13,7 @@ export const scheduleService = {
   getEmptySchedule
 }
 
-async function query(filterBy = { branch: '' }) {
+async function query(filterBy = { branch: '', username: '' }) {
   const { loggedinUser } = asyncLocalStorage.getStore()
   try {
     const collection = await dbService.getCollection('branch')

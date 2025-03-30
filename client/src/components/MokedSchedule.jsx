@@ -15,8 +15,11 @@ const SHIFT_NAMES = {
   noon: 'צהריים',
   evening: 'ערב'
 }
+const POSITIONS_PER_SHIFT = 4
 
-export function MokedSchedule({ schedules, employees, getAssignedEmployee, onUpdateSchedule, isSharing, handleEmployeeClick }) {
+export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleEmployeeClick }) {
+  const { schedules } = useSelector((storeState) => storeState.scheduleModule)
+  const { employees } = useSelector((storeState) => storeState.employeeModule)
   const currentSchedule = Array.isArray(schedules) ? schedules[0] : schedules
 
   const handleDragEnd = useCallback(
@@ -76,15 +79,14 @@ export function MokedSchedule({ schedules, employees, getAssignedEmployee, onUpd
       return (
         <Droppable key={cellId} droppableId={cellId}>
           {(provided, snapshot) => (
-            <TableCell
+            <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className={`text-center h-10 sm:h-12 border border-gray-200 p-0 ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+              className={`text-center h-10 border border-gray-200 ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
               style={{
                 backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : employee ? employee.color : '',
-                minWidth: '70px',
-                maxWidth: '100px',
-                padding: snapshot.isDraggingOver ? '1px sm:2px' : '2px sm:4px',
+                minWidth: '80px',
+                padding: snapshot.isDraggingOver ? '1px' : '1px',
                 boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none'
               }}>
               {employee && (
@@ -103,21 +105,12 @@ export function MokedSchedule({ schedules, employees, getAssignedEmployee, onUpd
                 </Draggable>
               )}
               {provided.placeholder}
-            </TableCell>
+            </div>
           )}
         </Droppable>
       )
     },
     [getAssignedEmployee, currentSchedule, handleEmployeeClick]
-  )
-
-  const renderShiftRows = (shift) => (
-    <TableRow key={shift}>
-      <TableCell className="text-center font-medium bg-gray-50 border-l text-sm sm:text-base sticky right-0 z-10">{SHIFT_NAMES[shift]}</TableCell>
-      {DAYS.map((day) => (
-        <React.Fragment key={`${day}-${shift}`}>{[1, 2, 3].map((position) => renderCell(day, shift, position))}</React.Fragment>
-      ))}
-    </TableRow>
   )
 
   if (!currentSchedule) {
@@ -126,36 +119,47 @@ export function MokedSchedule({ schedules, employees, getAssignedEmployee, onUpd
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex flex-col items-center justify-center gap-2 sm:gap-4 p-2 sm:p-4 container mx-auto">
+      <div className="flex flex-col items-center justify-center gap-4 p-1 container mx-auto">
         <EmployeesList employees={employees} />
 
         <div
-          className="w-full overflow-x-auto -mx-2 sm:mx-0"
+          className="w-full overflow-x-auto -mx-1"
           id="schedule-table-for-share"
           style={{ backgroundColor: isSharing ? '#ffffff' : 'transparent' }}>
-          <Table dir="rtl" className="min-w-[600px]">
+          <Table dir="rtl" className="min-w-[650px]">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center font-medium text-sm sm:text-base sticky right-0 z-10 bg-gray-50">משמרת</TableHead>
+                <TableHead className="text-center font-medium text-sm sticky right-0 z-10 bg-gray-50 p-1">משמרת</TableHead>
                 {DAYS.map((day) => (
-                  <TableHead key={day} className="text-center font-medium text-sm sm:text-base whitespace-nowrap" colSpan={3}>
+                  <TableHead key={day} className="text-center font-medium text-sm whitespace-nowrap p-2">
                     {day}
                   </TableHead>
                 ))}
               </TableRow>
-              <TableRow>
-                <TableHead className="text-center font-medium text-sm sm:text-base sticky right-0 z-10 bg-gray-50" />
-                {DAYS.map((day) => (
-                  <React.Fragment key={`${day}-positions`}>
-                    <TableHead className="text-center font-medium text-xs">1</TableHead>
-                    <TableHead className="text-center font-medium text-xs">2</TableHead>
-                    <TableHead className="text-center font-medium text-xs">3</TableHead>
-                  </React.Fragment>
-                ))}
-              </TableRow>
             </TableHeader>
 
-            <TableBody>{SHIFTS.map(renderShiftRows)}</TableBody>
+            <TableBody>
+              {SHIFTS.flatMap((shift) =>
+                Array.from({ length: POSITIONS_PER_SHIFT }, (_, index) => {
+                  const position = index + 1
+                  return (
+                    <TableRow key={`${shift}-${position}`} className="h-10">
+                      <TableCell
+                        className={`text-center font-medium bg-gray-50 border-l text-sm sticky right-0 z-10 p-1 ${
+                          position === 1 ? '' : 'border-t-0'
+                        }`}>
+                        {position === 1 ? SHIFT_NAMES[shift] : ''}
+                      </TableCell>
+                      {DAYS.map((day) => (
+                        <TableCell key={`${day}-${shift}-${position}`} className={`p-2 ${position === 1 ? '' : 'border-t-0'}`}>
+                          {renderCell(day, shift, position)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
           </Table>
         </div>
       </div>
