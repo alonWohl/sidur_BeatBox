@@ -1,6 +1,5 @@
-import React, { useState, useCallback } from 'react'
+import React, { useCallback } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 import { useSelector } from 'react-redux'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
@@ -26,7 +25,7 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
     async (result) => {
       if (!result.destination || !currentSchedule) return
 
-      const { source, destination, draggableId } = result
+      const { destination, draggableId } = result
 
       try {
         if (draggableId.startsWith('inside_table_')) {
