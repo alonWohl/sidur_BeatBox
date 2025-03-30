@@ -1,128 +1,119 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useCallback } from 'react'
+import { useSelector } from 'react-redux'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { toast } from 'react-hot-toast'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { useSelector } from 'react-redux'
+import { EmployeesList } from '@/components/EmployeesList'
+import { EmployeeCell } from '@/components/EmployeeCell'
+
+const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
 
 export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleEmployeeClick }) {
+  const { schedules } = useSelector((storeState) => storeState.scheduleModule)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
+  const currentSchedule = Array.isArray(schedules) ? schedules[0] : schedules
 
-  const { schedule } = useSelector((storeState) => storeState.scheduleModule)
-  const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+  const handleDragEnd = useCallback(
+    async (result) => {
+      if (!result.destination || !currentSchedule) return
 
-  const handleDragEnd = async (result) => {
-    if (!result.destination) return
+      const { source, destination, draggableId } = result
 
-    const { source, destination, draggableId } = result
+      try {
+        if (draggableId.startsWith('inside_table_')) {
+          await handleInternalMove(draggableId, destination)
+        } else {
+          await handleNewEmployee(draggableId, destination)
+        }
+      } catch (error) {
+        console.error('Error in drag end:', error)
+        toast.error('שגיאה בעדכון המשמרת')
+      }
+    },
+    [onUpdateSchedule, currentSchedule]
+  )
 
+  const handleInternalMove = async (draggableId, destination) => {
+    const [, , sourceDay, sourceRole, sourcePos] = draggableId.split('_')
     const [destDay, destRole, destPosition] = destination.droppableId.split('-')
 
-    try {
-      if (draggableId.startsWith('inside_table_')) {
-        // Moving from within the table
-        const [sourceDay, sourceRole, sourcePosition] = source.droppableId.split('-')
-        const employeeId = draggableId.split('_').pop() // Get the last part which is the employeeId
+    const sourceShift = currentSchedule.days
+      ?.find((d) => d.name === sourceDay)
+      ?.shifts?.find((s) => s.role === sourceRole && s.position === parseInt(sourcePos))
 
-        // First remove from original position
-        await onUpdateSchedule(schedule, null, sourceDay, sourceRole, parseInt(sourcePosition))
+    if (!sourceShift) return
 
-        await onUpdateSchedule(schedule, employeeId, destDay, destRole, parseInt(destPosition))
-      } else {
-        await onUpdateSchedule(schedule, draggableId, destDay, destRole, parseInt(destPosition))
-      }
-    } catch (error) {
-      console.error('Error in drag end:', error)
-      toast.error('שגיאה בעדכון המשמרת')
+    const moveInfo = {
+      type: 'move',
+      sourceDay,
+      sourceRole,
+      sourcePosition: parseInt(sourcePos),
+      employeeId: sourceShift.employeeId,
+      destDay,
+      destRole,
+      destPosition: parseInt(destPosition)
     }
+
+    await onUpdateSchedule(currentSchedule, moveInfo, destDay, destRole, parseInt(destPosition))
   }
 
-  const renderCell = (day, role, position) => {
-    const employee = getAssignedEmployee(schedule, day, role, position)
-    const cellId = `${day}-${role}-${position}`
+  const handleNewEmployee = async (employeeId, destination) => {
+    const [destDay, destRole, destPosition] = destination.droppableId.split('-')
+    await onUpdateSchedule(currentSchedule, employeeId, destDay, destRole, parseInt(destPosition))
+  }
 
-    return (
-      <Droppable key={cellId} droppableId={cellId}>
-        {(provided, snapshot) => (
-          <TableCell
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className={`text-center h-10 sm:h-12 border border-gray-200 p-0 ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-            style={{
-              backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : employee ? employee.color : '',
-              minWidth: '70px',
-              maxWidth: '100px',
-              padding: snapshot.isDraggingOver ? '1px sm:2px' : '2px sm:4px',
-              boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none'
-            }}>
-            {employee && (
-              <Draggable
-                key={`${day}-${role}-${position}-${employee._id}`}
-                draggableId={`inside_table_${day}_${role}_${position}_${employee._id}`}
-                index={0}>
-                {(dragProvided, dragSnapshot) => (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div
-                          ref={dragProvided.innerRef}
-                          {...dragProvided.draggableProps}
-                          {...dragProvided.dragHandleProps}
-                          onClick={() => handleEmployeeClick(schedule, day, role, position)}
-                          className={`text-white text-xs sm:text-sm font-medium rounded h-full flex items-center justify-center cursor-pointer hover:brightness-90 transition-all ${
-                            dragSnapshot.isDragging ? 'opacity-75 bg-blue-500' : ''
-                          }`}
-                          style={{
-                            ...dragProvided.draggableProps.style,
-                            backgroundColor: employee.color
-                          }}>
-                          {employee.name}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent dir="rtl" className="text-xs sm:text-sm" sideOffset={5}>
-                        <p>לחץ להסרה</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </Draggable>
-            )}
-            {provided.placeholder}
-          </TableCell>
-        )}
-      </Droppable>
-    )
+  const renderCell = useCallback(
+    (day, role, position) => {
+      const employee = getAssignedEmployee(currentSchedule, day, role, position)
+      const cellId = `${day}-${role}-${position}`
+
+      return (
+        <Droppable key={cellId} droppableId={cellId}>
+          {(provided, snapshot) => (
+            <TableCell
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className={`text-center h-10 sm:h-12 border border-gray-200 p-0 ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+              style={{
+                backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : employee ? employee.color : '',
+                minWidth: '70px',
+                maxWidth: '100px',
+                padding: snapshot.isDraggingOver ? '1px sm:2px' : '2px sm:4px',
+                boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none'
+              }}>
+              {employee && (
+                <Draggable
+                  key={`inside_table_${day}_${role}_${position}_${employee.id}`}
+                  draggableId={`inside_table_${day}_${role}_${position}_${employee.id}`}
+                  index={0}>
+                  {(dragProvided, dragSnapshot) => (
+                    <EmployeeCell
+                      employee={employee}
+                      dragProvided={dragProvided}
+                      dragSnapshot={dragSnapshot}
+                      onClick={() => handleEmployeeClick(day, role, position)}
+                    />
+                  )}
+                </Draggable>
+              )}
+              {provided.placeholder}
+            </TableCell>
+          )}
+        </Droppable>
+      )
+    },
+    [getAssignedEmployee, currentSchedule, handleEmployeeClick]
+  )
+
+  if (!currentSchedule) {
+    return <div>Loading schedule...</div>
   }
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="flex flex-col items-center justify-center gap-2 sm:gap-4 p-2 sm:p-4 container mx-auto">
-        {/* Employees List */}
-        <Droppable droppableId="employees-list" direction="horizontal">
-          {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-wrap gap-1.5 sm:gap-2 text-white w-full">
-              {employees.map((employee, index) => (
-                <Draggable key={employee._id} draggableId={employee._id} index={index}>
-                  {(provided, snapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      className={`p-1.5 sm:p-2 rounded cursor-pointer text-sm sm:text-base w-16 sm:w-20 text-center ${
-                        snapshot.isDragging ? 'shadow-xl' : ''
-                      }`}
-                      style={{
-                        backgroundColor: employee.color,
-                        ...provided.draggableProps.style
-                      }}>
-                      {employee.name}
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
+        <EmployeesList employees={employees} />
 
         <div
           className="w-full overflow-x-auto -mx-2 sm:mx-0"
@@ -132,7 +123,7 @@ export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharin
             <TableHeader>
               <TableRow>
                 <TableHead className="text-center font-medium text-sm sm:text-base sticky right-0 z-10 bg-gray-50">תפקיד</TableHead>
-                {days.map((day) => (
+                {DAYS.map((day) => (
                   <TableHead key={day} className="text-center font-medium text-sm sm:text-base whitespace-nowrap">
                     {day}
                   </TableHead>
@@ -141,52 +132,46 @@ export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharin
             </TableHeader>
 
             <TableBody>
-              {/* Shift Manager section */}
+              {/* Shift Manager */}
               <TableRow>
                 <TableCell className="text-center font-medium bg-gray-50 border-l text-sm sm:text-base sticky right-0 z-10 whitespace-nowrap">
                   אחמ"ש
                 </TableCell>
-                {days.map((day) => renderCell(day, 'אחמש', 1))}
+                {DAYS.map((day) => renderCell(day, 'אחמש', 1))}
               </TableRow>
 
-              {/* Waiters section */}
+              {/* Waiters */}
               <TableRow>
                 <TableCell
                   rowSpan={5}
                   className="text-center font-medium bg-gray-50 border-l text-sm sm:text-base sticky right-0 z-10 whitespace-nowrap">
                   מלצרים
                 </TableCell>
-                {days.map((day) => renderCell(day, 'מלצרים', 1))}
+                {DAYS.map((day) => renderCell(day, 'מלצרים', 1))}
               </TableRow>
-
               {[2, 3, 4, 5].map((position) => (
-                <TableRow key={`waiter-row-${position}`}>{days.map((day) => renderCell(day, 'מלצרים', position))}</TableRow>
+                <TableRow key={`waiter-${position}`}>{DAYS.map((day) => renderCell(day, 'מלצרים', position))}</TableRow>
               ))}
 
-              {/* Separator row */}
+              {/* Separator */}
               <TableRow>
-                <TableCell colSpan={days.length + 1} className="h-1 p-0 bg-gray-300"></TableCell>
+                <TableCell colSpan={DAYS.length + 1} className="h-1 p-0 bg-gray-300" />
               </TableRow>
 
-              {/* Cooks section */}
+              {/* Cooks */}
               <TableRow>
                 <TableCell
                   rowSpan={3}
                   className="text-center font-medium bg-gray-50 border-l text-sm sm:text-base sticky right-0 z-10 whitespace-nowrap">
                   טבחים
                 </TableCell>
-                {days.map((day) => renderCell(day, 'טבחים', 1))}
+                {DAYS.map((day) => renderCell(day, 'טבחים', 1))}
               </TableRow>
-
               {[2, 3].map((position) => (
-                <TableRow key={`cook-row-${position}`}>{days.map((day) => renderCell(day, 'טבחים', position))}</TableRow>
+                <TableRow key={`cook-${position}`}>{DAYS.map((day) => renderCell(day, 'טבחים', position))}</TableRow>
               ))}
             </TableBody>
           </Table>
-
-          <div className="mt-2 sm:mt-4 text-right text-xs sm:text-sm text-gray-500">
-            <p>גרור עובד לתא הרצוי</p>
-          </div>
         </div>
       </div>
     </DragDropContext>

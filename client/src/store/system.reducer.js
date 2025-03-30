@@ -8,7 +8,7 @@ const initialState = {
   isLoading: false,
   filterBy: {
     branch: '',
-    username: ''
+    username: null
   }
 }
 

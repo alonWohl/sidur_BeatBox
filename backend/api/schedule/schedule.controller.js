@@ -10,6 +10,7 @@ export async function getSchedules(req, res) {
     }
 
     const schedules = await scheduleService.query(filterBy)
+    console.log('🚀 ~ getSchedules ~ schedules:', schedules)
 
     res.json(schedules)
   } catch (err) {

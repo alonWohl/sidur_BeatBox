@@ -16,9 +16,8 @@ export function SchedulePage() {
   const { user } = useSelector((storeState) => storeState.userModule)
 
   const { filterBy } = useSelector((storeState) => storeState.systemModule)
-  console.log('🚀 ~ SchedulePage ~ filterBy:', filterBy)
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
-
+  console.log('🚀 ~ SchedulePage ~ schedules:', schedules)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
 
   const [isUpdating, setIsUpdating] = useState(false)
@@ -57,44 +56,69 @@ export function SchedulePage() {
   }
 
   const handleUpdateSchedule = async (schedule, employeeId, day, role, position) => {
-    if (!schedule) return
+    if (!schedule || !schedule.id) {
+      console.error('Invalid schedule:', { schedule })
+      return
+    }
 
     try {
       setIsUpdating(true)
       const scheduleToUpdate = JSON.parse(JSON.stringify(schedule))
+      const positionNum = parseInt(position)
 
-      // Case 1: Moving/Swapping employees within the schedule
-      if (employeeId?.type === 'move') {
+      console.log('Starting update with:', {
+        employeeId,
+        day,
+        role,
+        position: positionNum,
+        scheduleId: schedule.id
+      })
+
+      // Find or create the day
+      let dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
+      if (dayIndex === -1) {
+        console.log('Creating new day:', day)
+        dayIndex = scheduleToUpdate.days.push({ name: day, shifts: [] }) - 1
+      }
+
+      // Ensure shifts array exists
+      if (!scheduleToUpdate.days[dayIndex].shifts) {
+        scheduleToUpdate.days[dayIndex].shifts = []
+      }
+
+      if (employeeId && typeof employeeId === 'object' && employeeId.type === 'move') {
         const { sourceDay, sourceRole, sourcePosition, employeeId: actualEmployeeId } = employeeId
+        console.log('Moving employee:', { sourceDay, sourceRole, sourcePosition, actualEmployeeId })
 
-        // Find days in schedule
+        // Find source and destination days
         const sourceDayIndex = scheduleToUpdate.days.findIndex((d) => d.name === sourceDay)
-        const destDayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
 
-        if (sourceDayIndex === -1 || destDayIndex === -1) return
+        if (sourceDayIndex === -1) return
 
         // Get employees at both positions
-        const sourceEmployee = scheduleToUpdate.days[sourceDayIndex].shifts?.find(
+        const sourceEmployee = scheduleToUpdate.days[sourceDayIndex].shifts.find(
           (shift) => shift.role === sourceRole && shift.position === sourcePosition
         )
-        const destEmployee = scheduleToUpdate.days[destDayIndex].shifts?.find((shift) => shift.role === role && shift.position === position)
+        const destEmployee = scheduleToUpdate.days[dayIndex].shifts.find((shift) => shift.role === role && shift.position === positionNum)
 
-        if (!sourceEmployee) return
+        // Remove source employee
+        scheduleToUpdate.days[sourceDayIndex].shifts = scheduleToUpdate.days[sourceDayIndex].shifts.filter(
+          (shift) => !(shift.role === sourceRole && shift.position === sourcePosition)
+        )
 
-        // Remove employees from their current positions
-        scheduleToUpdate.days[sourceDayIndex].shifts =
-          scheduleToUpdate.days[sourceDayIndex].shifts?.filter((shift) => !(shift.role === sourceRole && shift.position === sourcePosition)) || []
+        // Remove destination employee if exists
+        scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
+          (shift) => !(shift.role === role && shift.position === positionNum)
+        )
 
-        scheduleToUpdate.days[destDayIndex].shifts =
-          scheduleToUpdate.days[destDayIndex].shifts?.filter((shift) => !(shift.role === role && shift.position === position)) || []
-
-        // Add employees to their new positions
-        scheduleToUpdate.days[destDayIndex].shifts.push({
+        // Add source employee to destination
+        scheduleToUpdate.days[dayIndex].shifts.push({
           role,
-          position,
-          employeeId: sourceEmployee.employeeId
+          position: positionNum,
+          employeeId: actualEmployeeId
         })
 
+        // Move destination employee to source if exists
         if (destEmployee) {
           scheduleToUpdate.days[sourceDayIndex].shifts.push({
             role: sourceRole,
@@ -102,30 +126,49 @@ export function SchedulePage() {
             employeeId: destEmployee.employeeId
           })
         }
-      }
-      // Case 2: Removing an employee
-      else if (employeeId === null || employeeId === 'undefined') {
-        const dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
-        if (dayIndex !== -1) {
-          scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
-            (shift) => !(shift.role === role && shift.position === position)
-          )
+      } else if (employeeId === null || employeeId === 'undefined') {
+        // Remove employee
+        scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
+          (shift) => !(shift.role === role && shift.position === positionNum)
+        )
+      } else {
+        // Add new employee
+        console.log('Current shifts before update:', scheduleToUpdate.days[dayIndex].shifts)
+
+        // Remove any existing employee in that position
+        scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
+          (shift) => !(shift.role === role && shift.position === positionNum)
+        )
+
+        // Add the new employee
+        const newShift = {
+          role,
+          position: positionNum,
+          employeeId
         }
-      }
-      // Case 3: Adding a new employee
-      else {
-        const dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
-        if (dayIndex !== -1) {
-          // Remove any existing employee in that position
-          scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
-            (shift) => !(shift.role === role && shift.position === position)
-          )
-          // Add the new employee
-          scheduleToUpdate.days[dayIndex].shifts.push({ role, position, employeeId })
-        }
+
+        scheduleToUpdate.days[dayIndex].shifts.push(newShift)
+
+        console.log('Added new shift:', newShift)
+        console.log('Updated shifts:', scheduleToUpdate.days[dayIndex].shifts)
       }
 
+      // Verify the update before saving
+      const updatedDay = scheduleToUpdate.days[dayIndex]
+      console.log('Day after update:', {
+        name: updatedDay.name,
+        shiftsCount: updatedDay.shifts.length,
+        shifts: updatedDay.shifts
+      })
+
+      console.log('Saving schedule:', {
+        id: scheduleToUpdate.id,
+        branchId: scheduleToUpdate.branchId,
+        daysCount: scheduleToUpdate.days.length
+      })
+
       await updateSchedule(scheduleToUpdate)
+      console.log('Schedule updated successfully')
     } catch (error) {
       console.error('Error updating schedule:', error)
       toast.error('שגיאה בעדכון המשמרת')
@@ -231,17 +274,15 @@ export function SchedulePage() {
         </div>
       </div>
 
-      {user.username === 'moked' && (
+      {filterBy.username === 'moked' && (
         <MokedSchedule
-          schedule={schedules}
-          employees={employees}
           getAssignedEmployee={getAssignedEmployee}
           onUpdateSchedule={handleUpdateSchedule}
           isSharing={isSharing}
           handleEmployeeClick={handleEmployeeClick}
         />
       )}
-      {user.username !== 'moked' && (
+      {filterBy.username !== 'moked' && (
         <BranchSchedule
           getAssignedEmployee={getAssignedEmployee}
           onUpdateSchedule={handleUpdateSchedule}
