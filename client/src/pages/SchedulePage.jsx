@@ -14,17 +14,18 @@ import { loadEmployees } from '@/store/employee.actions'
 
 export function SchedulePage() {
   const { user } = useSelector((storeState) => storeState.userModule)
-
   const { filterBy } = useSelector((storeState) => storeState.systemModule)
-  console.log('🚀 ~ SchedulePage ~ filterBy:', filterBy)
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
-  console.log('🚀 ~ SchedulePage ~ schedules:', schedules)
-
   const { employees } = useSelector((storeState) => storeState.employeeModule)
-  console.log('🚀 ~ SchedulePage ~ employees:', employees)
 
   const [isUpdating, setIsUpdating] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
+
+  useEffect(() => {
+    if (!filterBy.username) {
+      setFilterBy({ username: user?.username })
+    }
+  }, [user, filterBy])
 
   useEffect(() => {
     loadSchedules(filterBy)

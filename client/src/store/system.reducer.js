@@ -8,7 +8,6 @@ export const SET_FILTER_BY = 'SET_FILTER_BY'
 const initialState = {
   isLoading: false,
   filterBy: {
-    branch: '',
     username: userService.getLoggedinUser()?.username
   }
 }

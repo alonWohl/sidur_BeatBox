@@ -58,9 +58,6 @@ export function Login() {
       await login(user)
       toast.success('התחברת בהצלחה')
       navigate(`/`)
-
-      // Simplified redirect logic
-      // const loggedInUser = await userService.getLoggedInUser()
     } catch (error) {
       console.error('Login error:', error)
       toast.error('שגיאה בהתחברות. נא לנסות שוב.')
@@ -70,7 +67,7 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4">
+    <div className="h-full bg-gray-50 flex flex-col items-center p-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <UserCircle2 className="mx-auto h-12 w-12 text-red-600" />
