@@ -245,7 +245,7 @@ export function SchedulePage() {
 
       <h2 className="text-xl text-center font-bold mt-4">סידור עבודה</h2>
 
-      <div className="container mx-auto w-full mt-4">
+      <div className="container mx-auto w-full mb-4">
         <div className="flex items-center justify-between gap-2">
           {user.isAdmin && (
             <Select onValueChange={onSetFilterBy} value={filterBy.username}>
