@@ -57,10 +57,12 @@ app.get('/**', (req, res) => {
 })
 
 import { logger } from './services/logger.service.js'
-import { initApp } from './services/init.service.js'
+import { initApp, shouldInitialize } from './services/init.service.js'
 const port = process.env.PORT || 3030
 
 server.listen(port, () => {
-  // initApp()
+  if (shouldInitialize()) {
+    initApp()
+  }
   logger.info('Server is running on: ' + `http://localhost:${port}/`)
 })

@@ -14,12 +14,11 @@ function App() {
       <Header />
       <main className="h-[calc(100vh-178px)]">
         <Routes>
-          {/* {!user && <Route path="/" element={<Navigate to="/login" />} />} */}
+          {!user && <Route path="/" element={<Navigate to="/login" />} />}
           {!user && <Route path="/login" element={<Login />} />}
           {user && <Route path="/schedule/" element={<SchedulePage />} />}
           {user && <Route path="/employee" element={<EmployeesPage />} />}
-          {/* {user && <Route path="/" element={<Navigate to={`/schedule/${user?.username}`} />} />} */}
-          {/* <Route path="/admin" element={<AdminPage />} /> */}
+          {user && <Route path="/" element={<Navigate to={`/schedule/`} />} />}
         </Routes>
       </main>
       <Toaster position="bottom-right" />
