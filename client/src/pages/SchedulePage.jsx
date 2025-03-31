@@ -17,7 +17,7 @@ import { TimeDraw } from '@/components/TimeDraw'
 export function SchedulePage() {
   const { user } = useSelector((storeState) => storeState.userModule)
   const { filterBy, isLoading } = useSelector((storeState) => storeState.systemModule)
-  console.log('🚀 ~ SchedulePage ~ filterBy:', filterBy)
+
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
 
@@ -84,7 +84,6 @@ export function SchedulePage() {
       // Find or create the day
       let dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
       if (dayIndex === -1) {
-        console.log('Creating new day:', day)
         dayIndex = scheduleToUpdate.days.push({ name: day, shifts: [] }) - 1
       }
 
@@ -95,7 +94,6 @@ export function SchedulePage() {
 
       if (employeeId && typeof employeeId === 'object' && employeeId.type === 'move') {
         const { sourceDay, sourceRole, sourcePosition, employeeId: actualEmployeeId } = employeeId
-        console.log('Moving employee:', { sourceDay, sourceRole, sourcePosition, actualEmployeeId })
 
         // Find source and destination days
         const sourceDayIndex = scheduleToUpdate.days.findIndex((d) => d.name === sourceDay)
@@ -154,27 +152,12 @@ export function SchedulePage() {
         }
 
         scheduleToUpdate.days[dayIndex].shifts.push(newShift)
-
-        console.log('Added new shift:', newShift)
-        console.log('Updated shifts:', scheduleToUpdate.days[dayIndex].shifts)
       }
 
       // Verify the update before saving
       const updatedDay = scheduleToUpdate.days[dayIndex]
-      console.log('Day after update:', {
-        name: updatedDay.name,
-        shiftsCount: updatedDay.shifts.length,
-        shifts: updatedDay.shifts
-      })
-
-      console.log('Saving schedule:', {
-        id: scheduleToUpdate.id,
-        branchId: scheduleToUpdate.branchId,
-        daysCount: scheduleToUpdate.days.length
-      })
 
       await updateSchedule(scheduleToUpdate)
-      console.log('Schedule updated successfully')
     } catch (error) {
       console.error('Error updating schedule:', error)
       toast.error('שגיאה בעדכון המשמרת')
