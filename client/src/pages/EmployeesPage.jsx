@@ -8,7 +8,8 @@ import toast from 'react-hot-toast'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import React from 'react'
 import { Trash } from 'lucide-react'
-
+import { Loader } from '@/components/Loader'
+import { setFilterBy } from '@/store/system.reducer'
 const colorOptions = [
   '#FF3366', // bright pink
   '#FF6B2B', // vibrant orange
@@ -71,9 +72,16 @@ export function EmployeesPage() {
   const { user } = useSelector((storeState) => storeState.userModule)
   const [employeeToEdit, setEmployeeToEdit] = useState({ name: '', color: '', branch: user?.name })
   const employees = useSelector((storeState) => storeState.employeeModule.employees)
+  const { isLoading } = useSelector((storeState) => storeState.systemModule)
+  const { filterBy } = useSelector((storeState) => storeState.systemModule)
+
   useEffect(() => {
-    loadEmployees()
-  }, [])
+    setFilterBy({ name: user?.name })
+  }, [user])
+
+  useEffect(() => {
+    loadEmployees(filterBy)
+  }, [filterBy])
 
   const handleAddEmployee = async (e) => {
     e.preventDefault()
@@ -123,6 +131,7 @@ export function EmployeesPage() {
 
   return (
     <div className="flex flex-col h-full items-center p-4">
+      {isLoading && <Loader />}
       <form className="flex flex-col items-center gap-2 mt-8 sm:mt-16 w-full max-w-md" onSubmit={handleAddEmployee}>
         <h2 className="text-lg sm:text-xl font-semibold">הוסף עובד</h2>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-2 sm:mt-4 w-full">

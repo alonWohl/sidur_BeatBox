@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast'
 import { Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import { setFilterBy, startLoading, stopLoading } from '@/store/system.reducer'
+import { setFilterBy } from '@/store/system.reducer'
 import { loadSchedules, updateSchedule } from '@/store/schedule.actions'
 import { loadEmployees } from '@/store/employee.actions'
 import { Loader } from '@/components/Loader'
@@ -17,15 +17,15 @@ import { TimeDraw } from '@/components/TimeDraw'
 export function SchedulePage() {
   const { user } = useSelector((storeState) => storeState.userModule)
   const { filterBy, isLoading } = useSelector((storeState) => storeState.systemModule)
+  console.log('🚀 ~ SchedulePage ~ filterBy:', filterBy)
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
+
   const [isSharing, setIsSharing] = useState(false)
 
   useEffect(() => {
-    if (!filterBy.username) {
-      setFilterBy({ username: user?.username })
-    }
-  }, [user, filterBy])
+    setFilterBy({ name: user?.name })
+  }, [user])
 
   useEffect(() => {
     loadSchedules(filterBy)
@@ -78,7 +78,6 @@ export function SchedulePage() {
     }
 
     try {
-      startLoading()
       const scheduleToUpdate = JSON.parse(JSON.stringify(schedule))
       const positionNum = parseInt(position)
 
@@ -179,8 +178,6 @@ export function SchedulePage() {
     } catch (error) {
       console.error('Error updating schedule:', error)
       toast.error('שגיאה בעדכון המשמרת')
-    } finally {
-      stopLoading()
     }
   }
 
@@ -224,7 +221,7 @@ export function SchedulePage() {
   }
 
   const onSetFilterBy = (value) => {
-    setFilterBy({ username: value })
+    setFilterBy({ ...filterBy, name: value })
   }
 
   if (!user) {
@@ -248,16 +245,16 @@ export function SchedulePage() {
       <div className="container mx-auto w-full my-4 ">
         <div className="flex flex-col items-center gap-2 px-2">
           {user.isAdmin && (
-            <Select onValueChange={onSetFilterBy} value={filterBy.username} className="w-full sm:w-auto">
+            <Select onValueChange={onSetFilterBy} value={filterBy.name} className="w-full sm:w-auto">
               <SelectTrigger className="h-8 sm:h-10 text-sm sm:text-base">
                 <SelectValue placeholder="בחר סניף" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="moked">מוקד</SelectItem>
-                <SelectItem value="tlv">תל אביב</SelectItem>
-                <SelectItem value="pt">פתח תקווה</SelectItem>
-                <SelectItem value="rishon">רשאון לציון</SelectItem>
-                <SelectItem value="rosh">ראש העין</SelectItem>
+                <SelectItem value="מוקד">מוקד</SelectItem>
+                <SelectItem value="תל אביב">תל אביב</SelectItem>
+                <SelectItem value="פתח תקווה">פתח תקווה</SelectItem>
+                <SelectItem value="רשאון לציון">רשאון לציון</SelectItem>
+                <SelectItem value="ראש העין">ראש העין</SelectItem>
               </SelectContent>
             </Select>
           )}

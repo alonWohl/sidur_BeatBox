@@ -7,9 +7,7 @@ export const SET_FILTER_BY = 'SET_FILTER_BY'
 
 const initialState = {
   isLoading: false,
-  filterBy: {
-    username: userService.getLoggedinUser()?.username
-  }
+  filterBy: getDefaultFilterBy()
 }
 
 export function systemReducer(state = initialState, action = {}) {
@@ -35,4 +33,11 @@ export function startLoading() {
 
 export function stopLoading() {
   return store.dispatch({ type: LOADING_DONE })
+}
+
+function getDefaultFilterBy() {
+  return {
+    name: userService.getLoggedinUser()?.name || '',
+    username: userService.getLoggedinUser()?.username || ''
+  }
 }

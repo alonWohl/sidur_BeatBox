@@ -4,7 +4,7 @@ import { employeeService } from './employee.service.js'
 export async function getEmployees(req, res) {
   const { loggedinUser } = req
   const filterBy = {
-    username: loggedinUser.isAdmin ? req.query.username || loggedinUser.username : loggedinUser.username
+    name: loggedinUser.isAdmin ? req.query.name || loggedinUser.name : loggedinUser.name
   }
   try {
     const employees = await employeeService.query(filterBy)
@@ -32,7 +32,7 @@ export async function addEmployee(req, res) {
 
   const employeeToAdd = {
     name: req.body.name,
-    branch: loggedinUser.isAdmin ? req.body.branch : loggedinUser.username,
+    branch: loggedinUser.isAdmin ? req.body.branch : loggedinUser.name,
     color: req.body.color
   }
 

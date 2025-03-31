@@ -12,13 +12,14 @@ export const employeeService = {
   remove
 }
 
-async function query(filterBy = { username: '' }) {
+async function query(filterBy = { name: '' }) {
   const collection = await dbService.getCollection('branch')
   try {
-    const filter = {
-      username: filterBy.username
+    const criteria = {
+      name: filterBy.name
     }
-    const branch = await collection.findOne(filter)
+
+    const branch = await collection.findOne(criteria)
     return branch.employees
   } catch (err) {
     logger.error('Cannot find employees', err)
@@ -55,7 +56,10 @@ async function add(employee) {
     }
 
     const collection = await dbService.getCollection('branch')
-    const criteria = _buildCriteria(loggedinUser, employeeToAdd)
+
+    const criteria = {
+      name: employee.branch || loggedinUser.name
+    }
 
     const branch = await collection.findOne(criteria)
 
@@ -148,16 +152,4 @@ async function isNameExists(collection, username, name, excludeEmployeeId = null
   if (!branch || !branch.employees) return false
 
   return branch.employees.some((emp) => emp.name === name && (!excludeEmployeeId || emp.id !== excludeEmployeeId))
-}
-
-function _buildCriteria(loggedinUser, employeeToAdd) {
-  if (loggedinUser.isAdmin) {
-    return {
-      name: employeeToAdd.branch
-    }
-  } else {
-    return {
-      username: loggedinUser.username
-    }
-  }
 }

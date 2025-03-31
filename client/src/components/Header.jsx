@@ -1,4 +1,3 @@
-import logo from '../assets/images/logo.webp'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { logout } from '@/store/user.actions'
@@ -6,6 +5,7 @@ import { logout } from '@/store/user.actions'
 import { useNavigate } from 'react-router'
 import { Button } from './ui/button'
 import { forwardRef } from 'react'
+import logo from '../assets/images/logo.webp'
 
 export const Header = forwardRef((props, ref) => {
   const { user } = useSelector((storeState) => storeState.userModule)
@@ -15,6 +15,8 @@ export const Header = forwardRef((props, ref) => {
     navigate('/login')
   }
 
+  const brandLogo = 'https://res.cloudinary.com/dqfhbqcwv/image/upload/v1743384278/logo_ruqkfk.webp'
+
   return (
     <header ref={ref} className="bg-white shadow-md">
       <div className="px-4 sm:px-6 lg:px-8">
@@ -22,7 +24,7 @@ export const Header = forwardRef((props, ref) => {
           {/* Logo/Brand */}
           <Link to="/">
             <div className="logo max-w-[150px] sm:max-w-[200px]">
-              <img src={logo} alt="Sidur BeatBox" className="mix-blend-multiply w-full" />
+              <img src={brandLogo || logo} alt="Sidur BeatBox" className="mix-blend-multiply w-full" />
             </div>
           </Link>
 

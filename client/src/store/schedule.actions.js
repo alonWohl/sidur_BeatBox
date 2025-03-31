@@ -1,14 +1,18 @@
 import { scheduleService } from '../services/schedule/schedule.service.remote'
 import { store } from './store'
 import { ADD_SCHEDULE, REMOVE_SCHEDULE, SET_SCHEDULES, SET_SCHEDULE, UPDATE_SCHEDULE, ADD_SCHEDULE_MSG } from './schedule.reducer'
+import { startLoading, stopLoading } from './system.reducer'
 
 export async function loadSchedules(filterBy) {
   try {
+    startLoading()
     const schedules = await scheduleService.query({ ...filterBy })
     store.dispatch(getCmdSetSchedules(schedules))
   } catch (err) {
     console.log('Cannot load schedules', err)
     throw err
+  } finally {
+    stopLoading()
   }
 }
 

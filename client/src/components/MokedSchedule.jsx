@@ -181,7 +181,7 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
                         {position === 1 ? SHIFT_NAMES[shift] : ''}
                       </TableCell>
                       {DAYS.map((day) => (
-                        <TableCell key={`${day}-${shift}-${position}`} className={`p-2 ${position === 1 ? '' : 'border-t-0'} font-mono`}>
+                        <TableCell key={`${day}-${shift}-${position}`} className={`p-2 ${position === 1 ? '' : 'border-t-0'}`}>
                           {renderCell(day, shift, position)}
                         </TableCell>
                       ))}
