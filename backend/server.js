@@ -61,8 +61,6 @@ import { initApp, shouldInitialize } from './services/init.service.js'
 const port = process.env.PORT || 3030
 
 server.listen(port, () => {
-  if (shouldInitialize()) {
-    // initApp()
-  }
+  initApp()
   logger.info('Server is running on: ' + `http://localhost:${port}/`)
 })

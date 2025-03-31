@@ -6,6 +6,13 @@ import { makeId } from './util.service.js'
 
 export async function initApp() {
   try {
+    // Check if initialization is needed
+    const shouldInit = await shouldInitialize()
+    if (!shouldInit) {
+      logger.info('Database already initialized, skipping initialization')
+      return
+    }
+
     const branchCollection = await dbService.getCollection('branch')
     await branchCollection.deleteMany()
 
@@ -60,7 +67,6 @@ export async function initApp() {
           employees: [],
           schedule: defaultSchedule
         }
-        // branchFullData.schedule.id = makeId()
 
         await userService.update(branchFullData)
         logger.info(`Updated branch data: ${savedBranch.name}`)
@@ -82,6 +88,7 @@ export async function shouldInitialize() {
   try {
     const collection = await dbService.getCollection('branch')
     const count = await collection.countDocuments()
+    console.log('🚀 ~ shouldInitialize ~ count:', count)
     return count === 0
   } catch (error) {
     logger.error('Failed to check initialization status:', error)
