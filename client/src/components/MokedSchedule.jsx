@@ -9,6 +9,7 @@ import { EmployeeCell } from '@/components/EmployeeCell'
 import { format, startOfWeek, addDays } from 'date-fns'
 import { he } from 'date-fns/locale' // Hebrew locale
 import { Loader } from '@/components/Loader'
+
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
 const SHIFTS = ['morning', 'noon', 'evening']
 const SHIFT_NAMES = {
@@ -85,15 +86,13 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
               ref={provided.innerRef}
               {...provided.droppableProps}
               className={`text-center h-8 border border-gray-200 
-                ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}
-                touch-manipulation`}
+                ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
               style={{
                 backgroundColor: snapshot.isDraggingOver ? '#EFF6FF' : employee ? employee.color : '',
                 minWidth: '80px',
                 padding: snapshot.isDraggingOver ? '1px' : '1px',
                 boxShadow: snapshot.isDraggingOver ? 'inset 0 0 0 2px #60A5FA' : 'none',
-                WebkitTapHighlightColor: 'transparent',
-                touchAction: 'none'
+                WebkitTapHighlightColor: 'transparent'
               }}>
               {employee && (
                 <Draggable
@@ -143,22 +142,19 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd} enableDefaultSensors={true} touchTimeout={150}>
-      <div className="flex flex-col items-center justify-center gap-8 p-1 container mx-auto">
+    <DragDropContext onDragEnd={handleDragEnd} enableDefaultSensors={true}>
+      <div className="h-full flex flex-col gap-8 p-1 container mx-auto">
         <EmployeesList employees={employees} />
 
-        <div
-          className="w-full overflow-x-auto -mx-1 font-sans"
-          id="schedule-table-for-share"
-          style={{ backgroundColor: isSharing ? '#ffffff' : 'transparent' }}>
-          <Table dir="rtl" className="min-w-[650px] bg-white border border-gray-200 rounded-lg ">
+        <div className="w-full overflow-x-auto" id="schedule-table-for-share" style={{ backgroundColor: isSharing ? '#ffffff' : 'transparent' }}>
+          <Table dir="rtl" className="w-full border-collapse bg-white border border-gray-200 rounded-lg">
             <TableHeader>
               <TableRow>
                 <TableHead className="text-center font-medium text-sm sticky right-0 z-10 bg-gray-50 p-1">משמרת</TableHead>
                 {getWeekDates().map(({ name, date }) => (
                   <TableHead
                     key={name}
-                    className={`text-center  font-medium text-sm whitespace-nowrap p-2 ${
+                    className={`text-center font-medium text-sm whitespace-nowrap p-2 ${
                       isToday(name) ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-4 border-t-[#BE202E]' : 'font-medium'
                     }`}>
                     <div className="text-center">{name}</div>

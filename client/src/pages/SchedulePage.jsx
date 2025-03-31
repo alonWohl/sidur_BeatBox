@@ -13,17 +13,13 @@ import { loadEmployees } from '@/store/employee.actions'
 import { Loader } from '@/components/Loader'
 import { ScheduleDraw } from '@/components/ScheduleDraw'
 import { TimeDraw } from '@/components/TimeDraw'
-import { useEffectUpdate } from '@/hooks/useEffectUpdate'
+
 export function SchedulePage() {
   const { user } = useSelector((storeState) => storeState.userModule)
   const { filterBy, isLoading } = useSelector((storeState) => storeState.systemModule)
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
   const [isSharing, setIsSharing] = useState(false)
-
-  // useEffectUpdate(() => {
-  //   setFilterBy({ name: user?.name })
-  // }, [user])
 
   useEffect(() => {
     loadSchedules(filterBy)
@@ -45,7 +41,26 @@ export function SchedulePage() {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
       if (isMobile) {
-        window.location.href = `whatsapp://send?text=סידור עבודה שבועי`
+        const response = await fetch(dataUrl)
+        const blob = await response.blob()
+
+        const file = new File([blob], 'schedule.png', { type: 'image/png' })
+
+        if (navigator.share) {
+          await navigator.share({
+            files: [file],
+            title: 'סידור עבודה שבועי',
+            text: 'סידור עבודה שבועי'
+          })
+        } else {
+          const whatsappUrl = `whatsapp://send?text=סידור עבודה שבועי`
+          window.location.href = whatsappUrl
+
+          const link = document.createElement('a')
+          link.href = dataUrl
+          link.download = 'schedule.png'
+          link.click()
+        }
       } else {
         const link = document.createElement('a')
         link.href = dataUrl
@@ -54,6 +69,7 @@ export function SchedulePage() {
         window.open('https://web.whatsapp.com', '_blank')
       }
     } catch (error) {
+      console.error('Share error:', error)
       toast.error('שגיאה בשיתוף')
     } finally {
       setIsSharing(false)
@@ -159,15 +175,6 @@ export function SchedulePage() {
       toast.error('שגיאה בהסרת העובד')
     }
   }
-
-  // const handleEmployeeClick = async (schedule, employeeId, day, role, position) => {
-  //   try {
-  //     await handleUpdateSchedule(schedule, employeeId, day, role, position)
-  //   } catch (error) {
-  //     console.error('Error removing employee:', error)
-  //     toast.error('שגיאה בהסרת העובד')
-  //   }
-  // }
 
   if (!user) {
     return (
