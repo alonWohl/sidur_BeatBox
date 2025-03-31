@@ -18,7 +18,7 @@ const SHIFT_NAMES = {
 }
 const POSITIONS_PER_SHIFT = 3
 
-export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleEmployeeClick }) {
+export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleRemoveEmployee }) {
   const { isLoading } = useSelector((storeState) => storeState.systemModule)
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
@@ -105,7 +105,7 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
                       employee={employee}
                       dragProvided={dragProvided}
                       dragSnapshot={dragSnapshot}
-                      onClick={() => handleEmployeeClick(day, role, position)}
+                      onClick={() => handleRemoveEmployee(currentSchedule, day, role, position)}
                     />
                   )}
                 </Draggable>
@@ -116,7 +116,7 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
         </Droppable>
       )
     },
-    [getAssignedEmployee, currentSchedule, handleEmployeeClick]
+    [getAssignedEmployee, currentSchedule, handleRemoveEmployee]
   )
 
   const getWeekDates = () => {

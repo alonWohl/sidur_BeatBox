@@ -2,7 +2,8 @@ import { scheduleService } from '../services/schedule/schedule.service.remote'
 import { store } from './store'
 import { ADD_SCHEDULE, REMOVE_SCHEDULE, SET_SCHEDULES, SET_SCHEDULE, UPDATE_SCHEDULE, ADD_SCHEDULE_MSG } from './schedule.reducer'
 import { startLoading, stopLoading } from './system.reducer'
-
+import { toast } from 'react-hot-toast'
+import { debounce } from '@/services/util.service'
 export async function loadSchedules(filterBy) {
   try {
     startLoading()
@@ -51,15 +52,40 @@ export async function addSchedule(schedule) {
   }
 }
 
+export async function updateScheduleOptimistic(schedule) {
+  // Keep original schedule for rollback
+  const originalSchedule = structuredClone(schedule)
+
+  try {
+    // Optimistically update UI
+    store.dispatch(getCmdUpdateSchedule(schedule))
+
+    // Make API call
+    const savedSchedule = await scheduleService.save(schedule)
+    return savedSchedule
+  } catch (err) {
+    // Rollback on error
+    store.dispatch(getCmdUpdateSchedule(originalSchedule))
+    toast.error('שגיאה בעדכון המשמרת')
+    throw err
+  }
+}
+
+export async function updateScheduleDebounced(schedule) {
+  debounce(updateSchedule(schedule), 300)
+}
+
 export async function updateSchedule(schedule) {
   try {
-    const scheduleToSave = structuredClone(schedule)
-    store.dispatch(getCmdUpdateSchedule(scheduleToSave))
-    const savedSchedule = await scheduleService.save(scheduleToSave)
+    startLoading()
+    const savedSchedule = await scheduleService.save(schedule)
+    store.dispatch(getCmdUpdateSchedule(savedSchedule))
     return savedSchedule
   } catch (err) {
     console.log('Cannot save schedule', err)
     throw err
+  } finally {
+    stopLoading()
   }
 }
 

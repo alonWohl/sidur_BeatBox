@@ -13,7 +13,7 @@ const ROLES = {
   cooks: { name: 'טבחים', positions: 6 }
 }
 
-export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleEmployeeClick }) {
+export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleRemoveEmployee }) {
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
   const { isLoading } = useSelector((storeState) => storeState.systemModule)
@@ -116,7 +116,7 @@ export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharin
                       employee={employee}
                       dragProvided={dragProvided}
                       dragSnapshot={dragSnapshot}
-                      onClick={() => handleEmployeeClick(day, role, position)}
+                      onClick={() => handleRemoveEmployee(currentSchedule, day, role, position)}
                     />
                   )}
                 </Draggable>
@@ -127,7 +127,7 @@ export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharin
         </Droppable>
       )
     },
-    [getAssignedEmployee, currentSchedule, handleEmployeeClick]
+    [getAssignedEmployee, currentSchedule, handleRemoveEmployee]
   )
 
   const renderRoleRows = (role, roleConfig) => {
