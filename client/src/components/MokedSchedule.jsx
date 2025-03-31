@@ -146,47 +146,57 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
       <div className="h-full flex flex-col gap-8 p-1 container mx-auto">
         <EmployeesList employees={employees} />
 
-        <div className="w-full overflow-x-auto" id="schedule-table-for-share" style={{ backgroundColor: isSharing ? '#ffffff' : 'transparent' }}>
-          <Table dir="rtl" className="w-full border-collapse bg-white border border-gray-200 rounded-lg">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-center font-medium text-sm sticky right-0 z-10 bg-gray-50 p-1">משמרת</TableHead>
-                {getWeekDates().map(({ name, date }) => (
-                  <TableHead
-                    key={name}
-                    className={`text-center font-medium text-sm whitespace-nowrap p-2 ${
-                      isToday(name) ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-4 border-t-[#BE202E]' : 'font-medium'
-                    }`}>
-                    <div className="text-center">{name}</div>
-                    <div className="text-sm text-gray-600 mt-1">{date}</div>
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
+        <div
+          className="w-full overflow-x-auto touch-manipulation touch-pan-x"
+          id="schedule-table-for-share"
+          style={{
+            backgroundColor: isSharing ? '#ffffff' : 'transparent',
+            WebkitOverflowScrolling: 'touch' // For smooth scrolling on iOS
+          }}>
+          <div className="min-w-[800px]">
+            {' '}
+            {/* Force minimum width to ensure scrolling */}
+            <Table dir="rtl" className="w-full border-collapse bg-white border border-gray-200 rounded-lg">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-center font-medium text-sm sticky right-0 z-10 bg-gray-50 p-1">משמרת</TableHead>
+                  {getWeekDates().map(({ name, date }) => (
+                    <TableHead
+                      key={name}
+                      className={`text-center font-medium text-sm whitespace-nowrap p-2 ${
+                        isToday(name) ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-4 border-t-[#BE202E]' : 'font-medium'
+                      }`}>
+                      <div className="text-center">{name}</div>
+                      <div className="text-sm text-gray-600 mt-1">{date}</div>
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
 
-            <TableBody>
-              {SHIFTS.flatMap((shift) =>
-                Array.from({ length: POSITIONS_PER_SHIFT }, (_, index) => {
-                  const position = index + 1
-                  return (
-                    <TableRow key={`${shift}-${position}`} className="h-10">
-                      <TableCell
-                        className={`text-center font-medium bg-gray-50 border-l text-sm sticky right-0 z-10 p-1 ${
-                          position === 1 ? '' : 'border-t-0'
-                        }`}>
-                        {position === 1 ? SHIFT_NAMES[shift] : ''}
-                      </TableCell>
-                      {DAYS.map((day) => (
-                        <TableCell key={`${day}-${shift}-${position}`} className={`p-2 ${position === 1 ? '' : 'border-t-0'}`}>
-                          {renderCell(day, shift, position)}
+              <TableBody>
+                {SHIFTS.flatMap((shift) =>
+                  Array.from({ length: POSITIONS_PER_SHIFT }, (_, index) => {
+                    const position = index + 1
+                    return (
+                      <TableRow key={`${shift}-${position}`} className="h-10">
+                        <TableCell
+                          className={`text-center font-medium bg-gray-50 border-l text-sm sticky right-0 z-10 p-1 ${
+                            position === 1 ? '' : 'border-t-0'
+                          }`}>
+                          {position === 1 ? SHIFT_NAMES[shift] : ''}
                         </TableCell>
-                      ))}
-                    </TableRow>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
+                        {DAYS.map((day) => (
+                          <TableCell key={`${day}-${shift}-${position}`} className={`p-2 ${position === 1 ? '' : 'border-t-0'}`}>
+                            {renderCell(day, shift, position)}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    )
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
     </DragDropContext>
