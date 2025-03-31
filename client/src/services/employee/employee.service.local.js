@@ -17,7 +17,7 @@ async function query(filterBy = { name: '' }) {
   if (!employees.length) {
     employees = _createDemoEmployees()
   }
-  console.log('employees:', employees)
+  // console.log('employees:', employees)
   const { name } = filterBy
 
   if (name) {
