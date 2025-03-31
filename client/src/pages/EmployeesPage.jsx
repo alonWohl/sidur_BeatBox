@@ -40,7 +40,7 @@ const ColorPickerPopover = ({ value, onChange }) => {
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button type="button" className="flex items-center gap-2 p-1.5 sm:p-2 border rounded-md hover:bg-gray-50 w-full">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border" style={{ backgroundColor: value }} />
+            <div className="w-full h-5 min-w-5 sm:w-6 sm:h-6 rounded-sm border" style={{ backgroundColor: value }} />
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-[200px] sm:w-[232px] p-2 sm:p-3">
@@ -52,7 +52,7 @@ const ColorPickerPopover = ({ value, onChange }) => {
                   onChange({ target: { name: 'color', value: color } })
                   setOpen(false)
                 }}
-                className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                   value === color
                 }`}
                 style={{ backgroundColor: color }}

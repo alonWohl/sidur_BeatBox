@@ -8,7 +8,7 @@ import { EmployeesList } from '@/components/EmployeesList'
 import { EmployeeCell } from '@/components/EmployeeCell'
 import { format, startOfWeek, addDays } from 'date-fns'
 import { he } from 'date-fns/locale' // Hebrew locale
-
+import { Loader } from '@/components/Loader'
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
 const SHIFTS = ['morning', 'noon', 'evening']
 const SHIFT_NAMES = {
@@ -19,6 +19,7 @@ const SHIFT_NAMES = {
 const POSITIONS_PER_SHIFT = 3
 
 export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleEmployeeClick }) {
+  const { isLoading } = useSelector((storeState) => storeState.systemModule)
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
   const currentSchedule = Array.isArray(schedules) ? schedules[0] : schedules
@@ -131,8 +132,8 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
     })
   }
 
-  if (!currentSchedule) {
-    return <div>Loading schedule...</div>
+  if (!currentSchedule || isLoading) {
+    return <Loader />
   }
 
   const isToday = (dayName) => {
@@ -147,7 +148,7 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
         <EmployeesList employees={employees} />
 
         <div
-          className="w-full overflow-x-auto -mx-1"
+          className="w-full overflow-x-auto -mx-1 font-sans"
           id="schedule-table-for-share"
           style={{ backgroundColor: isSharing ? '#ffffff' : 'transparent' }}>
           <Table dir="rtl" className="min-w-[650px] bg-white border border-gray-200 rounded-lg ">
@@ -180,7 +181,7 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
                         {position === 1 ? SHIFT_NAMES[shift] : ''}
                       </TableCell>
                       {DAYS.map((day) => (
-                        <TableCell key={`${day}-${shift}-${position}`} className={`p-2 ${position === 1 ? '' : 'border-t-0'}`}>
+                        <TableCell key={`${day}-${shift}-${position}`} className={`p-2 ${position === 1 ? '' : 'border-t-0'} font-mono`}>
                           {renderCell(day, shift, position)}
                         </TableCell>
                       ))}

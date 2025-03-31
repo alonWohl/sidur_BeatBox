@@ -45,6 +45,7 @@ async function getById(employeeId) {
 
 async function add(employee) {
   const { loggedinUser } = asyncLocalStorage.getStore()
+
   try {
     const employeeToAdd = {
       id: makeId(),
@@ -54,11 +55,15 @@ async function add(employee) {
     }
 
     const collection = await dbService.getCollection('branch')
+    const criteria = _buildCriteria(loggedinUser, employeeToAdd)
 
-    // Validate all conditions
+    const branch = await collection.findOne(criteria)
+
+    if (!branch) throw new Error('Branch not found')
+
     await validateEmployee(collection, loggedinUser, employeeToAdd)
 
-    const addedEmployee = await collection.updateOne({ username: loggedinUser.username }, { $push: { employees: employeeToAdd } })
+    const addedEmployee = await collection.updateOne(criteria, { $push: { employees: employeeToAdd } })
 
     if (addedEmployee.matchedCount === 0) {
       throw new Error('Branch not found')
@@ -143,4 +148,16 @@ async function isNameExists(collection, username, name, excludeEmployeeId = null
   if (!branch || !branch.employees) return false
 
   return branch.employees.some((emp) => emp.name === name && (!excludeEmployeeId || emp.id !== excludeEmployeeId))
+}
+
+function _buildCriteria(loggedinUser, employeeToAdd) {
+  if (loggedinUser.isAdmin) {
+    return {
+      name: employeeToAdd.branch
+    }
+  } else {
+    return {
+      username: loggedinUser.username
+    }
+  }
 }

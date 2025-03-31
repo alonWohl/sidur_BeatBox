@@ -28,3 +28,11 @@ export function systemReducer(state = initialState, action = {}) {
 export function setFilterBy(filterBy) {
   return store.dispatch({ type: SET_FILTER_BY, filterBy })
 }
+
+export function startLoading() {
+  return store.dispatch({ type: LOADING_START })
+}
+
+export function stopLoading() {
+  return store.dispatch({ type: LOADING_DONE })
+}

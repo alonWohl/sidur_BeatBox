@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EmployeesList } from '@/components/EmployeesList'
 import { EmployeeCell } from '@/components/EmployeeCell'
-
+import { Loader } from '@/components/Loader'
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
 const ROLES = {
   manager: { name: 'אחמ"ש', positions: 1 },
@@ -16,6 +16,7 @@ const ROLES = {
 export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing, handleEmployeeClick }) {
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
+  const { isLoading } = useSelector((storeState) => storeState.systemModule)
   const currentSchedule = Array.isArray(schedules) ? schedules[0] : schedules
 
   const getDayDates = () => {
@@ -148,8 +149,8 @@ export function BranchSchedule({ getAssignedEmployee, onUpdateSchedule, isSharin
     })
   }
 
-  if (!currentSchedule) {
-    return <div>Loading schedule...</div>
+  if (!currentSchedule || isLoading) {
+    return <Loader />
   }
 
   return (

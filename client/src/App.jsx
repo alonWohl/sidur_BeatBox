@@ -23,7 +23,7 @@ function App() {
   return (
     <div className="h-screen w-full bg-neutral-50">
       <Header ref={headerRef} />
-      <main style={{ height: mainHeight }} className="transition-height duration-200">
+      <main style={{ height: mainHeight }} className="transition-height duration-200 ">
         <Routes>
           {!user && <Route path="/" element={<Navigate to="/login" />} />}
           {!user && <Route path="/login" element={<Login />} />}

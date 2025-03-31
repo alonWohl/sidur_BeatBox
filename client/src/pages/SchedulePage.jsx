@@ -5,20 +5,20 @@ import { BranchSchedule } from '@/components/BranchSchedule'
 
 import domtoimage from 'dom-to-image-more'
 import { toast } from 'react-hot-toast'
-import { Loader2, Share2 } from 'lucide-react'
+import { Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import { setFilterBy } from '@/store/system.reducer'
+import { setFilterBy, startLoading, stopLoading } from '@/store/system.reducer'
 import { loadSchedules, updateSchedule } from '@/store/schedule.actions'
 import { loadEmployees } from '@/store/employee.actions'
-
+import { Loader } from '@/components/Loader'
+import { ScheduleDraw } from '@/components/ScheduleDraw'
+import { TimeDraw } from '@/components/TimeDraw'
 export function SchedulePage() {
   const { user } = useSelector((storeState) => storeState.userModule)
-  const { filterBy } = useSelector((storeState) => storeState.systemModule)
+  const { filterBy, isLoading } = useSelector((storeState) => storeState.systemModule)
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
-
-  const [isUpdating, setIsUpdating] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
 
   useEffect(() => {
@@ -37,7 +37,6 @@ export function SchedulePage() {
       e.preventDefault()
     }
 
-    // Prevent scrolling during drag
     document.addEventListener('touchmove', preventDefault, { passive: false })
 
     return () => {
@@ -79,7 +78,7 @@ export function SchedulePage() {
     }
 
     try {
-      setIsUpdating(true)
+      startLoading()
       const scheduleToUpdate = JSON.parse(JSON.stringify(schedule))
       const positionNum = parseInt(position)
 
@@ -181,7 +180,7 @@ export function SchedulePage() {
       console.error('Error updating schedule:', error)
       toast.error('שגיאה בעדכון המשמרת')
     } finally {
-      setIsUpdating(false)
+      stopLoading()
     }
   }
 
@@ -228,15 +227,6 @@ export function SchedulePage() {
     setFilterBy({ username: value })
   }
 
-  const LoadingOverlay = () => (
-    <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="flex flex-col items-center gap-2">
-        <Loader2 className="w-8 h-8 animate-spin text-red-600" />
-        <span className="text-gray-600 font-medium">מעדכן...</span>
-      </div>
-    </div>
-  )
-
   if (!user) {
     return (
       <div className="flex justify-center items-center h-96 animate-in fade-in duration-500">
@@ -249,12 +239,14 @@ export function SchedulePage() {
 
   return (
     <div className="flex flex-col h-full relative animate-in fade-in duration-300 px-4 space-y-6">
-      {isUpdating && <LoadingOverlay />}
+      {isLoading && <Loader />}
+      <h1 className="text-3xl text-center font-semibold font-mono text-zinc-800 my-4">סידור עבודה</h1>
 
-      <h2 className="text-xl text-center font-bold mt-4">סידור עבודה</h2>
+      <TimeDraw className="absolute top-10 right-10 opacity-50 hidden max-w-[300px] max-h-[300px] 2xl:block " />
+      <ScheduleDraw className="absolute bottom-10 left-10 opacity-50 hidden max-w-[300px] max-h-[300px] md:block md:max-w-[200px] md:max-h-[200px] " />
 
-      <div className="container mx-auto w-full sm:my-8 ">
-        <div className="flex flexitems-center gap-2 px-2">
+      <div className="container mx-auto w-full my-4 ">
+        <div className="flex flex-col items-center gap-2 px-2">
           {user.isAdmin && (
             <Select onValueChange={onSetFilterBy} value={filterBy.username} className="w-full sm:w-auto">
               <SelectTrigger className="h-8 sm:h-10 text-sm sm:text-base">
