@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "start": "node server.js",
     "server:prod": "set NODE_ENV=production&node server.js",
     "server:prod:mac": "export NODE_ENV=production && nodemon server.js"
   },
