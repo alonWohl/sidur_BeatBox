@@ -13,7 +13,7 @@ function App() {
   return (
     <div className="h-[100dvh] w-full bg-neutral-50 flex flex-col">
       <Header />
-      <main className="h-[calc(100%-8rem)] overflow-hidden">
+      <main className="h-[calc(100%-8rem)] overflow-hidden relative">
         <Routes>
           {!user && <Route path="/" element={<Navigate to="/login" />} />}
           {!user && <Route path="/login" element={<Login />} />}

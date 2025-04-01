@@ -256,7 +256,7 @@ export function SchedulePage() {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
-      <div className="flex flex-col h-full w-full relative animate-in fade-in duration-300 px-4 space-y-6 max-w-[1600px] mx-auto overflow-hidden">
+      <div className="flex flex-col h-full w-full animate-in fade-in duration-300 px-4 space-y-6 max-w-[1600px] mx-auto">
         {isLoading && <Loader />}
 
         <h1 className="text-3xl text-center font-semibold  text-zinc-800 my-4">סידור עבודה</h1>

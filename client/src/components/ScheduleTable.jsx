@@ -78,29 +78,14 @@ function DroppableCell({ id, employee, onRemove }) {
       className={`h-8 w-full border border-gray-200 relative
         flex items-center justify-center text-white truncate px-1
         ${isOver ? 'ring-2 ring-blue-400 bg-blue-50' : ''}
-        ${employee ? 'cursor-pointer group hover:delay-150' : ''}`}
+        ${employee ? 'cursor-pointer group' : ''}`}
       style={{
         backgroundColor: employee?.color || 'transparent',
         opacity: isDragging ? 0 : 1
       }}>
-      <div
-        className="absolute inset-0 bg-white/50 opacity-0 group-hover:opacity-100 
-        transition-opacity duration-200 delay-150"
-      />
-      {!isDragging && (
-        <span
-          className="relative z-10 group-hover:hidden 
-          transition-opacity duration-200 delay-150">
-          {employee?.name}
-        </span>
-      )}
-      {!isDragging && employee && (
-        <span
-          className="relative z-10 hidden group-hover:block text-sm
-          transition-opacity duration-200 delay-150">
-          לחץ להסרה
-        </span>
-      )}
+      <div className="absolute inset-0 bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+      {!isDragging && <span className="relative z-10 group-hover:hidden">{employee?.name}</span>}
+      {!isDragging && employee && <span className="relative z-10 hidden group-hover:block text-sm  ">לחץ להסרה</span>}
     </div>
   )
 }
@@ -181,10 +166,7 @@ export const ScheduleTable = memo(
               <TableRow>
                 <TableHead className="text-center border-x bg-[#BE202E]/50 text-white w-[80px]">{isMoked ? 'משמרות' : 'תפקידים'}</TableHead>
                 {DAYS.map((day) => (
-                  <TableHead
-                    key={day}
-                    className="text-center border-x border-b even:bg-[#BE202E] even:text-white 
-                      odd:bg-[#BE202E]/50 text-white w-[80px]">
+                  <TableHead key={day} className="text-center border-x border-b bg-[#BE202E] text-white w-[80px]">
                     {day}
                   </TableHead>
                 ))}
