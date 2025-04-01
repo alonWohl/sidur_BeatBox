@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import domtoimage from 'dom-to-image-more'
 import { toast } from 'react-hot-toast'
@@ -24,6 +24,9 @@ export function SchedulePage() {
   const [currentSchedule, setCurrentSchedule] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const [activeEmployee, setActiveEmployee] = useState(null)
+
+  const TimeDraw = lazy(() => import('@/components/TimeDraw'))
+  const ScheduleDraw = lazy(() => import('@/components/ScheduleDraw'))
 
   const sensors = useSensors(
     useSensor(MouseSensor),
