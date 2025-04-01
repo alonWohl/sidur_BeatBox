@@ -1,4 +1,4 @@
-import { lazy, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import domtoimage from 'dom-to-image-more'
 import { toast } from 'react-hot-toast'
@@ -25,9 +25,6 @@ export function SchedulePage() {
   const [activeId, setActiveId] = useState(null)
   const [activeEmployee, setActiveEmployee] = useState(null)
 
-  const TimeDraw = lazy(() => import('@/components/TimeDraw'))
-  const ScheduleDraw = lazy(() => import('@/components/ScheduleDraw'))
-
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor, {
@@ -39,16 +36,25 @@ export function SchedulePage() {
   )
 
   useEffect(() => {
-    loadSchedules(filterBy)
-    loadEmployees(filterBy)
-    setCurrentSchedule(null)
-  }, [filterBy])
-
-  useEffect(() => {
     if (schedules && employees?.length > 0) {
-      setCurrentSchedule({ ...schedules })
+      const initialSchedule = {
+        ...schedules,
+        days: schedules.days || []
+      }
+      setCurrentSchedule(initialSchedule)
+      console.log('Setting current schedule:', initialSchedule)
     }
   }, [schedules, employees])
+
+  useEffect(() => {
+    try {
+      loadSchedules(filterBy)
+      loadEmployees(filterBy)
+    } catch (error) {
+      console.error('Error loading data:', error)
+      toast.error('שגיאה בטעינת הנתונים')
+    }
+  }, [filterBy])
 
   const handleShare = async () => {
     setIsSharing(true)

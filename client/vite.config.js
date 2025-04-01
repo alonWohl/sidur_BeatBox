@@ -13,49 +13,36 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
-        pure_funcs: ['console.log']
-      }
+        pure_funcs: ['console.log', 'console.error', 'console.warn'],
+        passes: 2
+      },
+      mangle: true
     },
     rollupOptions: {
       output: {
+        // Split only non-React vendor code
         manualChunks: (id) => {
-          // Vendor chunks
+          // Keep all React and related packages in the main bundle
           if (id.includes('node_modules')) {
-            if (id.includes('react-dom')) return 'vendor-react'
-            if (id.includes('react')) return 'vendor-react'
-            if (id.includes('@dnd-kit')) return 'vendor-dnd'
+            if (id.includes('react') || id.includes('redux') || id.includes('scheduler')) {
+              return null // Keep in main bundle
+            }
+            // Split other vendors
+            if (id.includes('@dnd-kit')) {
+              return 'vendor-dnd'
+            }
+            if (id.includes('dom-to-image')) {
+              return 'vendor-image'
+            }
             return 'vendor'
           }
-
-          // Feature-based chunks (combining related functionality)
-          if (id.includes('/components/')) {
-            if (id.includes('Schedule') || id.includes('Employee')) {
-              return 'feature-schedule'
-            }
-            if (id.includes('Draw')) {
-              return 'feature-schedule' // Combining with schedule since they're related
-            }
-            return 'components'
-          }
-
-          // Core app code (combining smaller chunks)
-          if (id.includes('/services/') || id.includes('/store/')) {
-            return 'core'
-          }
-
-          // Pages
-          if (id.includes('/pages/')) {
-            return 'pages'
-          }
-
-          return 'index'
         }
       }
     },
-    chunkSizeWarningLimit: 1000,
-    sourcemap: false,
-    cssMinify: true,
-    cssCodeSplit: true
+    target: 'esnext',
+    chunkSizeWarningLimit: 600,
+    cssCodeSplit: true,
+    sourcemap: false
   },
   resolve: {
     alias: {
