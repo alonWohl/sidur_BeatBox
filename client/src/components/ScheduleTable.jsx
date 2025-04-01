@@ -1,5 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 import { useDroppable, useDraggable } from '@dnd-kit/core'
+import { format, startOfWeek, addDays } from 'date-fns'
+import { he } from 'date-fns/locale' // Hebrew locale
 
 import { memo } from 'react'
 
@@ -92,11 +94,24 @@ function DroppableCell({ id, employee, onRemove }) {
 
 export const ScheduleTable = memo(
   function ScheduleTable({ type, currentSchedule, getAssignedEmployee, handleRemoveEmployee, isSharing }) {
-    console.log('ScheduleTable render:', {
-      type,
-      currentSchedule,
-      sampleDay: currentSchedule?.days?.[0] // Log a sample day to verify data
-    })
+    const getWeekDates = () => {
+      const today = new Date()
+      const startOfTheWeek = startOfWeek(today, { weekStartsOn: 0 }) // 0 = Sunday
+
+      return DAYS.map((day, index) => {
+        const date = addDays(startOfTheWeek, index)
+        return {
+          name: day,
+          date: format(date, 'd/M', { locale: he })
+        }
+      })
+    }
+
+    const isToday = (dayName) => {
+      const today = new Date()
+      const hebrewDays = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+      return hebrewDays[today.getDay()] === dayName
+    }
 
     const isMoked = type === 'מוקד'
     const POSITIONS_PER_SHIFT = isMoked ? 4 : null
@@ -119,11 +134,11 @@ export const ScheduleTable = memo(
               <TableRow key={`${shift}-${position}`} className="h-10">
                 <TableCell
                   className={`text-center font-medium border-l border text-sm p-1 w-[80px]
-                    ${position === 1 ? 'bg-[#BE202E] text-white' : 'border-t-0 bg-[#BE202E]/50'}`}>
+                    ${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-4 border-t-[#BE202E]' : '  border-t-0  bg-gray-100/50'}`}>
                   {position === 1 ? SHIFT_NAMES[shift] : ''}
                 </TableCell>
                 {DAYS.map((day) => (
-                  <TableCell key={`${day}-${shift}-${position}`} className={`p-2 w-[80px] ${position === 1 ? '' : 'border-t-0'}`}>
+                  <TableCell key={`${day}-${shift}-${position}`} className={`p-2 w-[80px] border-x ${position === 1 ? '' : 'border-t-0'}`}>
                     {renderCell(day, shift, position)}
                   </TableCell>
                 ))}
@@ -143,11 +158,11 @@ export const ScheduleTable = memo(
               <TableRow key={`${role}-${position}`} className="h-10">
                 <TableCell
                   className={`text-center font-medium border-l border text-sm p-1 w-[80px] max-w-[80px]
-                    ${position === 1 ? 'bg-[#BE202E] text-white' : 'border-t-0 bg-[#BE202E]/50'}`}>
+                      ${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-4 border-t-[#BE202E]' : 'border-t-0 bg-gray-100/50'}`}>
                   {position === 1 ? config.name : ''}
                 </TableCell>
                 {DAYS.map((day) => (
-                  <TableCell key={`${day}-${role}-${position}`} className={`p-2 w-[80px] ${position === 1 ? '' : 'border-t-0'}`}>
+                  <TableCell key={`${day}-${role}-${position}`} className={`p-2 w-[80px] border-x ${position === 1 ? '' : 'border-t-0'}`}>
                     {renderCell(day, role, position)}
                   </TableCell>
                 ))}
@@ -164,10 +179,15 @@ export const ScheduleTable = memo(
           <Table className="w-full table-fixed min-w-[640px]">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center border-x bg-[#BE202E]/50 text-white w-[80px]">{isMoked ? 'משמרות' : 'תפקידים'}</TableHead>
-                {DAYS.map((day) => (
-                  <TableHead key={day} className="text-center border-x border-b bg-[#BE202E] text-white w-[80px]">
-                    {day}
+                <TableHead className="text-center font-medium bg-gray-100/50 text-zinc-900">משמרת</TableHead>
+                {getWeekDates().map(({ name, date }) => (
+                  <TableHead
+                    key={name}
+                    className={`text-center font-medium text-sm whitespace-nowrap p-2 border-x ${
+                      isToday(name) ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-4 border-t-[#BE202E]' : 'font-medium bg-gray-100/50'
+                    }`}>
+                    <div className="text-center">{name}</div>
+                    <div className={`text-sm text-zinc-900 mt-1`}>{date}</div>
                   </TableHead>
                 ))}
               </TableRow>
