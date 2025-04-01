@@ -271,10 +271,8 @@ export function SchedulePage() {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
-      <div className="flex flex-col h-full w-full animate-in fade-in duration-300 px-4 space-y-6 max-w-[1600px] mx-auto">
+      <div className="flex flex-col h-full w-full animate-in fade-in duration-300 px-4 space-y-6 max-w-[1900px] mx-auto pt-4">
         {isLoading && <Loader />}
-
-        <h1 className="text-3xl text-center font-semibold  text-zinc-800 my-4">סידור עבודה</h1>
 
         <TimeDraw className="absolute top-10 right-10 opacity-50 hidden max-w-[300px] max-h-[300px] 2xl:block" />
         <ScheduleDraw className="absolute bottom-10 left-10 opacity-50 hidden max-w-[300px] max-h-[300px] md:block md:max-w-[200px] md:max-h-[200px]" />

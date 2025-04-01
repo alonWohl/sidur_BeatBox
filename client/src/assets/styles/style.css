@@ -158,6 +158,7 @@ html {
 
 /* For Firefox */
 .scrollbar-thin {
+  direction: ltr;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }

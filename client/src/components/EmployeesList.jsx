@@ -31,7 +31,7 @@ function DraggableEmployee({ employee }) {
 
 export function EmployeesList({ employees }) {
   return (
-    <div className="flex flex-wrap gap-1.5 sm:gap-2 w-full items-center justify-center">
+    <div className="flex flex-wrap gap-1.5 sm:gap-2 w-full items-center py-2">
       {employees.map((employee) => (
         <DraggableEmployee key={employee.id} employee={employee} />
       ))}
