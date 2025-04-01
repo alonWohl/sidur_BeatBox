@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { MokedSchedule } from '@/components/MokedSchedule'
-import { BranchSchedule } from '@/components/BranchSchedule'
 import domtoimage from 'dom-to-image-more'
 import { toast } from 'react-hot-toast'
 import { Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { setFilterBy } from '@/store/system.reducer'
-import { loadSchedules, updateSchedule, updateScheduleDebounced, updateScheduleOptimistic } from '@/store/schedule.actions'
+import { loadSchedules, updateSchedule, updateScheduleOptimistic } from '@/store/schedule.actions'
 import { loadEmployees } from '@/store/employee.actions'
 import { Loader } from '@/components/Loader'
 import { ScheduleDraw } from '@/components/ScheduleDraw'
 import { TimeDraw } from '@/components/TimeDraw'
+import { ScheduleTable } from '@/components/ScheduleTable'
+import { EmployeesList } from '@/components/EmployeesList'
+import { DndContext, DragOverlay, useSensor, useSensors, TouchSensor, MouseSensor, pointerWithin } from '@dnd-kit/core'
 
 export function SchedulePage() {
   const { user } = useSelector((storeState) => storeState.userModule)
@@ -20,18 +21,31 @@ export function SchedulePage() {
   const { schedules } = useSelector((storeState) => storeState.scheduleModule)
   const { employees } = useSelector((storeState) => storeState.employeeModule)
   const [isSharing, setIsSharing] = useState(false)
+  const [currentSchedule, setCurrentSchedule] = useState(null)
+  const [activeId, setActiveId] = useState(null)
+  const [activeEmployee, setActiveEmployee] = useState(null)
+
+  const sensors = useSensors(
+    useSensor(MouseSensor),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5
+      }
+    })
+  )
 
   useEffect(() => {
     loadSchedules(filterBy)
     loadEmployees(filterBy)
-  }, [user, filterBy])
+    setCurrentSchedule(null)
+  }, [filterBy])
 
-  // Prevent scrolling during drag
   useEffect(() => {
-    const preventDefault = (e) => e.preventDefault()
-    document.addEventListener('touchmove', preventDefault, { passive: false })
-    return () => document.removeEventListener('touchmove', preventDefault)
-  }, [])
+    if (schedules && employees?.length > 0) {
+      setCurrentSchedule({ ...schedules })
+    }
+  }, [schedules, employees])
 
   const handleShare = async () => {
     setIsSharing(true)
@@ -76,6 +90,50 @@ export function SchedulePage() {
     }
   }
 
+  const handleDragStart = (event) => {
+    const { active } = event
+    setActiveId(active.id)
+
+    if (active.data.current?.type === 'employee') {
+      setActiveEmployee(active.data.current.employee)
+    } else if (active.data.current?.type === 'tableCell') {
+      setActiveEmployee(active.data.current.employee)
+    }
+  }
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event
+    if (!over || !currentSchedule) return
+
+    try {
+      if (active.data.current?.type === 'employee') {
+        // Handle new employee drop
+        const [day, role, position] = over.id.split('-')
+        handleUpdateSchedule(currentSchedule, active.id, day, role, parseInt(position))
+      } else if (active.data.current?.type === 'tableCell') {
+        // Handle cell to cell move
+        const [sourceDay, sourceRole, sourcePos] = active.data.current.cellId.split('-')
+        const [destDay, destRole, destPosition] = over.id.split('-')
+
+        const moveInfo = {
+          type: 'move',
+          sourceDay,
+          sourceRole,
+          sourcePosition: parseInt(sourcePos),
+          employeeId: active.data.current.employee.id
+        }
+
+        handleUpdateSchedule(currentSchedule, moveInfo, destDay, destRole, parseInt(destPosition))
+      }
+    } catch (error) {
+      console.error('Drag end error:', error)
+      toast.error('שגיאה בעדכון המשמרת')
+    }
+
+    setActiveId(null)
+    setActiveEmployee(null)
+  }
+
   const handleUpdateSchedule = async (schedule, employeeId, day, role, position) => {
     if (!schedule?.id) return
 
@@ -85,7 +143,8 @@ export function SchedulePage() {
 
       let dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
       if (dayIndex === -1) {
-        dayIndex = scheduleToUpdate.days.push({ name: day, shifts: [] }) - 1
+        scheduleToUpdate.days.push({ name: day, shifts: [] })
+        dayIndex = scheduleToUpdate.days.length - 1
       }
 
       if (!scheduleToUpdate.days[dayIndex].shifts) {
@@ -99,15 +158,14 @@ export function SchedulePage() {
 
         const destEmployee = scheduleToUpdate.days[dayIndex].shifts.find((shift) => shift.role === role && shift.position === positionNum)
 
-        // Remove employees from both positions
         scheduleToUpdate.days[sourceDayIndex].shifts = scheduleToUpdate.days[sourceDayIndex].shifts.filter(
           (shift) => !(shift.role === sourceRole && shift.position === sourcePosition)
         )
+
         scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
           (shift) => !(shift.role === role && shift.position === positionNum)
         )
 
-        // Add employees to their new positions
         scheduleToUpdate.days[dayIndex].shifts.push({
           role,
           position: positionNum,
@@ -122,17 +180,21 @@ export function SchedulePage() {
           })
         }
       } else {
-        // Remove existing employee
         scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
           (shift) => !(shift.role === role && shift.position === positionNum)
         )
 
-        // Add new employee if not removing
         if (employeeId && employeeId !== 'undefined') {
-          scheduleToUpdate.days[dayIndex].shifts.push({ role, position: positionNum, employeeId })
+          scheduleToUpdate.days[dayIndex].shifts.push({
+            role,
+            position: positionNum,
+            employeeId
+          })
         }
       }
+
       await updateScheduleOptimistic(scheduleToUpdate)
+      setCurrentSchedule({ ...scheduleToUpdate })
     } catch (error) {
       toast.error('שגיאה בעדכון המשמרת')
     }
@@ -153,9 +215,15 @@ export function SchedulePage() {
   }
 
   const getAssignedEmployee = (schedule, day, role, position) => {
-    if (!schedule) return null
-    const shift = schedule.days?.find((d) => d.name === day)?.shifts?.find((s) => s.role === role && s.position === position)
-    return shift ? employees.find((w) => w.id === shift.employeeId) : null
+    if (!schedule?.days) return null
+
+    const dayData = schedule.days.find((d) => d.name === day)
+    if (!dayData?.shifts) return null
+
+    const shift = dayData.shifts.find((s) => s.role === role && s.position === parseInt(position))
+    if (!shift?.employeeId) return null
+
+    return employees.find((e) => e.id === shift.employeeId)
   }
 
   const handleRemoveEmployee = async (schedule, day, role, position) => {
@@ -165,12 +233,12 @@ export function SchedulePage() {
       const scheduleToUpdate = JSON.parse(JSON.stringify(schedule))
 
       const dayObj = scheduleToUpdate.days.find((d) => d.name === day)
-
       if (!dayObj) return
 
       dayObj.shifts = dayObj.shifts.filter((shift) => !(shift.role === role && shift.position === position))
 
-      await updateScheduleDebounced(scheduleToUpdate)
+      await updateScheduleOptimistic(scheduleToUpdate)
+      setCurrentSchedule(scheduleToUpdate)
     } catch (error) {
       toast.error('שגיאה בהסרת העובד')
     }
@@ -187,18 +255,19 @@ export function SchedulePage() {
   }
 
   return (
-    <div className="flex flex-col h-full relative animate-in fade-in duration-300 px-4 space-y-6">
-      {isLoading && <Loader />}
-      <h1 className="text-3xl text-center font-semibold font-mono text-zinc-800 my-4">סידור עבודה</h1>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
+      <div className="flex flex-col h-full w-full relative animate-in fade-in duration-300 px-4 space-y-6 max-w-[1600px] mx-auto overflow-hidden">
+        {isLoading && <Loader />}
 
-      <TimeDraw className="absolute top-10 right-10 opacity-50 hidden max-w-[300px] max-h-[300px] 2xl:block" />
-      <ScheduleDraw className="absolute bottom-10 left-10 opacity-50 hidden max-w-[300px] max-h-[300px] md:block md:max-w-[200px] md:max-h-[200px]" />
+        <h1 className="text-3xl text-center font-semibold  text-zinc-800 my-4">סידור עבודה</h1>
 
-      <div className="container mx-auto w-full my-4">
-        <div className="flex flex-col items-center gap-2 px-2">
+        <TimeDraw className="absolute top-10 right-10 opacity-50 hidden max-w-[300px] max-h-[300px] 2xl:block" />
+        <ScheduleDraw className="absolute bottom-10 left-10 opacity-50 hidden max-w-[300px] max-h-[300px] md:block md:max-w-[200px] md:max-h-[200px]" />
+
+        <div className="flex gap-2 items-center justify-between w-full">
           {user.isAdmin && (
             <Select onValueChange={(value) => setFilterBy({ ...filterBy, name: value })} value={filterBy.name} className="w-full sm:w-auto">
-              <SelectTrigger className="h-8 sm:h-10 text-sm sm:text-base">
+              <SelectTrigger className="h-8 sm:h-10 text-sm sm:text-base justify-self-start">
                 <SelectValue placeholder="בחר סניף" />
               </SelectTrigger>
               <SelectContent>
@@ -211,7 +280,7 @@ export function SchedulePage() {
             </Select>
           )}
 
-          <div className="flex gap-1 sm:gap-2 justify-end w-full">
+          <div className="flex gap-2">
             <Button
               onClick={() => handleClearBoard(schedules)}
               className="cursor-pointer hover:bg-[#BE202E] hover:text-white h-8 sm:h-10 text-sm sm:text-base px-2 sm:px-4"
@@ -221,29 +290,43 @@ export function SchedulePage() {
             <Button
               onClick={handleShare}
               disabled={isSharing}
-              className="flex items-center gap-1 sm:gap-2 bg-green-500 hover:bg-green-600 h-8 sm:h-10 text-sm sm:text-base px-2 sm:px-4">
+              className=" bg-green-500 hover:bg-green-600 h-8 sm:h-10 text-sm sm:text-base px-2 sm:px-4  ">
               {isSharing ? <span className="animate-spin">⏳</span> : <Share2 className="w-3 h-3 sm:w-4 sm:h-4" />}
               <span className="whitespace-nowrap">{isSharing ? 'מכין...' : 'שתף'}</span>
             </Button>
           </div>
         </div>
-      </div>
 
-      {filterBy.username === 'moked' ? (
-        <MokedSchedule
-          getAssignedEmployee={getAssignedEmployee}
-          onUpdateSchedule={handleUpdateSchedule}
-          isSharing={isSharing}
-          handleRemoveEmployee={handleRemoveEmployee}
-        />
-      ) : (
-        <BranchSchedule
-          getAssignedEmployee={getAssignedEmployee}
-          onUpdateSchedule={handleUpdateSchedule}
-          isSharing={isSharing}
-          handleRemoveEmployee={handleRemoveEmployee}
-        />
-      )}
-    </div>
+        <EmployeesList employees={employees} />
+
+        <div className="overflow-auto touch-pan-x touch-pan-y">
+          <div className="min-w-[640px]">
+            <ScheduleTable
+              type={filterBy.name}
+              currentSchedule={currentSchedule}
+              getAssignedEmployee={getAssignedEmployee}
+              handleRemoveEmployee={handleRemoveEmployee}
+            />
+          </div>
+        </div>
+
+        <DragOverlay
+          dropAnimation={{
+            duration: 200,
+            easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)'
+          }}>
+          {activeEmployee && (
+            <div
+              className="h-8 w-[80px] flex items-center justify-center text-white rounded-sm shadow-lg"
+              style={{
+                backgroundColor: activeEmployee.color,
+                transform: 'scale(1.05)' // Slightly larger for better visibility
+              }}>
+              {activeEmployee.name}
+            </div>
+          )}
+        </DragOverlay>
+      </div>
+    </DndContext>
   )
 }

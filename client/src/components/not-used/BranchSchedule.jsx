@@ -4,7 +4,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { toast } from 'react-hot-toast'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EmployeesList } from '@/components/EmployeesList'
-import { EmployeeCell } from '@/components/EmployeeCell'
+import { EmployeeCell } from '@/components/not-used/EmployeeCell'
 import { Loader } from '@/components/Loader'
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
 const ROLES = {

@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { toast } from 'react-hot-toast'
 import { EmployeesList } from '@/components/EmployeesList'
-import { EmployeeCell } from '@/components/EmployeeCell'
+import { EmployeeCell } from '@/components/not-used/EmployeeCell'
 import { format, startOfWeek, addDays } from 'date-fns'
 import { he } from 'date-fns/locale' // Hebrew locale
 import { Loader } from '@/components/Loader'
@@ -154,7 +154,6 @@ export function MokedSchedule({ getAssignedEmployee, onUpdateSchedule, isSharing
             WebkitOverflowScrolling: 'touch' // For smooth scrolling on iOS
           }}>
           <div className="min-w-[800px]">
-            {' '}
             {/* Force minimum width to ensure scrolling */}
             <Table dir="rtl" className="w-full border-collapse bg-white border border-gray-200 rounded-lg">
               <TableHeader>
