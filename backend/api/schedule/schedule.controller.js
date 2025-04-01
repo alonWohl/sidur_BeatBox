@@ -6,7 +6,7 @@ export async function getSchedules(req, res) {
 
   try {
     const filterBy = {
-      username: loggedinUser.isAdmin ? req.query.username || loggedinUser.username : loggedinUser.username
+      name: loggedinUser.isAdmin ? req.query.name || loggedinUser.name : loggedinUser.name
     }
 
     const schedules = await scheduleService.query(filterBy)

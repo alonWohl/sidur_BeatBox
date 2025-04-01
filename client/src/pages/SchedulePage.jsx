@@ -56,6 +56,12 @@ export function SchedulePage() {
     }
   }, [filterBy])
 
+  useEffect(() => {
+    if (user?.name) {
+      setFilterBy({ ...filterBy, name: user.name })
+    }
+  }, [user])
+
   const handleShare = async () => {
     setIsSharing(true)
     try {
@@ -315,6 +321,7 @@ export function SchedulePage() {
               currentSchedule={currentSchedule}
               getAssignedEmployee={getAssignedEmployee}
               handleRemoveEmployee={handleRemoveEmployee}
+              isSharing={isSharing}
             />
           </div>
         </div>

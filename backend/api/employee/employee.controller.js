@@ -32,7 +32,7 @@ export async function addEmployee(req, res) {
 
   const employeeToAdd = {
     name: req.body.name,
-    branch: loggedinUser.isAdmin ? req.body.branch : loggedinUser.name,
+    branch: loggedinUser.isAdmin ? req.body.branch || loggedinUser.name : loggedinUser.name,
     color: req.body.color
   }
 

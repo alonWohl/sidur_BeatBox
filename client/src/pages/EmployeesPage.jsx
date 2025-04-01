@@ -98,7 +98,7 @@ export function EmployeesPage() {
 
     try {
       await addEmployee(employeeToEdit)
-      setEmployeeToEdit({ name: '', color: '', branch: '' })
+      setEmployeeToEdit({ ...employeeToEdit, name: '', color: '' })
       toast.success('עובד נוסף בהצלחה')
     } catch (err) {
       const errorMessage = err.response?.data?.err || err.message || 'שגיאה בהוספת עובד'

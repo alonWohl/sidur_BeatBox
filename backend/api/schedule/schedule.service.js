@@ -19,7 +19,7 @@ async function query(filterBy = { name: '', username: '' }) {
     const collection = await dbService.getCollection('branch')
 
     const branch = await collection.findOne({
-      username: filterBy.username
+      name: filterBy.name
     })
 
     if (!branch) {

@@ -91,7 +91,7 @@ function DroppableCell({ id, employee, onRemove }) {
 }
 
 export const ScheduleTable = memo(
-  function ScheduleTable({ type, currentSchedule, getAssignedEmployee, handleRemoveEmployee }) {
+  function ScheduleTable({ type, currentSchedule, getAssignedEmployee, handleRemoveEmployee, isSharing }) {
     console.log('ScheduleTable render:', {
       type,
       currentSchedule,
@@ -160,7 +160,7 @@ export const ScheduleTable = memo(
 
     return (
       <div className="overflow-auto touch-pan-x touch-pan-y -mx-4 px-4">
-        <div id="schedule-table-for-share">
+        <div id="schedule-table-for-share" className={`${isSharing ? 'bg-white' : ''}`}>
           <Table className="w-full table-fixed min-w-[640px]">
             <TableHeader>
               <TableRow>
