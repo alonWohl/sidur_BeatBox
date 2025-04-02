@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
-import domtoimage from 'dom-to-image-more';
+import html2canvas from 'html2canvas';
 import {toast} from 'react-hot-toast';
 import {Share2} from 'lucide-react';
 import {Button} from '@/components/ui/button';
@@ -65,86 +65,113 @@ export function SchedulePage() {
 	const handleShare = async () => {
 		try {
 			setIsSharing(true);
-
 			const node = document.getElementById('schedule-table-for-share');
 
-			// Save original styles
+			// Apply temporary styles for better capture
 			const originalStyles = {
 				background: node.style.background,
 				backgroundColor: node.style.backgroundColor,
-				transform: node.style.transform,
 				width: node.style.width,
 				padding: node.style.padding,
 			};
 
-			// Apply temporary styles for capture
 			Object.assign(node.style, {
 				background: '#ffffff',
 				backgroundColor: '#ffffff',
-				transform: 'none',
 				width: '2400px',
 				padding: '20px',
 			});
 
-			// Force white background on all elements
-			const elements = Array.from(node.querySelectorAll('*')); // Convert to array first
-			const originalElementStyles = elements.map((el) => ({
-				el,
-				bg: el.style.backgroundColor,
-				color: el.style.color,
-			}));
-
-			// Apply white background to all elements
-			elements.forEach((el) => {
-				if (el.tagName === 'TD' || el.tagName === 'TH') {
-					el.style.backgroundColor = '#ffffff';
-					el.style.color = '#000000';
-				}
-				// Remove any oklch colors
-				if (el.style.backgroundColor?.includes('oklch')) {
-					el.style.backgroundColor = '#ffffff';
-				}
-				if (el.style.color?.includes('oklch')) {
-					el.style.color = '#000000';
-				}
-			});
-
-			// Wait for styles to apply
-			await new Promise((resolve) => setTimeout(resolve, 100));
-
-			const dataUrl = await domtoimage.toPng(node, {
-				quality: 1.0,
-				bgcolor: '#ffffff',
-				style: {
-					transform: 'none',
-				},
+			// Configure html2canvas options
+			const canvas = await html2canvas(node, {
+				backgroundColor: '#ffffff',
+				scale: 2,
+				useCORS: true,
+				logging: false,
 				width: node.scrollWidth,
 				height: node.scrollHeight,
-				filter: (node) => {
-					return !node.classList?.contains('overlay') && !node.classList?.contains('loader');
+				onclone: (clonedDoc) => {
+					const clonedNode = clonedDoc.getElementById('schedule-table-for-share');
+
+					// Helper function to check for modern color formats
+					const hasModernColor = (color) => {
+						return color?.includes('oklch') || color?.includes('oklab');
+					};
+
+					// Convert all modern colors to RGB
+					const elements = clonedNode.getElementsByTagName('*');
+					Array.from(elements).forEach((el) => {
+						const style = window.getComputedStyle(el);
+
+						// Handle background color
+						if (hasModernColor(style.backgroundColor)) {
+							el.style.backgroundColor = '#ffffff';
+						}
+
+						// Handle text color
+						if (hasModernColor(style.color)) {
+							el.style.color = '#000000';
+						}
+
+						// Handle border color
+						if (hasModernColor(style.borderColor)) {
+							el.style.borderColor = '#e5e5e5';
+						}
+
+						// Handle any other color properties
+						if (hasModernColor(style.fill)) {
+							el.style.fill = '#000000';
+						}
+					});
+
+					// Ensure table cells are white
+					clonedNode.querySelectorAll('td, th').forEach((cell) => {
+						cell.style.backgroundColor = '#ffffff';
+						cell.style.color = '#000000';
+						cell.style.borderColor = '#e5e5e5';
+					});
+
+					// Handle employee color blocks
+					clonedNode.querySelectorAll('[data-type="employee-cell"]').forEach((cell) => {
+						const bgColor = window.getComputedStyle(cell).backgroundColor;
+						if (hasModernColor(bgColor)) {
+							cell.style.backgroundColor = '#3b82f6'; // Default blue
+						}
+					});
+
+					// Force white background on container
+					clonedNode.style.backgroundColor = '#ffffff';
 				},
 			});
 
 			// Restore original styles
 			Object.assign(node.style, originalStyles);
-			originalElementStyles.forEach(({el, bg, color}) => {
-				el.style.backgroundColor = bg;
-				el.style.color = color;
-			});
 
+			// Convert to PNG
+			const dataUrl = canvas.toDataURL('image/png', 1.0);
+
+			// Handle sharing based on device
 			const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 			if (isMobile) {
-				const blob = await (await fetch(dataUrl)).blob();
-				const file = new File([blob], 'schedule.png', {type: 'image/png'});
+				try {
+					const blob = await (await fetch(dataUrl)).blob();
+					const file = new File([blob], 'schedule.png', {type: 'image/png'});
 
-				if (navigator.share) {
-					await navigator.share({
-						files: [file],
-						title: 'סידור עבודה שבועי',
-						text: 'סידור עבודה שבועי',
-					});
-				} else {
+					if (navigator.share) {
+						await navigator.share({
+							files: [file],
+							title: 'סידור עבודה שבועי',
+							text: 'סידור עבודה שבועי',
+						});
+					} else {
+						const link = document.createElement('a');
+						link.href = dataUrl;
+						link.download = 'schedule.png';
+						link.click();
+					}
+				} catch (error) {
+					console.error('Mobile share error:', error);
 					const link = document.createElement('a');
 					link.href = dataUrl;
 					link.download = 'schedule.png';
@@ -388,7 +415,7 @@ export function SchedulePage() {
 
 				<EmployeesList employees={employees} />
 
-				<div className='overflow-x-auto scrollbar-hide'>
+				<div className='overflow-x-auto scrollbar-hide '>
 					<div className='min-w-[640px]'>
 						<ScheduleTable
 							type={filterBy.name}

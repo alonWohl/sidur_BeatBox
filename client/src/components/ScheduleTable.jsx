@@ -77,7 +77,7 @@ function DroppableCell({id, employee, onRemove}) {
 			ref={ref}
 			{...attributes}
 			{...listeners}
-			className={`h-8 w-full border border-gray-200 relative
+			className={`h-10 w-full border border-gray-200 relative
         flex items-center justify-center text-white truncate px-1
         ${isOver ? 'ring-2 ring-blue-400 bg-blue-50' : ''}
         ${employee ? 'cursor-pointer group' : ''}`}
@@ -142,18 +142,14 @@ export const ScheduleTable = memo(
 								key={`${shift}-${position}`}
 								className='h-10'>
 								<TableCell
-									className={`text-center font-medium text-sm p-1 w-[80p]
-                    ${
-						position === 1
-							? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-4 border-t-[#BE202E]'
-							: '  border-t-0  bg-gray-100/50'
-					}`}>
+									className={`text-center font-medium text-sm p-0
+                    ${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold ' : '  border-t-0  bg-gray-100/50'}`}>
 									{position === 1 ? SHIFT_NAMES[shift] : ''}
 								</TableCell>
 								{DAYS.map((day) => (
 									<TableCell
 										key={`${day}-${shift}-${position}`}
-										className={`p-2 w-[80px] border-x ${position === 1 ? '' : ''}`}>
+										className={`p-0  w-[80px] border-x ${position === 1 ? '' : ''}`}>
 										{renderCell(day, shift, position)}
 									</TableCell>
 								))}
@@ -174,7 +170,7 @@ export const ScheduleTable = memo(
 								key={`${role}-${position}`}
 								className='h-10'>
 								<TableCell
-									className={`text-center font-medium border-l border text-sm p-1 w-[80px] max-w-[80px]
+									className={`text-center font-medium border-l border text-sm
                       ${
 							position === 1
 								? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-4 border-t-[#BE202E]'
@@ -185,7 +181,7 @@ export const ScheduleTable = memo(
 								{DAYS.map((day) => (
 									<TableCell
 										key={`${day}-${role}-${position}`}
-										className={`p-2 w-[80px] border-x ${position === 1 ? '' : 'border-t-0'}`}>
+										className={` border-x ${position === 1 ? '' : 'border-t-0'}`}>
 										{renderCell(day, role, position)}
 									</TableCell>
 								))}
