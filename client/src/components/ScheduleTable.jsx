@@ -133,32 +133,37 @@ export const ScheduleTable = memo(
 		};
 
 		const renderMokedLayout = () => (
-			<TableBody>
-				{SHIFTS.flatMap((shift) =>
-					Array.from({length: POSITIONS_PER_SHIFT}, (_, index) => {
-						const position = index + 1;
-						return (
-							<TableRow
-								key={`${shift}-${position}`}
-								className='h-10'>
-								<TableCell
-									className={`text-center font-medium text-sm p-0
-                    ${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold ' : '  border-t-0  bg-gray-100/50'}`}>
-									{position === 1 ? SHIFT_NAMES[shift] : ''}
-								</TableCell>
-								{DAYS.map((day) => (
-									<TableCell
-										key={`${day}-${shift}-${position}`}
-										className={`p-0  w-[80px] border-x ${position === 1 ? '' : ''}`}>
-										{renderCell(day, shift, position)}
-									</TableCell>
-								))}
-							</TableRow>
-						);
-					})
-				)}
-			</TableBody>
-		);
+    <TableBody>
+        {SHIFTS.flatMap((shift) => {
+            let shiftPositions = 0;
+            if (shift === 'morning') shiftPositions = 3;
+            else if (shift === 'noon') shiftPositions = 1;
+            else if (shift === 'evening') shiftPositions = 3;
+
+            return Array.from({ length: shiftPositions }, (_, index) => {
+                const position = index + 1;
+                return (
+                    <TableRow
+                        key={`${shift}-${position}`}
+                        className='h-10'>
+                        <TableCell
+                            className={`text-center font-medium text-sm p-0
+                                ${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold ' : '  border-t-0  bg-gray-100/50'}`}>
+                            {position === 1 ? SHIFT_NAMES[shift] : ''}
+                        </TableCell>
+                        {DAYS.map((day) => (
+                            <TableCell
+                                key={`${day}-${shift}-${position}`}
+                                className={`p-0  w-[80px] border-x ${position === 1 ? '' : ''}`}>
+                                {renderCell(day, shift, position)}
+                            </TableCell>
+                        ))}
+                    </TableRow>
+                );
+            });
+        })}
+    </TableBody>
+);
 
 		const renderBranchLayout = () => (
 			<TableBody>
