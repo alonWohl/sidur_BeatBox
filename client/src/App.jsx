@@ -4,11 +4,11 @@ import { Login } from './pages/Login'
 import { EmployeesPage } from './pages/EmployeesPage'
 import { SchedulePage } from './pages/SchedulePage'
 import { Toaster } from 'react-hot-toast'
-import { useSelector } from 'react-redux'
+import { useUserStore } from './stores/useUserStore'
 import { Footer } from './components/Footer'
 
 function App() {
-  const { user } = useSelector((storeState) => storeState.userModule)
+  const user = useUserStore((state) => state.user)
 
   return (
     <div className="h-svh w-full bg-neutral-50 flex flex-col">

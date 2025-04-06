@@ -2,7 +2,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
-import { login } from '@/store/user.actions'
+import { useUserStore } from '@/stores/useUserStore'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { UserCircle2 } from 'lucide-react'
@@ -12,6 +12,7 @@ export function Login() {
   const [errors, setErrors] = useState({ username: '', password: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
+  const login = useUserStore((state) => state.login)
 
   const handleUserChange = (value) => {
     setUser({ ...user, username: value })
@@ -102,34 +103,24 @@ export function Login() {
                   </SelectItem>
                 </SelectContent>
               </Select>
-              {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+              {errors.username && <p className="text-red-500 text-sm">{errors.username}</p>}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 block">סיסמא</label>
               <Input
                 type="password"
-                placeholder="הזן סיסמא"
-                onChange={handleChange}
-                value={user.password}
                 name="password"
+                value={user.password}
+                onChange={handleChange}
                 className={`w-full ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-red-500'}`}
+                placeholder="הזן סיסמא"
               />
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
             </div>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-[#BE202E] cursor-pointer hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-              {isSubmitting ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  מתחבר...
-                </div>
-              ) : (
-                'התחבר'
-              )}
+            <Button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white" disabled={isSubmitting}>
+              {isSubmitting ? 'מתחבר...' : 'התחבר'}
             </Button>
           </form>
         </div>

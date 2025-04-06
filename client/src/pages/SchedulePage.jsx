@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useEffect, useState, useCallback } from 'react'
 import html2canvas from 'html2canvas'
 import { toast } from 'react-hot-toast'
 import { Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import { setFilterBy } from '@/store/system.reducer'
-import { loadSchedules, updateSchedule, updateScheduleOptimistic } from '@/store/schedule.actions'
-import { loadEmployees } from '@/store/employee.actions'
+import { useSystemStore } from '@/stores/useSystemStore'
+import { useScheduleStore } from '@/stores/useScheduleStore'
+import { useEmployeeStore } from '@/stores/useEmployeeStore'
+import { useUserStore } from '@/stores/useUserStore'
 import { Loader } from '@/components/Loader'
 import { ScheduleDraw } from '@/components/ScheduleDraw'
 import { TimeDraw } from '@/components/TimeDraw'
@@ -16,13 +16,21 @@ import { EmployeesList } from '@/components/EmployeesList'
 import { DndContext, DragOverlay, useSensor, useSensors, TouchSensor, MouseSensor, pointerWithin } from '@dnd-kit/core'
 
 export function SchedulePage() {
-  const { user } = useSelector((storeState) => storeState.userModule)
-  const { filterBy, isLoading } = useSelector((storeState) => storeState.systemModule)
-  const { schedules } = useSelector((storeState) => storeState.scheduleModule)
-  const { employees } = useSelector((storeState) => storeState.employeeModule)
+  const user = useUserStore((state) => state.user)
+  const filterBy = useSystemStore((state) => state.filterBy)
+  const isLoading = useSystemStore((state) => state.isLoading)
+  const setFilterBy = useSystemStore((state) => state.setFilterBy)
+
+  const schedules = useScheduleStore((state) => state.schedules)
+  const loadSchedules = useScheduleStore((state) => state.loadSchedules)
+  const updateSchedule = useScheduleStore((state) => state.updateSchedule)
+  const updateScheduleOptimistic = useScheduleStore((state) => state.updateScheduleOptimistic)
+
+  const employees = useEmployeeStore((state) => state.employees)
+  const loadEmployees = useEmployeeStore((state) => state.loadEmployees)
+
   const [isSharing, setIsSharing] = useState(false)
   const [currentSchedule, setCurrentSchedule] = useState(null)
-  const [activeId, setActiveId] = useState(null)
   const [activeEmployee, setActiveEmployee] = useState(null)
 
   const sensors = useSensors(
@@ -35,32 +43,42 @@ export function SchedulePage() {
     })
   )
 
-  useEffect(() => {
-    if (schedules && employees?.length > 0) {
+  const initializeSchedule = useCallback(() => {
+    if (schedules?.length > 0 && employees?.length > 0) {
       const initialSchedule = {
-        ...schedules,
-        days: schedules.days || []
+        ...schedules[0],
+        days: schedules[0].days || []
       }
       setCurrentSchedule(initialSchedule)
-      console.log('Setting current schedule:', initialSchedule)
     }
   }, [schedules, employees])
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     try {
-      loadSchedules(filterBy)
-      loadEmployees(filterBy)
+      await Promise.all([loadSchedules(filterBy), loadEmployees(filterBy)])
     } catch (error) {
       console.error('Error loading data:', error)
       toast.error('שגיאה בטעינת הנתונים')
     }
-  }, [filterBy])
+  }, [filterBy, loadSchedules, loadEmployees])
+
+  const updateUserFilter = useCallback(() => {
+    if (user?.name && (!filterBy?.name || filterBy.name !== user.name)) {
+      setFilterBy({ name: user.name })
+    }
+  }, [user, filterBy?.name, setFilterBy])
 
   useEffect(() => {
-    if (user?.name) {
-      setFilterBy({ ...filterBy, name: user.name })
-    }
-  }, [user])
+    initializeSchedule()
+  }, [initializeSchedule])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  useEffect(() => {
+    updateUserFilter()
+  }, [updateUserFilter])
 
   const handleShare = async () => {
     try {
@@ -195,7 +213,6 @@ export function SchedulePage() {
 
   const handleDragStart = (event) => {
     const { active } = event
-    setActiveId(active.id)
 
     if (active.data.current?.type === 'employee') {
       setActiveEmployee(active.data.current.employee)
@@ -233,7 +250,6 @@ export function SchedulePage() {
       toast.error('שגיאה בעדכון המשמרת')
     }
 
-    setActiveId(null)
     setActiveEmployee(null)
   }
 
@@ -298,17 +314,18 @@ export function SchedulePage() {
 
       await updateScheduleOptimistic(scheduleToUpdate)
       setCurrentSchedule({ ...scheduleToUpdate })
-    } catch (error) {
+    } catch (err) {
+      console.error('Error updating schedule:', err)
       toast.error('שגיאה בעדכון המשמרת')
     }
   }
 
-  const handleClearBoard = async (schedule) => {
-    if (!schedule) return
+  const handleClearBoard = async (schedules) => {
+    if (!schedules?.length) return
     try {
       const clearedSchedule = {
-        ...schedule,
-        days: schedule.days.map((day) => ({ ...day, shifts: [] }))
+        ...schedules[0],
+        days: schedules[0].days.map((day) => ({ ...day, shifts: [] }))
       }
       await updateSchedule(clearedSchedule)
       toast.success('הסידור נוקה בהצלחה')
@@ -342,7 +359,8 @@ export function SchedulePage() {
 
       await updateScheduleOptimistic(scheduleToUpdate)
       setCurrentSchedule(scheduleToUpdate)
-    } catch (error) {
+    } catch (err) {
+      console.error('Error removing employee:', err)
       toast.error('שגיאה בהסרת העובד')
     }
   }

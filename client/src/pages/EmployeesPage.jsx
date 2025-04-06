@@ -1,6 +1,4 @@
-import { useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
-import { loadEmployees, removeEmployee, updateEmployee, addEmployee } from '../store/employee.actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
@@ -9,7 +7,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import React from 'react'
 import { Trash } from 'lucide-react'
 import { Loader } from '@/components/Loader'
-import { setFilterBy } from '@/store/system.reducer'
+import { useUserStore } from '@/stores/useUserStore'
+import { useEmployeeStore } from '@/stores/useEmployeeStore'
+import { useSystemStore } from '@/stores/useSystemStore'
+
 const colorOptions = [
   '#FF3366', // bright pink
   '#FF6B2B', // vibrant orange
@@ -69,19 +70,29 @@ const ColorPickerPopover = ({ value, onChange }) => {
 }
 
 export function EmployeesPage() {
-  const { user } = useSelector((storeState) => storeState.userModule)
+  const user = useUserStore((state) => state.user)
   const [employeeToEdit, setEmployeeToEdit] = useState({ name: '', color: '', branch: user?.name })
-  const employees = useSelector((storeState) => storeState.employeeModule.employees)
-  const { isLoading } = useSelector((storeState) => storeState.systemModule)
-  const { filterBy } = useSelector((storeState) => storeState.systemModule)
+  const { employees, loadEmployees, addEmployee, removeEmployee } = useEmployeeStore((state) => ({
+    employees: state.employees,
+    loadEmployees: state.loadEmployees,
+    addEmployee: state.addEmployee,
+    removeEmployee: state.removeEmployee
+  }))
+  const { isLoading, filterBy, setFilterBy } = useSystemStore((state) => ({
+    isLoading: state.isLoading,
+    filterBy: state.filterBy,
+    setFilterBy: state.setFilterBy
+  }))
 
   useEffect(() => {
-    setFilterBy({ name: user?.name })
-  }, [user])
+    if (user?.name) {
+      setFilterBy({ name: user.name })
+    }
+  }, [user, setFilterBy])
 
   useEffect(() => {
     loadEmployees(filterBy)
-  }, [filterBy])
+  }, [filterBy, loadEmployees])
 
   const handleAddEmployee = async (e) => {
     e.preventDefault()
@@ -98,93 +109,109 @@ export function EmployeesPage() {
 
     try {
       await addEmployee(employeeToEdit)
-      setEmployeeToEdit({ ...employeeToEdit, name: '', color: '' })
-      toast.success('עובד נוסף בהצלחה')
+      setEmployeeToEdit({ name: '', color: '', branch: user?.name })
+      toast.success('העובד נוסף בהצלחה')
     } catch (err) {
-      const errorMessage = err.response?.data?.err || err.message || 'שגיאה בהוספת עובד'
-      toast.error(errorMessage)
+      console.error('Error adding employee:', err)
+      toast.error('שגיאה בהוספת העובד')
     }
   }
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setEmployeeToEdit({ ...employeeToEdit, [name]: value })
+    setEmployeeToEdit((prev) => ({ ...prev, [name]: value, branch: user?.name }))
   }
 
-  const handleUpdateEmployee = async (e, employee) => {
-    const updatedEmployee = { ...employee, color: e.target.value }
+  const handleRemoveEmployee = async (employeeId) => {
     try {
-      await updateEmployee(updatedEmployee)
+      await removeEmployee(employeeId)
+      toast.success('העובד הוסר בהצלחה')
     } catch (err) {
-      const errorMessage = err.response?.data?.err || err.message || 'שגיאה בעדכון עובד'
-      toast.error(errorMessage)
+      console.error('Error removing employee:', err)
+      toast.error('שגיאה בהסרת העובד')
     }
   }
 
-  const handleRemoveEmployee = (employeeId) => {
-    removeEmployee(employeeId)
+  const handleBranchChange = (value) => {
+    setFilterBy({ name: value })
+    setEmployeeToEdit((prev) => ({ ...prev, branch: value }))
   }
 
-  const handleBranchChange = (value) => {
-    setEmployeeToEdit({ ...employeeToEdit, branch: value })
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center h-96 animate-in fade-in duration-500">
+        <div className="text-center text-gray-500">
+          <p className="text-lg font-medium">אנא התחבר כדי להציג את העובדים</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="flex flex-col h-full items-center p-4">
+    <div className="flex flex-col h-full w-full animate-in fade-in duration-300 px-4 space-y-6 max-w-[1900px] mx-auto pt-4">
       {isLoading && <Loader />}
-      <form className="flex flex-col items-center gap-2 mt-8 sm:mt-16 w-full max-w-md" onSubmit={handleAddEmployee}>
-        <h2 className="text-lg sm:text-xl font-semibold">הוסף עובד</h2>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-2 sm:mt-4 w-full">
-          <Input
-            type="text"
-            placeholder="שם"
-            name="name"
-            value={employeeToEdit.name}
-            onChange={handleChange}
-            className="text-sm sm:text-base"
-            tabIndex={1}
-            autoFocus
-          />
-          <ColorPickerPopover value={employeeToEdit.color} onChange={handleChange} />
-          {user?.isAdmin && (
-            <Select name="branch" value={employeeToEdit.branch} onValueChange={handleBranchChange} className="w-full sm:w-auto">
-              <SelectTrigger className="text-sm sm:text-base">
-                <SelectValue placeholder="בחר סניף" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="מוקד">מוקד</SelectItem>
-                <SelectItem value="תל אביב">תל אביב</SelectItem>
-                <SelectItem value="פתח תקווה">פתח תקווה</SelectItem>
-                <SelectItem value="רשאון לציון">רשאון לציון</SelectItem>
-                <SelectItem value="ראש העין">ראש העין</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-          <Button className="w-full sm:w-auto text-sm sm:text-base">הוסף</Button>
-        </div>
-      </form>
 
-      <ul className="grid grid-cols-2  sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 container mt-8 sm:mt-16 w-full max-w-6xl overflow-y-auto scrollbar-thin">
-        {employees.length === 0 && <li className="text-center text-gray-500 col-span-full text-sm sm:text-base">אין עובדים</li>}
+      <div className="flex gap-2 items-center justify-between w-full">
+        {user.isAdmin && (
+          <Select onValueChange={handleBranchChange} value={filterBy.name} className="w-full sm:w-auto">
+            <SelectTrigger className="h-8 sm:h-10 text-sm sm:text-base justify-self-start">
+              <SelectValue placeholder="בחר סניף" />
+            </SelectTrigger>
+            <SelectContent>
+              {['מוקד', 'תל אביב', 'פתח תקווה', 'רשאון לציון', 'ראש העין'].map((branch) => (
+                <SelectItem key={branch} value={branch}>
+                  {branch}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {employees.map((employee) => (
-          <li key={employee.id} className="flex flex-col p-3 sm:p-4 gap-2 sm:gap-3 bg-white rounded-lg shadow-sm border">
-            <h2 className="text-sm sm:text-md font-bold truncate" style={{ color: employee.color }}>
-              {employee.name}
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-500">סניף: {employee.branch}</p>
-
-            <div className="flex items-center gap-2">
-              <p className="text-xs sm:text-sm text-gray-500">צבע</p>
-              <ColorPickerPopover value={employee.color} onChange={(e) => handleUpdateEmployee(e, employee)} />
+          <div key={employee.id} className="flex flex-col gap-2 p-4 border rounded-lg shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-sm" style={{ backgroundColor: employee.color }} />
+                <h3 className="text-lg font-medium">{employee.name}</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                onClick={() => handleRemoveEmployee(employee.id)}>
+                <Trash className="h-4 w-4" />
+              </Button>
             </div>
-
-            <Button onClick={() => handleRemoveEmployee(employee.id)} className="text-xs sm:text-sm mt-auto" variant="destructive">
-              הסר
-              <Trash className="w-4 h-4" />
-            </Button>
-          </li>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">סניף:</span>
+              <span className="text-sm font-medium">{employee.branch}</span>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">הוסף עובד חדש</h2>
+        <form onSubmit={handleAddEmployee} className="flex flex-col gap-4 max-w-md">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="name" className="text-sm font-medium">
+              שם העובד
+            </label>
+            <Input id="name" name="name" value={employeeToEdit.name} onChange={handleChange} placeholder="הכנס שם עובד" className="h-10" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="color" className="text-sm font-medium">
+              צבע
+            </label>
+            <ColorPickerPopover value={employeeToEdit.color} onChange={handleChange} />
+          </div>
+          <Button type="submit" className="mt-2">
+            הוסף עובד
+          </Button>
+        </form>
+      </div>
     </div>
   )
 }

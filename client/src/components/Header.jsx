@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useSelector } from 'react-redux'
-import { logout } from '@/store/user.actions'
+import { useUserStore } from '@/stores/useUserStore'
 
 import { useNavigate } from 'react-router'
 import { Button } from './ui/button'
@@ -8,7 +7,8 @@ import { forwardRef } from 'react'
 import logo from '../assets/images/logo.webp'
 
 export const Header = forwardRef((props, ref) => {
-  const { user } = useSelector((storeState) => storeState.userModule)
+  const user = useUserStore((state) => state.user)
+  const logout = useUserStore((state) => state.logout)
   const navigate = useNavigate()
   const handleLogout = () => {
     logout()
