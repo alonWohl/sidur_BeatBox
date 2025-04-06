@@ -1,10 +1,11 @@
+// auth.service.js
 import Cryptr from 'cryptr'
 import bcrypt from 'bcrypt'
 import { userService } from '../branch/user.service.js'
-
 import { logger } from '../../services/logger.service.js'
 
 const cryptr = new Cryptr(process.env.SECRET || 'Secret-Puk-1234')
+const SALT_ROUNDS = 10
 
 export const authService = {
   signup,
@@ -17,11 +18,13 @@ async function login(username, password) {
   logger.debug(`auth.service - login with username: ${username}`)
 
   const user = await userService.getByUsername(username)
-  //   if (!user) return Promise.reject('Invalid username or password')
+  if (!user) return Promise.reject('Invalid username or password')
 
-  // TODO: un-comment for real login
   const match = await bcrypt.compare(password, user.password)
   if (!match) return Promise.reject('Invalid username or password')
+
+  // Add last login timestamp
+  await userService.update({ ...user, lastLogin: Date.now() })
 
   delete user.password
   user._id = user._id.toString()
@@ -29,16 +32,20 @@ async function login(username, password) {
 }
 
 async function signup({ username, password, name, isAdmin }) {
-  const saltRounds = 10
-
   logger.debug(`auth.service - signup with username: ${username}`)
   if (!username || !password) return Promise.reject('Missing required signup information')
 
   const userExist = await userService.getByUsername(username)
   if (userExist) return Promise.reject('Username already taken')
 
-  const hash = await bcrypt.hash(password, saltRounds)
-  return userService.add({ username, password: hash, name, isAdmin })
+  const hash = await bcrypt.hash(password, SALT_ROUNDS)
+  return userService.add({
+    username,
+    password: hash,
+    name,
+    isAdmin,
+    createdAt: Date.now()
+  })
 }
 
 function getLoginToken(user) {
@@ -46,7 +53,8 @@ function getLoginToken(user) {
     _id: user._id,
     name: user.name,
     username: user.username,
-    isAdmin: user.isAdmin
+    isAdmin: user.isAdmin,
+    exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours from now
   }
   return cryptr.encrypt(JSON.stringify(userInfo))
 }
@@ -55,9 +63,16 @@ function validateToken(loginToken) {
   try {
     const json = cryptr.decrypt(loginToken)
     const loggedinUser = JSON.parse(json)
+
+    // Check if token has expired
+    if (loggedinUser.exp && loggedinUser.exp < Date.now()) {
+      logger.info(`Token expired for user: ${loggedinUser.username}`)
+      return null
+    }
+
     return loggedinUser
   } catch (err) {
-    console.log('Invalid login token')
+    logger.error('Invalid login token', err)
   }
   return null
 }

@@ -5,8 +5,6 @@ import cors from 'cors'
 import express from 'express'
 import cookieParser from 'cookie-parser'
 
-import { setupSocketAPI } from './services/socket.service.js'
-
 import { setupAsyncLocalStorage } from './middlewares/setupAls.middleware.js'
 
 import { authRoutes } from './api/auth/auth.routes.js'
@@ -37,8 +35,6 @@ app.use('/api/user', userRoutes)
 app.use('/api/employee', employeeRoutes)
 app.use('/api/schedule', scheduleRoutes)
 
-setupSocketAPI(server)
-
 app.get('/secret', (req, res) => {
   if (process.env.SECRET_STR) {
     res.send(process.env.SECRET_STR)
@@ -57,7 +53,7 @@ app.get('/**', (req, res) => {
 })
 
 import { logger } from './services/logger.service.js'
-import { initApp, shouldInitialize } from './services/init.service.js'
+import { initApp } from './services/init.service.js'
 const port = process.env.PORT || 3030
 
 server.listen(port, () => {

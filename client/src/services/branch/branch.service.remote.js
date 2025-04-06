@@ -8,18 +8,21 @@ export const userService = {
   getLoggedinUser
 }
 
-async function login(userCred) {
-  const user = await httpService.post('auth/login', userCred)
-  if (user) return _saveLocalUser(user)
+async function login(credentials) {
+  const user = await httpService.post('auth/login', credentials)
+  if (user) {
+    return _saveLocalUser(user)
+  }
+  return user
 }
 
 async function logout() {
-  sessionStorage.removeItem(STORAGE_KEY_LOGGEDIN_USER)
+  localStorage.removeItem(STORAGE_KEY_LOGGEDIN_USER)
   return await httpService.post('auth/logout')
 }
 
 function getLoggedinUser() {
-  return JSON.parse(sessionStorage.getItem(STORAGE_KEY_LOGGEDIN_USER))
+  return JSON.parse(localStorage.getItem(STORAGE_KEY_LOGGEDIN_USER))
 }
 
 function _saveLocalUser(user) {
@@ -29,6 +32,6 @@ function _saveLocalUser(user) {
     name: user.name,
     isAdmin: user.isAdmin
   }
-  sessionStorage.setItem(STORAGE_KEY_LOGGEDIN_USER, JSON.stringify(user))
+  localStorage.setItem(STORAGE_KEY_LOGGEDIN_USER, JSON.stringify(user))
   return user
 }
