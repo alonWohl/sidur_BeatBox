@@ -1,452 +1,417 @@
-import { useEffect, useState, useCallback } from 'react'
-import html2canvas from 'html2canvas'
-import { toast } from 'react-hot-toast'
-import { Share2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import { useSystemStore } from '@/stores/useSystemStore'
-import { useScheduleStore } from '@/stores/useScheduleStore'
-import { useEmployeeStore } from '@/stores/useEmployeeStore'
-import { useUserStore } from '@/stores/useUserStore'
-import { Loader } from '@/components/Loader'
-import { ScheduleDraw } from '@/components/ScheduleDraw'
-import { TimeDraw } from '@/components/TimeDraw'
-import { ScheduleTable } from '@/components/ScheduleTable'
-import { EmployeesList } from '@/components/EmployeesList'
-import { DndContext, DragOverlay, useSensor, useSensors, TouchSensor, MouseSensor, pointerWithin } from '@dnd-kit/core'
+import {useEffect, useState, useCallback} from 'react';
+import {toast} from 'react-hot-toast';
+import {
+	Share2,
+	ChevronRight,
+	ChevronLeft,
+	Calendar,
+	CalendarDays,
+	LayoutGrid,
+	Users,
+	Building2,
+	Menu,
+	Clock,
+	X,
+	ChevronDown,
+} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {Select, SelectTrigger, SelectValue, SelectContent, SelectItem} from '@/components/ui/select';
+import {useSystemStore} from '@/stores/useSystemStore';
+import {useScheduleStore} from '@/stores/useScheduleStore';
+import {useEmployeeStore} from '@/stores/useEmployeeStore';
+import {useUserStore} from '@/stores/useUserStore';
+import {Loader} from '@/components/Loader';
+import {ScheduleDraw} from '@/components/ScheduleDraw';
+import {TimeDraw} from '@/components/TimeDraw';
+import {ScheduleTable} from '@/components/ScheduleTable';
+import {EmployeesList} from '@/components/EmployeesList';
+import {DndContext, DragOverlay, useSensor, useSensors, TouchSensor, MouseSensor, pointerWithin} from '@dnd-kit/core';
 
 export function SchedulePage() {
-  const user = useUserStore((state) => state.user)
-  const filterBy = useSystemStore((state) => state.filterBy)
-  const isLoading = useSystemStore((state) => state.isLoading)
-  const setFilterBy = useSystemStore((state) => state.setFilterBy)
-
-  const schedules = useScheduleStore((state) => state.schedules)
-  const loadSchedules = useScheduleStore((state) => state.loadSchedules)
-  const updateSchedule = useScheduleStore((state) => state.updateSchedule)
-  const updateScheduleOptimistic = useScheduleStore((state) => state.updateScheduleOptimistic)
-
-  const employees = useEmployeeStore((state) => state.employees)
-  const loadEmployees = useEmployeeStore((state) => state.loadEmployees)
-
-  const [isSharing, setIsSharing] = useState(false)
-  const [currentSchedule, setCurrentSchedule] = useState(null)
-  const [activeEmployee, setActiveEmployee] = useState(null)
-
-  const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 5
-      }
-    })
-  )
-
-  const initializeSchedule = useCallback(() => {
-    if (schedules?.length > 0 && employees?.length > 0) {
-      const initialSchedule = {
-        ...schedules[0],
-        days: schedules[0].days || []
-      }
-      setCurrentSchedule(initialSchedule)
-    }
-  }, [schedules, employees])
-
-  const loadData = useCallback(async () => {
-    try {
-      await Promise.all([loadSchedules(filterBy), loadEmployees(filterBy)])
-    } catch (error) {
-      console.error('Error loading data:', error)
-      toast.error('שגיאה בטעינת הנתונים')
-    }
-  }, [filterBy, loadSchedules, loadEmployees])
-
-  const updateUserFilter = useCallback(() => {
-    if (user?.name && (!filterBy?.name || filterBy.name !== user.name)) {
-      setFilterBy({ name: user.name })
-    }
-  }, [user, filterBy?.name, setFilterBy])
-
-  useEffect(() => {
-    initializeSchedule()
-  }, [initializeSchedule])
-
-  useEffect(() => {
-    loadData()
-  }, [loadData])
-
-  useEffect(() => {
-    updateUserFilter()
-  }, [updateUserFilter])
-
-  const handleShare = async () => {
-    try {
-      setIsSharing(true)
-      const node = document.getElementById('schedule-table-for-share')
-
-      // Apply temporary styles for better capture
-      const originalStyles = {
-        background: node.style.background,
-        backgroundColor: node.style.backgroundColor,
-        width: node.style.width,
-        padding: node.style.padding
-      }
-
-      Object.assign(node.style, {
-        background: '#ffffff',
-        backgroundColor: '#ffffff',
-        width: '2400px',
-        padding: '20px'
-      })
-
-      // Configure html2canvas options
-      const canvas = await html2canvas(node, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        width: node.scrollWidth,
-        height: node.scrollHeight,
-        onclone: (clonedDoc) => {
-          const clonedNode = clonedDoc.getElementById('schedule-table-for-share')
-
-          // Helper function to check for modern color formats
-          const hasModernColor = (color) => {
-            return color?.includes('oklch') || color?.includes('oklab')
-          }
-
-          // Convert all modern colors to RGB
-          const elements = clonedNode.getElementsByTagName('*')
-          Array.from(elements).forEach((el) => {
-            const style = window.getComputedStyle(el)
-
-            // Handle background color
-            if (hasModernColor(style.backgroundColor)) {
-              el.style.backgroundColor = '#ffffff'
-            }
-
-            // Handle text color
-            if (hasModernColor(style.color)) {
-              el.style.color = '#000000'
-            }
-
-            // Handle border color
-            if (hasModernColor(style.borderColor)) {
-              el.style.borderColor = '#e5e5e5'
-            }
-
-            // Handle any other color properties
-            if (hasModernColor(style.fill)) {
-              el.style.fill = '#000000'
-            }
-          })
-
-          // Ensure table cells are white
-          clonedNode.querySelectorAll('td, th').forEach((cell) => {
-            cell.style.backgroundColor = '#ffffff'
-            cell.style.color = '#000000'
-            cell.style.borderColor = '#e5e5e5'
-          })
-
-          // Handle employee color blocks
-          clonedNode.querySelectorAll('[data-type="employee-cell"]').forEach((cell) => {
-            const bgColor = window.getComputedStyle(cell).backgroundColor
-            if (hasModernColor(bgColor)) {
-              cell.style.backgroundColor = '#3b82f6' // Default blue
-            }
-          })
-
-          // Force white background on container
-          clonedNode.style.backgroundColor = '#ffffff'
-        }
-      })
-
-      // Restore original styles
-      Object.assign(node.style, originalStyles)
-
-      // Convert to PNG
-      const dataUrl = canvas.toDataURL('image/png', 1.0)
-
-      // Handle sharing based on device
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-
-      if (isMobile) {
-        try {
-          const blob = await (await fetch(dataUrl)).blob()
-          const file = new File([blob], 'schedule.png', { type: 'image/png' })
-
-          if (navigator.share) {
-            await navigator.share({
-              files: [file],
-              title: 'סידור עבודה שבועי',
-              text: 'סידור עבודה שבועי'
-            })
-          } else {
-            const link = document.createElement('a')
-            link.href = dataUrl
-            link.download = 'schedule.png'
-            link.click()
-          }
-        } catch (error) {
-          console.error('Mobile share error:', error)
-          const link = document.createElement('a')
-          link.href = dataUrl
-          link.download = 'schedule.png'
-          link.click()
-        }
-      } else {
-        const link = document.createElement('a')
-        link.href = dataUrl
-        link.download = 'schedule.png'
-        link.click()
-      }
-
-      toast.success('הסידור הועתק בהצלחה')
-    } catch (error) {
-      console.error('Share error:', error)
-      toast.error('שגיאה בשיתוף')
-    } finally {
-      setIsSharing(false)
-    }
-  }
-
-  const handleDragStart = (event) => {
-    const { active } = event
-
-    if (active.data.current?.type === 'employee') {
-      setActiveEmployee(active.data.current.employee)
-    } else if (active.data.current?.type === 'tableCell') {
-      setActiveEmployee(active.data.current.employee)
-    }
-  }
-
-  const handleDragEnd = (event) => {
-    const { active, over } = event
-    if (!over || !currentSchedule) return
-
-    try {
-      if (active.data.current?.type === 'employee') {
-        // Handle new employee drop
-        const [day, role, position] = over.id.split('-')
-        handleUpdateSchedule(currentSchedule, active.id, day, role, parseInt(position))
-      } else if (active.data.current?.type === 'tableCell') {
-        // Handle cell to cell move
-        const [sourceDay, sourceRole, sourcePos] = active.data.current.cellId.split('-')
-        const [destDay, destRole, destPosition] = over.id.split('-')
-
-        const moveInfo = {
-          type: 'move',
-          sourceDay,
-          sourceRole,
-          sourcePosition: parseInt(sourcePos),
-          employeeId: active.data.current.employee.id
-        }
-
-        handleUpdateSchedule(currentSchedule, moveInfo, destDay, destRole, parseInt(destPosition))
-      }
-    } catch (error) {
-      console.error('Drag end error:', error)
-      toast.error('שגיאה בעדכון המשמרת')
-    }
-
-    setActiveEmployee(null)
-  }
-
-  const handleUpdateSchedule = async (schedule, employeeId, day, role, position) => {
-    if (!schedule?.id) return
-
-    try {
-      const scheduleToUpdate = JSON.parse(JSON.stringify(schedule))
-      const positionNum = parseInt(position)
-
-      let dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day)
-      if (dayIndex === -1) {
-        scheduleToUpdate.days.push({ name: day, shifts: [] })
-        dayIndex = scheduleToUpdate.days.length - 1
-      }
-
-      if (!scheduleToUpdate.days[dayIndex].shifts) {
-        scheduleToUpdate.days[dayIndex].shifts = []
-      }
-
-      if (employeeId?.type === 'move') {
-        const { sourceDay, sourceRole, sourcePosition, employeeId: actualEmployeeId } = employeeId
-        const sourceDayIndex = scheduleToUpdate.days.findIndex((d) => d.name === sourceDay)
-        if (sourceDayIndex === -1) return
-
-        const destEmployee = scheduleToUpdate.days[dayIndex].shifts.find((shift) => shift.role === role && shift.position === positionNum)
-
-        scheduleToUpdate.days[sourceDayIndex].shifts = scheduleToUpdate.days[sourceDayIndex].shifts.filter(
-          (shift) => !(shift.role === sourceRole && shift.position === sourcePosition)
-        )
-
-        scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
-          (shift) => !(shift.role === role && shift.position === positionNum)
-        )
-
-        scheduleToUpdate.days[dayIndex].shifts.push({
-          role,
-          position: positionNum,
-          employeeId: actualEmployeeId
-        })
-
-        if (destEmployee) {
-          scheduleToUpdate.days[sourceDayIndex].shifts.push({
-            role: sourceRole,
-            position: sourcePosition,
-            employeeId: destEmployee.employeeId
-          })
-        }
-      } else {
-        scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
-          (shift) => !(shift.role === role && shift.position === positionNum)
-        )
-
-        if (employeeId && employeeId !== 'undefined') {
-          scheduleToUpdate.days[dayIndex].shifts.push({
-            role,
-            position: positionNum,
-            employeeId
-          })
-        }
-      }
-
-      await updateScheduleOptimistic(scheduleToUpdate)
-      setCurrentSchedule({ ...scheduleToUpdate })
-    } catch (err) {
-      console.error('Error updating schedule:', err)
-      toast.error('שגיאה בעדכון המשמרת')
-    }
-  }
-
-  const handleClearBoard = async (schedules) => {
-    if (!schedules?.length) return
-    try {
-      const clearedSchedule = {
-        ...schedules[0],
-        days: schedules[0].days.map((day) => ({ ...day, shifts: [] }))
-      }
-      await updateSchedule(clearedSchedule)
-      toast.success('הסידור נוקה בהצלחה')
-    } catch {
-      toast.error('שגיאה בניקוי הסידור')
-    }
-  }
-
-  const getAssignedEmployee = (schedule, day, role, position) => {
-    if (!schedule?.days) return null
-
-    const dayData = schedule.days.find((d) => d.name === day)
-    if (!dayData?.shifts) return null
-
-    const shift = dayData.shifts.find((s) => s.role === role && s.position === parseInt(position))
-    if (!shift?.employeeId) return null
-
-    return employees.find((e) => e.id === shift.employeeId)
-  }
-
-  const handleRemoveEmployee = async (schedule, day, role, position) => {
-    if (!schedule?.id) return
-
-    try {
-      const scheduleToUpdate = JSON.parse(JSON.stringify(schedule))
-
-      const dayObj = scheduleToUpdate.days.find((d) => d.name === day)
-      if (!dayObj) return
-
-      dayObj.shifts = dayObj.shifts.filter((shift) => !(shift.role === role && shift.position === position))
-
-      await updateScheduleOptimistic(scheduleToUpdate)
-      setCurrentSchedule(scheduleToUpdate)
-    } catch (err) {
-      console.error('Error removing employee:', err)
-      toast.error('שגיאה בהסרת העובד')
-    }
-  }
-
-  if (!user) {
-    return (
-      <div className="flex justify-center items-center h-96 animate-in fade-in duration-500">
-        <div className="text-center text-gray-500">
-          <p className="text-lg font-medium">אנא התחבר כדי להציג את הסידור</p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
-      <div className="flex flex-col h-full w-full animate-in fade-in duration-300 px-4 space-y-6 max-w-[1900px] mx-auto pt-4">
-        {isLoading && <Loader />}
-
-        {/* <TimeDraw className="absolute top-10 right-10 opacity-50 hidden max-w-[300px] max-h-[300px] 2xl:block" />
-        <ScheduleDraw className="absolute bottom-10 left-10 opacity-50 hidden max-w-[300px] max-h-[300px] md:block md:max-w-[200px] md:max-h-[200px]" /> */}
-
-        <div className="flex gap-2 items-center justify-between w-full">
-          {user.isAdmin && (
-            <Select onValueChange={(value) => setFilterBy({ ...filterBy, name: value })} value={filterBy.name} className="w-full sm:w-auto">
-              <SelectTrigger className="h-8 sm:h-10 text-sm sm:text-base justify-self-start">
-                <SelectValue placeholder="בחר סניף" />
-              </SelectTrigger>
-              <SelectContent>
-                {['מוקד', 'תל אביב', 'פתח תקווה', 'רשאון לציון', 'ראש העין'].map((branch) => (
-                  <SelectItem key={branch} value={branch}>
-                    {branch}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
-          <div className="flex gap-2">
-            <Button
-              onClick={() => handleClearBoard(schedules)}
-              className="cursor-pointer hover:bg-[#BE202E] hover:text-white h-8 sm:h-10 text-sm sm:text-base px-2 sm:px-4"
-              variant="outline">
-              נקה סידור
-            </Button>
-            <Button
-              onClick={handleShare}
-              disabled={isSharing}
-              className=" bg-green-500 hover:bg-green-600 h-8 sm:h-10 text-sm sm:text-base px-2 sm:px-4  ">
-              {isSharing ? <span className="animate-spin">⏳</span> : <Share2 className="w-3 h-3 sm:w-4 sm:h-4" />}
-              <span className="whitespace-nowrap">{isSharing ? 'מכין...' : 'שתף'}</span>
-            </Button>
-          </div>
-        </div>
-
-        <EmployeesList employees={employees} />
-
-        <div className="overflow-x-auto scrollbar-hide ">
-          <div className="min-w-[640px]">
-            <ScheduleTable
-              type={filterBy.name}
-              currentSchedule={currentSchedule}
-              getAssignedEmployee={getAssignedEmployee}
-              handleRemoveEmployee={handleRemoveEmployee}
-              isSharing={isSharing}
-            />
-          </div>
-        </div>
-
-        <DragOverlay
-          dropAnimation={{
-            duration: 200,
-            easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)'
-          }}>
-          {activeEmployee && (
-            <div
-              className="h-10  flex items-center justify-center text-white rounded-sm shadow-lg "
-              style={{
-                backgroundColor: activeEmployee.color,
-                transform: 'scale(1.05)'
-              }}>
-              {activeEmployee.name}
-            </div>
-          )}
-        </DragOverlay>
-      </div>
-    </DndContext>
-  )
+	const user = useUserStore((state) => state.user);
+	const filterBy = useSystemStore((state) => state.filterBy);
+	const isLoading = useSystemStore((state) => state.isLoading);
+	const setFilterBy = useSystemStore((state) => state.setFilterBy);
+
+	const schedules = useScheduleStore((state) => state.schedules);
+	const loadSchedules = useScheduleStore((state) => state.loadSchedules);
+	const updateSchedule = useScheduleStore((state) => state.updateSchedule);
+	const updateScheduleOptimistic = useScheduleStore((state) => state.updateScheduleOptimistic);
+
+	const employees = useEmployeeStore((state) => state.employees);
+	const loadEmployees = useEmployeeStore((state) => state.loadEmployees);
+
+	const [isSharing, setIsSharing] = useState(false);
+	const [currentSchedule, setCurrentSchedule] = useState(null);
+	const [activeEmployee, setActiveEmployee] = useState(null);
+	const [weekMode, setWeekMode] = useState('current'); // 'current' or 'next'
+
+	const sensors = useSensors(
+		useSensor(MouseSensor),
+		useSensor(TouchSensor, {
+			activationConstraint: {
+				delay: 200,
+				tolerance: 5,
+			},
+		})
+	);
+
+	const initializeSchedule = useCallback(() => {
+		if (schedules?.length > 0 && employees?.length > 0) {
+			// Reset the current schedule when switching weeks to ensure a clean slate
+			const matchingSchedule = schedules.find((s) => s.week === weekMode);
+
+			if (matchingSchedule) {
+				// We have a schedule for this specific week
+				setCurrentSchedule({
+					...matchingSchedule,
+					week: weekMode,
+				});
+			} else {
+				// Use the first available schedule but make sure to set the correct week
+				setCurrentSchedule({
+					...schedules[0],
+					days: schedules[0].days || [],
+					week: weekMode,
+				});
+			}
+		}
+	}, [schedules, employees, weekMode]);
+
+	const loadData = useCallback(async () => {
+		try {
+			await Promise.all([loadSchedules({...filterBy, week: weekMode}), loadEmployees(filterBy)]);
+		} catch (error) {
+			console.error('Error loading data:', error);
+			toast.error('שגיאה בטעינת הנתונים');
+		}
+	}, [filterBy, loadSchedules, loadEmployees, weekMode]);
+
+	const updateUserFilter = useCallback(() => {
+		if (user?.name && (!filterBy?.name || filterBy.name !== user.name)) {
+			setFilterBy({name: user.name});
+		}
+	}, [user, filterBy?.name, setFilterBy]);
+
+	useEffect(() => {
+		initializeSchedule();
+	}, [initializeSchedule]);
+
+	useEffect(() => {
+		loadData();
+	}, [loadData]);
+
+	// When week mode changes, reload data and reset current schedule
+	useEffect(() => {
+		console.log('Week mode changed to:', weekMode);
+		loadData();
+		// Reset the currentSchedule to force reinitialization after data loads
+		setCurrentSchedule(null);
+	}, [weekMode]);
+
+	useEffect(() => {
+		updateUserFilter();
+	}, [updateUserFilter]);
+
+	const handleDragStart = (event) => {
+		const {active} = event;
+
+		if (active.data.current?.type === 'employee') {
+			setActiveEmployee(active.data.current.employee);
+		} else if (active.data.current?.type === 'tableCell') {
+			setActiveEmployee(active.data.current.employee);
+		}
+	};
+
+	const handleDragEnd = (event) => {
+		const {active, over} = event;
+		if (!over || !currentSchedule) return;
+
+		try {
+			if (active.data.current?.type === 'employee') {
+				// Handle new employee drop
+				const [day, role, position] = over.id.split('-');
+				handleUpdateSchedule(currentSchedule, active.id, day, role, parseInt(position));
+			} else if (active.data.current?.type === 'tableCell') {
+				// Handle cell to cell move
+				const [sourceDay, sourceRole, sourcePos] = active.data.current.cellId.split('-');
+				const [destDay, destRole, destPosition] = over.id.split('-');
+
+				const moveInfo = {
+					type: 'move',
+					sourceDay,
+					sourceRole,
+					sourcePosition: parseInt(sourcePos),
+					employeeId: active.data.current.employee.id,
+				};
+
+				handleUpdateSchedule(currentSchedule, moveInfo, destDay, destRole, parseInt(destPosition));
+			}
+		} catch (error) {
+			console.error('Drag end error:', error);
+			toast.error('שגיאה בעדכון המשמרת');
+		}
+
+		setActiveEmployee(null);
+	};
+
+	const handleUpdateSchedule = async (schedule, employeeId, day, role, position) => {
+		if (!schedule?.id) return;
+
+		try {
+			const scheduleToUpdate = JSON.parse(JSON.stringify(schedule));
+			scheduleToUpdate.week = weekMode;
+
+			const positionNum = parseInt(position);
+
+			let dayIndex = scheduleToUpdate.days.findIndex((d) => d.name === day);
+			if (dayIndex === -1) {
+				scheduleToUpdate.days.push({name: day, shifts: []});
+				dayIndex = scheduleToUpdate.days.length - 1;
+			}
+
+			if (!scheduleToUpdate.days[dayIndex].shifts) {
+				scheduleToUpdate.days[dayIndex].shifts = [];
+			}
+
+			if (employeeId?.type === 'move') {
+				const {sourceDay, sourceRole, sourcePosition, employeeId: actualEmployeeId} = employeeId;
+				const sourceDayIndex = scheduleToUpdate.days.findIndex((d) => d.name === sourceDay);
+				if (sourceDayIndex === -1) return;
+
+				const destEmployee = scheduleToUpdate.days[dayIndex].shifts.find(
+					(shift) => shift.role === role && shift.position === positionNum
+				);
+
+				scheduleToUpdate.days[sourceDayIndex].shifts = scheduleToUpdate.days[sourceDayIndex].shifts.filter(
+					(shift) => !(shift.role === sourceRole && shift.position === sourcePosition)
+				);
+
+				scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
+					(shift) => !(shift.role === role && shift.position === positionNum)
+				);
+
+				scheduleToUpdate.days[dayIndex].shifts.push({
+					role,
+					position: positionNum,
+					employeeId: actualEmployeeId,
+				});
+
+				if (destEmployee) {
+					scheduleToUpdate.days[sourceDayIndex].shifts.push({
+						role: sourceRole,
+						position: sourcePosition,
+						employeeId: destEmployee.employeeId,
+					});
+				}
+			} else {
+				scheduleToUpdate.days[dayIndex].shifts = scheduleToUpdate.days[dayIndex].shifts.filter(
+					(shift) => !(shift.role === role && shift.position === positionNum)
+				);
+
+				if (employeeId && employeeId !== 'undefined') {
+					scheduleToUpdate.days[dayIndex].shifts.push({
+						role,
+						position: positionNum,
+						employeeId,
+					});
+				}
+			}
+
+			await updateScheduleOptimistic(scheduleToUpdate);
+			setCurrentSchedule({...scheduleToUpdate});
+		} catch (err) {
+			console.error('Error updating schedule:', err);
+			toast.error('שגיאה בעדכון המשמרת');
+		}
+	};
+
+	const handleClearBoard = async (schedule) => {
+		// Handle both single schedule and array of schedules
+		if (Array.isArray(schedule)) {
+			if (!schedule.length) return;
+			try {
+				const clearedSchedule = {
+					...schedule[0],
+					days: schedule[0].days.map((day) => ({...day, shifts: []})),
+					week: weekMode,
+				};
+				await updateSchedule(clearedSchedule);
+				setCurrentSchedule(clearedSchedule);
+				toast.success('הסידור נוקה בהצלחה');
+			} catch {
+				toast.error('שגיאה בניקוי הסידור');
+			}
+		} else {
+			// Handle single schedule object
+			if (!schedule?.id) return;
+			try {
+				const clearedSchedule = {
+					...schedule,
+					days: schedule.days.map((day) => ({...day, shifts: []})),
+					week: weekMode,
+				};
+				await updateSchedule(clearedSchedule);
+				setCurrentSchedule(clearedSchedule);
+				toast.success('הסידור נוקה בהצלחה');
+			} catch {
+				toast.error('שגיאה בניקוי הסידור');
+			}
+		}
+	};
+
+	const getAssignedEmployee = (schedule, day, role, position) => {
+		if (!schedule?.days) return null;
+
+		const dayData = schedule.days.find((d) => d.name === day);
+		if (!dayData?.shifts) return null;
+
+		const shift = dayData.shifts.find((s) => s.role === role && s.position === parseInt(position));
+		if (!shift?.employeeId) return null;
+
+		return employees.find((e) => e.id === shift.employeeId);
+	};
+
+	const handleRemoveEmployee = async (schedule, day, role, position) => {
+		if (!schedule?.id) return;
+
+		try {
+			const scheduleToUpdate = JSON.parse(JSON.stringify(schedule));
+			scheduleToUpdate.week = weekMode;
+
+			const dayObj = scheduleToUpdate.days.find((d) => d.name === day);
+			if (!dayObj) return;
+
+			dayObj.shifts = dayObj.shifts.filter((shift) => !(shift.role === role && shift.position === position));
+
+			await updateScheduleOptimistic(scheduleToUpdate);
+			setCurrentSchedule(scheduleToUpdate);
+		} catch (err) {
+			console.error('Error removing employee:', err);
+			toast.error('שגיאה בהסרת העובד');
+		}
+	};
+
+	const handleSetSharing = (value) => {
+		setIsSharing(value);
+	};
+
+	if (!user) {
+		return (
+			<div className='flex justify-center items-center h-96 animate-in fade-in duration-500'>
+				<div className='text-center text-gray-500'>
+					<p className='text-lg font-medium'>אנא התחבר כדי להציג את הסידור</p>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<DndContext
+			sensors={sensors}
+			onDragStart={handleDragStart}
+			onDragEnd={handleDragEnd}
+			collisionDetection={pointerWithin}>
+			<div className='flex flex-col h-full w-full animate-in fade-in duration-300 space-y-3 max-w-[1900px] mx-auto'>
+				{isLoading && <Loader />}
+
+				{/* New streamlined header */}
+				<div className='sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm'>
+					<div className='flex items-center justify-between px-3 py-2 max-w-[1900px] mx-auto'>
+						{/* Left side: Brand and title */}
+						<div className='flex items-center gap-3'>
+							<div className='h-8 w-8 flex items-center justify-center rounded-full bg-[#BE202E]'>
+								<Clock className='h-4 w-4 text-white' />
+							</div>
+							<h1 className='font-bold text-gray-800'>סידור עבודה</h1>
+						</div>
+
+						{/* Right side: Week toggle and branch selector */}
+						<div className='flex items-center gap-2'>
+							{/* Week selector as pill buttons */}
+							<div className='flex bg-gray-100 rounded-full p-0.5 border border-gray-200'>
+								<button
+									onClick={() => setWeekMode('current')}
+									className={`px-3 py-1 text-xs rounded-full transition-all ${
+										weekMode === 'current'
+											? 'bg-[#BE202E] text-white shadow-sm'
+											: 'text-gray-600 hover:bg-gray-200'
+									}`}>
+									שבוע נוכחי
+								</button>
+								<button
+									onClick={() => setWeekMode('next')}
+									className={`px-3 py-1 text-xs rounded-full transition-all ${
+										weekMode === 'next'
+											? 'bg-[#BE202E] text-white shadow-sm'
+											: 'text-gray-600 hover:bg-gray-200'
+									}`}>
+									שבוע הבא
+								</button>
+							</div>
+
+							{/* Branch selector as a simple dropdown */}
+							{user.isAdmin && (
+								<Select
+									onValueChange={(value) => setFilterBy({...filterBy, name: value})}
+									value={filterBy.name}>
+									<SelectTrigger className='h-8 text-xs border-gray-200 bg-white min-w-[90px] px-2'>
+										<SelectValue placeholder='בחר סניף' />
+									</SelectTrigger>
+									<SelectContent>
+										{['מוקד', 'תל אביב', 'פתח תקווה', 'רשאון לציון', 'ראש העין'].map((branch) => (
+											<SelectItem
+												key={branch}
+												value={branch}>
+												{branch}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							)}
+						</div>
+					</div>
+				</div>
+
+				<div
+					className='overflow-x-auto scrollbar-hide px-2 pb-4'
+					style={{
+						scrollbarWidth: 'none',
+						msOverflowStyle: 'none',
+					}}>
+					<div className='min-w-[640px]'>
+						<ScheduleTable
+							type={filterBy.name}
+							currentSchedule={currentSchedule}
+							getAssignedEmployee={getAssignedEmployee}
+							handleRemoveEmployee={handleRemoveEmployee}
+							handleUpdateSchedule={handleUpdateSchedule}
+							employees={employees}
+							isSharing={isSharing}
+							onClearSchedule={handleClearBoard}
+							weekMode={weekMode}
+							setIsSharing={handleSetSharing}
+						/>
+					</div>
+				</div>
+
+				<DragOverlay
+					dropAnimation={{
+						duration: 200,
+						easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+					}}>
+					{activeEmployee && (
+						<div
+							className='h-10 flex items-center justify-center text-white rounded-sm shadow-lg'
+							style={{
+								backgroundColor: activeEmployee.color,
+								transform: 'scale(1.05)',
+							}}>
+							{activeEmployee.name}
+						</div>
+					)}
+				</DragOverlay>
+			</div>
+		</DndContext>
+	);
 }

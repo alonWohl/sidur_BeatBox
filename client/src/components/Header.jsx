@@ -1,75 +1,114 @@
-import { Link } from 'react-router-dom'
-import { useUserStore } from '@/stores/useUserStore'
-
-import { useNavigate } from 'react-router'
-import { Button } from './ui/button'
-import { forwardRef } from 'react'
-import logo from '../assets/images/logo.webp'
+import {Link, useLocation} from 'react-router-dom';
+import {useUserStore} from '@/stores/useUserStore';
+import {useNavigate} from 'react-router';
+import {Button} from './ui/button';
+import {LogOut, Building2} from 'lucide-react';
+import {forwardRef} from 'react';
+import logo from '../assets/images/logo.webp';
 
 export const Header = forwardRef((props, ref) => {
-  const user = useUserStore((state) => state.user)
-  const logout = useUserStore((state) => state.logout)
-  const navigate = useNavigate()
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+	const user = useUserStore((state) => state.user);
+	const logout = useUserStore((state) => state.logout);
+	const navigate = useNavigate();
+	const location = useLocation();
 
-  const brandLogo = 'https://res.cloudinary.com/dqfhbqcwv/image/upload/v1743384278/logo_ruqkfk.webp'
+	const handleLogout = () => {
+		logout();
+		navigate('/login');
+	};
 
-  return (
-    <header ref={ref} className="bg-white shadow-md">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center">
-          {/* Logo/Brand */}
-          <Link to="/">
-            <div className="logo max-w-[150px] sm:max-w-[200px]">
-              <img src={brandLogo || logo} alt="Sidur BeatBox" className="mix-blend-multiply w-full" />
-            </div>
-          </Link>
+	const brandLogo = 'https://res.cloudinary.com/dqfhbqcwv/image/upload/v1743384278/logo_ruqkfk.webp';
 
-          {/* Navigation */}
-          <nav className="flex items-center space-x-2 sm:space-x-8 rtl:space-x-reverse">
-            {user && (
-              <>
-                <Link
-                  to="/employee"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                  עובדים
-                </Link>
-                <Link
-                  to={`/schedule/`}
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                  משמרות
-                </Link>
-              </>
-            )}
+	// פונקציה שבודקת אם הקישור פעיל
+	const isActive = (path) => {
+		return location.pathname.startsWith(path);
+	};
 
-            {/* User Section */}
-            {user ? (
-              <div className="flex items-center gap-4 border-r pr-4 mr-4 rtl:border-l rtl:pl-4 rtl:ml-4 rtl:border-r-0 rtl:pr-0">
-                <div className="text-xs sm:text-sm">
-                  <span className="text-gray-500">סניף: </span>
-                  <span className="font-medium text-gray-900">{user.name}</span>
-                </div>
-                <Button
-                  onClick={handleLogout}
-                  className="bg-[#BE202E] text-white hover:bg-[#BE202E]/80 cursor-pointer px-2 py-1 sm:px-4 sm:py-2 rounded-md text-sm font-medium transition-colors duration-200 ">
-                  התנתק
-                </Button>
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                className="bg-[#BE202E] text-white hover:bg-[#BE202E]/80 cursor-pointer px-2 py-1 sm:px-4 sm:py-2 rounded-md text-sm font-medium transition-colors duration-200 ">
-                התחברות
-              </Link>
-            )}
-          </nav>
-        </div>
-      </div>
-    </header>
-  )
-})
+	return (
+		<header
+			ref={ref}
+			className='bg-white border-b border-gray-200 shadow-sm sticky top-0 z-20'>
+			<div className='px-4 sm:px-6 max-w-[1900px] mx-auto'>
+				<div className='flex items-center justify-between h-14 sm:h-16'>
+					{/* Logo/Brand */}
+					<Link
+						to='/'
+						className='flex items-center'>
+						<div className='h-8 sm:h-10 max-w-[120px] sm:max-w-[150px]'>
+							<img
+								src={brandLogo || logo}
+								alt='Sidur BeatBox'
+								className='h-full object-contain'
+							/>
+						</div>
+					</Link>
 
-Header.displayName = 'Header'
+					{/* Navigation */}
+					<nav className='flex items-center space-x-2 sm:space-x-4 rtl:space-x-reverse'>
+						{user && (
+							<>
+								<Link
+									to='/employee'
+									className={`relative px-3 py-2 text-sm font-medium 
+										${
+											isActive('/employee')
+												? 'text-[#BE202E] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#BE202E]'
+												: 'text-gray-700 hover:text-[#BE202E] hover:after:scale-x-100'
+										} 
+										transition-colors duration-200 
+										after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#BE202E] 
+										${isActive('/employee') ? '' : 'after:scale-x-0'} 
+										after:transition-transform after:origin-bottom-right`}>
+									עובדים
+								</Link>
+								<Link
+									to='/schedule'
+									className={`relative px-3 py-2 text-sm font-medium 
+										${
+											isActive('/schedule')
+												? 'text-[#BE202E] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#BE202E]'
+												: 'text-gray-700 hover:text-[#BE202E] hover:after:scale-x-100'
+										} 
+										transition-colors duration-200 
+										after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#BE202E] 
+										${isActive('/schedule') ? '' : 'after:scale-x-0'} 
+										after:transition-transform after:origin-bottom-right`}>
+									משמרות
+								</Link>
+							</>
+						)}
+
+						{/* User Section */}
+						{user ? (
+							<div className='flex items-center gap-2 sm:gap-4 border-r pr-3 sm:pr-4 mr-2 sm:mr-4 rtl:border-l rtl:pl-4 rtl:ml-4 rtl:border-r-0 rtl:pr-0'>
+								<div className='flex items-center bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100'>
+									<Building2 className='w-3 h-3 text-gray-400 mr-1.5' />
+									<span className='text-xs text-gray-500 ml-0.5'>סניף:</span>
+									<span className='text-xs font-medium text-gray-800 ml-1'>{user.name}</span>
+								</div>
+								<Button
+									onClick={handleLogout}
+									variant='ghost'
+									size='sm'
+									className='text-gray-600 hover:text-[#BE202E] hover:bg-gray-50 h-8 rounded-md px-2'>
+									<LogOut className='w-3.5 h-3.5 mr-1.5' />
+									<span className='text-xs font-medium'>התנתק</span>
+								</Button>
+							</div>
+						) : (
+							<Link to='/login'>
+								<Button
+									className='bg-[#BE202E] text-white hover:bg-[#BE202E]/90 h-8 rounded-md'
+									size='sm'>
+									התחברות
+								</Button>
+							</Link>
+						)}
+					</nav>
+				</div>
+			</div>
+		</header>
+	);
+});
+
+Header.displayName = 'Header';
