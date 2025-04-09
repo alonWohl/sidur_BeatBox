@@ -655,12 +655,12 @@ export const ScheduleTable = React.memo(
 
 					{/* Horizontally scrollable employee buttons */}
 					<div
-						className='pb-3 -mt-1 overflow-x-auto whitespace-nowrap'
+						className='pb-3 grid grid-cols-5 md:grid-cols-7 gap-0.5 max-w-76 md:max-w-full w-full -mt-1 overflow-x-auto  whitespace-nowrap'
 						style={{scrollbarWidth: 'none'}}>
 						{employees?.map((emp) => (
 							<button
 								key={emp.id}
-								className={`inline-flex px-3 py-1.5 rounded-full text-sm transition-all items-center gap-1 mr-1.5 text-white
+								className={`inline-flex px-2 py-1 rounded-sm md:text-sm text-xs w-full transition-all justify-center items-center gap-1 text-white truncate
 									${selectedEmployee?.id === emp.id ? 'ring-2 ring-white shadow-sm' : 'hover:shadow-sm'}`}
 								style={{backgroundColor: emp.color}}
 								onClick={() => {
@@ -670,8 +670,10 @@ export const ScheduleTable = React.memo(
 										setSelectedEmployee(emp);
 									}
 								}}>
-								{selectedEmployee?.id === emp.id && <Check className='h-3 w-3 text-white' />}
-								{emp.name}
+								{selectedEmployee?.id === emp.id && (
+									<Check className='h-3 w-3 flex-shrink-0 text-white' />
+								)}
+								<span className='truncate'>{emp.name}</span>
 							</button>
 						))}
 					</div>
