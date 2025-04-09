@@ -647,7 +647,7 @@ export const ScheduleTable = React.memo(
 		return (
 			<div className='-mx-4 px-4 pb-4'>
 				{/* Compact employee selection row */}
-				<div className='bg-gray-50 rounded-lg px-4 border border-gray-200 mb-4'>
+				<div className='bg-gray-50 md:pr-7 rounded-lg px-4 border border-gray-200 mb-4'>
 					<div className='flex items-center gap-2 py-3'>
 						<Users className='h-4 w-4 text-gray-500' />
 						<div className='text-sm font-medium text-gray-700'>עובדים:</div>
