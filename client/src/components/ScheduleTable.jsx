@@ -96,8 +96,6 @@ export const ScheduleTable = React.memo(
 		const addEmployee = useCallback(
 			(day, role, position, employeeId) => {
 				handleUpdateSchedule(currentSchedule, employeeId, day, role, parseInt(position));
-				// Clear selected employee after adding
-				setSelectedEmployee(null);
 			},
 			[currentSchedule, handleUpdateSchedule]
 		);
@@ -649,23 +647,22 @@ export const ScheduleTable = React.memo(
 		return (
 			<div className='-mx-4 px-4 pb-4'>
 				{/* Compact employee selection row */}
-				<div className='flex flex-col md:flex-row items-start md:items-center gap-3 mb-4 overflow-x-auto py-3 bg-gray-50 rounded-lg px-4 border border-gray-200'>
-					<div className='flex items-center gap-2'>
+				<div className='bg-gray-50 rounded-lg px-4 border border-gray-200 mb-4'>
+					<div className='flex items-center gap-2 py-3'>
 						<Users className='h-4 w-4 text-gray-500' />
 						<div className='text-sm font-medium text-gray-700'>עובדים:</div>
 					</div>
 
-					<div className='flex gap-1.5 overflow-x-auto py-1 flex-1 flex-wrap'>
+					{/* Horizontally scrollable employee buttons */}
+					<div
+						className='pb-3 -mt-1 overflow-x-auto whitespace-nowrap'
+						style={{scrollbarWidth: 'none'}}>
 						{employees?.map((emp) => (
 							<button
 								key={emp.id}
-								className={`px-3 py-1.5 rounded-full text-sm transition-all flex items-center gap-1 whitespace-nowrap
-									${
-										selectedEmployee?.id === emp.id
-											? 'ring-2 ring-blue-500 bg-white shadow-sm'
-											: 'hover:bg-white hover:shadow-sm bg-gray-100'
-									}`}
-								style={{color: emp.color}}
+								className={`inline-flex px-3 py-1.5 rounded-full text-sm transition-all items-center gap-1 mr-1.5 text-white
+									${selectedEmployee?.id === emp.id ? 'ring-2 ring-white shadow-sm' : 'hover:shadow-sm'}`}
+								style={{backgroundColor: emp.color}}
 								onClick={() => {
 									if (selectedEmployee?.id === emp.id) {
 										setSelectedEmployee(null);
@@ -673,14 +670,14 @@ export const ScheduleTable = React.memo(
 										setSelectedEmployee(emp);
 									}
 								}}>
-								{selectedEmployee?.id === emp.id && <Check className='h-3 w-3 text-blue-500' />}
+								{selectedEmployee?.id === emp.id && <Check className='h-3 w-3 text-white' />}
 								{emp.name}
 							</button>
 						))}
 					</div>
 
 					{selectedForSwap && (
-						<div className='ml-auto bg-green-50 px-3 py-1.5 rounded-full flex items-center gap-2 border border-green-200'>
+						<div className='bg-green-50 px-3 py-1.5 rounded-full flex items-center gap-2 border border-green-200 mb-3'>
 							<span className='text-green-800 text-sm whitespace-nowrap'>בחר תא שני להחלפה</span>
 							<button
 								className='h-5 w-5 rounded-full bg-white/80 flex items-center justify-center hover:bg-white'
@@ -691,15 +688,10 @@ export const ScheduleTable = React.memo(
 					)}
 				</div>
 
+				{/* Table container with horizontal scroll */}
 				<div
-					className='w-full overflow-auto touch-pan-x'
-					style={{
-						WebkitOverflowScrolling: 'touch',
-						scrollSnapType: 'x mandatory',
-						scrollPadding: '0 12px',
-						msOverflowStyle: 'none',
-						scrollbarWidth: 'none',
-					}}>
+					className='w-full overflow-x-auto'
+					style={{WebkitOverflowScrolling: 'touch'}}>
 					<div
 						id='schedule-table-for-share'
 						className='bg-white rounded-lg shadow-md border border-gray-200 min-w-[640px]'>

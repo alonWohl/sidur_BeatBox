@@ -208,158 +208,160 @@ export function EmployeesPage() {
 	}
 
 	return (
-		<div className='flex flex-col h-full w-full animate-in fade-in duration-300 px-4 space-y-6 max-w-[1900px] mx-auto pt-6'>
-			{isLoading && <Loader />}
+		<div className='w-full min-h-screen pb-24 overflow-y-auto overscroll-contain'>
+			<div className='flex flex-col w-full animate-in fade-in duration-300 p-4 space-y-6 max-w-[1900px] mx-auto'>
+				{isLoading && <Loader />}
 
-			<div className='flex flex-col md:flex-row gap-3 items-center justify-between w-full bg-white p-4 rounded-xl shadow-sm border'>
-				<div className='flex items-center gap-2 text-xl font-bold text-gray-800'>
-					<UserPlus className='h-6 w-6' />
-					<h1>ניהול עובדים</h1>
-				</div>
-
-				<div className='flex flex-col sm:flex-row gap-2 w-full md:w-auto'>
-					<div className='relative w-full sm:w-auto'>
-						<Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
-						<Input
-							placeholder='חיפוש עובדים...'
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className='pl-10 pr-4'
-						/>
+				<div className='flex flex-col md:flex-row gap-3 items-center justify-between w-full bg-white p-4 rounded-xl shadow-sm border'>
+					<div className='flex items-center gap-2 text-xl font-bold text-gray-800'>
+						<UserPlus className='h-6 w-6' />
+						<h1>ניהול עובדים</h1>
 					</div>
 
-					{user.isAdmin && (
-						<div className='flex items-center gap-2'>
-							<Filter className='h-4 w-4 text-gray-600' />
-							<Select
-								onValueChange={handleBranchChange}
-								value={filterBy?.name}
-								className='w-full sm:w-auto'>
-								<SelectTrigger className='h-10 text-base'>
-									<SelectValue placeholder='בחר סניף' />
-								</SelectTrigger>
-								<SelectContent>
-									{['מוקד', 'תל אביב', 'פתח תקווה', 'רשאון לציון', 'ראש העין'].map((branch) => (
-										<SelectItem
-											key={branch}
-											value={branch}>
-											{branch}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-					)}
-
-					<Button
-						onClick={() => setShowAddForm(!showAddForm)}
-						className='gap-1'>
-						<PlusCircle className='h-4 w-4' />
-						<span>{showAddForm ? 'סגור טופס' : 'הוסף עובד'}</span>
-					</Button>
-				</div>
-			</div>
-
-			{showAddForm && (
-				<div className='bg-white p-6 rounded-xl shadow-sm border animate-in fade-in-0 slide-in-from-top-5 duration-300'>
-					<h2 className='text-xl font-semibold mb-4 flex items-center gap-2'>
-						<UserPlus className='h-5 w-5 text-primary' />
-						הוסף עובד חדש
-					</h2>
-					<form
-						onSubmit={handleAddEmployee}
-						className='flex flex-col gap-4 max-w-md'>
-						<div className='flex flex-col gap-2'>
-							<label
-								htmlFor='name'
-								className='text-sm font-medium'>
-								שם העובד
-							</label>
+					<div className='flex flex-col sm:flex-row gap-2 w-full md:w-auto'>
+						<div className='relative w-full sm:w-auto'>
+							<Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
 							<Input
-								id='name'
-								name='name'
-								value={employeeToEdit.name}
-								onChange={handleChange}
-								placeholder='הכנס שם עובד'
-								className='h-10'
+								placeholder='חיפוש עובדים...'
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className='pl-10 pr-4'
 							/>
 						</div>
-						<div className='flex flex-col gap-2'>
-							<label
-								htmlFor='color'
-								className='text-sm font-medium'>
-								צבע
-							</label>
-							<ColorPickerPopover
-								value={employeeToEdit.color}
-								onChange={handleChange}
-							/>
-						</div>
-						<div className='flex gap-2 mt-2'>
-							<Button
-								type='submit'
-								className='flex items-center gap-2'>
-								<PlusCircle className='h-4 w-4' />
-								הוסף עובד
-							</Button>
-							<Button
-								type='button'
-								variant='outline'
-								onClick={() => setShowAddForm(false)}>
-								בטל
-							</Button>
-						</div>
-					</form>
-				</div>
-			)}
 
-			{filteredEmployees.length === 0 ? (
-				<div className='flex flex-col items-center justify-center bg-gray-50 p-12 rounded-lg text-center space-y-4'>
-					<div className='text-gray-400 p-6 rounded-full bg-gray-100'>
-						<UserPlus className='h-12 w-12' />
+						{user.isAdmin && (
+							<div className='flex items-center gap-2'>
+								<Filter className='h-4 w-4 text-gray-600' />
+								<Select
+									onValueChange={handleBranchChange}
+									value={filterBy?.name}
+									className='w-full sm:w-auto'>
+									<SelectTrigger className='h-10 text-base'>
+										<SelectValue placeholder='בחר סניף' />
+									</SelectTrigger>
+									<SelectContent>
+										{['מוקד', 'תל אביב', 'פתח תקווה', 'רשאון לציון', 'ראש העין'].map((branch) => (
+											<SelectItem
+												key={branch}
+												value={branch}>
+												{branch}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+						)}
+
+						<Button
+							onClick={() => setShowAddForm(!showAddForm)}
+							className='gap-1'>
+							<PlusCircle className='h-4 w-4' />
+							<span>{showAddForm ? 'סגור טופס' : 'הוסף עובד'}</span>
+						</Button>
 					</div>
-					<h3 className='text-xl font-medium text-gray-700'>אין עובדים להצגה</h3>
-					<p className='text-gray-500'>התחל להוסיף עובדים חדשים או שנה את פילטר החיפוש</p>
-					<Button
-						onClick={() => setShowAddForm(true)}
-						className='mt-4'>
-						הוסף עובד ראשון
-					</Button>
 				</div>
-			) : (
-				<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4'>
-					{filteredEmployees.map((employee) => (
-						<div
-							key={employee.id}
-							className='flex flex-col gap-2 p-5 border rounded-xl shadow-sm hover:shadow-md transition-all bg-white overflow-hidden group animate-in fade-in-50 duration-300'
-							style={{borderTop: `4px solid ${employee.color}`}}>
-							<div className='flex items-center justify-between'>
-								<div className='flex items-center gap-2'>
-									<div
-										className='w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-sm'
-										style={{backgroundColor: employee.color}}>
-										{employee.name.charAt(0)}
-									</div>
-									<h3 className='text-lg font-medium'>{employee.name}</h3>
-								</div>
+
+				{showAddForm && (
+					<div className='bg-white p-6 rounded-xl shadow-sm border animate-in fade-in-0 slide-in-from-top-5 duration-300'>
+						<h2 className='text-xl font-semibold mb-4 flex items-center gap-2'>
+							<UserPlus className='h-5 w-5 text-primary' />
+							הוסף עובד חדש
+						</h2>
+						<form
+							onSubmit={handleAddEmployee}
+							className='flex flex-col gap-4 max-w-md'>
+							<div className='flex flex-col gap-2'>
+								<label
+									htmlFor='name'
+									className='text-sm font-medium'>
+									שם העובד
+								</label>
+								<Input
+									id='name'
+									name='name'
+									value={employeeToEdit.name}
+									onChange={handleChange}
+									placeholder='הכנס שם עובד'
+									className='h-10'
+								/>
+							</div>
+							<div className='flex flex-col gap-2'>
+								<label
+									htmlFor='color'
+									className='text-sm font-medium'>
+									צבע
+								</label>
+								<ColorPickerPopover
+									value={employeeToEdit.color}
+									onChange={handleChange}
+								/>
+							</div>
+							<div className='flex gap-2 mt-2'>
 								<Button
-									variant='ghost'
-									size='icon'
-									className='h-8 w-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 hover:bg-red-50'
-									onClick={() => confirmDeleteEmployee(employee)}>
-									<Trash className='h-4 w-4' />
+									type='submit'
+									className='flex items-center gap-2'>
+									<PlusCircle className='h-4 w-4' />
+									הוסף עובד
+								</Button>
+								<Button
+									type='button'
+									variant='outline'
+									onClick={() => setShowAddForm(false)}>
+									בטל
 								</Button>
 							</div>
-							<div className='flex items-center gap-2 mt-1 text-gray-500'>
-								<span className='text-sm'>סניף:</span>
-								<span className='text-sm font-medium px-2 py-0.5 bg-gray-100 rounded-full'>
-									{employee.branch}
-								</span>
-							</div>
+						</form>
+					</div>
+				)}
+
+				{filteredEmployees.length === 0 ? (
+					<div className='flex flex-col items-center justify-center bg-gray-50 p-12 rounded-lg text-center space-y-4'>
+						<div className='text-gray-400 p-6 rounded-full bg-gray-100'>
+							<UserPlus className='h-12 w-12' />
 						</div>
-					))}
-				</div>
-			)}
+						<h3 className='text-xl font-medium text-gray-700'>אין עובדים להצגה</h3>
+						<p className='text-gray-500'>התחל להוסיף עובדים חדשים או שנה את פילטר החיפוש</p>
+						<Button
+							onClick={() => setShowAddForm(true)}
+							className='mt-4'>
+							הוסף עובד ראשון
+						</Button>
+					</div>
+				) : (
+					<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full pb-8'>
+						{filteredEmployees.map((employee) => (
+							<div
+								key={employee.id}
+								className='flex flex-col gap-2 p-5 border rounded-xl shadow-sm hover:shadow-md transition-all bg-white overflow-hidden group animate-in fade-in-50 duration-300'
+								style={{borderTop: `4px solid ${employee.color}`}}>
+								<div className='flex items-center justify-between'>
+									<div className='flex items-center gap-2'>
+										<div
+											className='w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-sm'
+											style={{backgroundColor: employee.color}}>
+											{employee.name.charAt(0)}
+										</div>
+										<h3 className='text-lg font-medium'>{employee.name}</h3>
+									</div>
+									<Button
+										variant='ghost'
+										size='icon'
+										className='h-8 w-8 text-gray-400 opacity-60 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 hover:bg-red-50'
+										onClick={() => confirmDeleteEmployee(employee)}>
+										<Trash className='h-4 w-4' />
+									</Button>
+								</div>
+								<div className='flex items-center gap-2 mt-1 text-gray-500'>
+									<span className='text-sm'>סניף:</span>
+									<span className='text-sm font-medium px-2 py-0.5 bg-gray-100 rounded-full'>
+										{employee.branch}
+									</span>
+								</div>
+							</div>
+						))}
+					</div>
+				)}
+			</div>
 
 			<AlertDialog
 				open={showDeleteDialog}

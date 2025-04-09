@@ -32,9 +32,8 @@ export function DroppableCell({
 		},
 	});
 
-	// State for confirmations and modes
+	// State for swap mode
 	const [isSwapMode, setIsSwapMode] = useState(false);
-	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
 	// State for mobile detection
 	const [isMobile, setIsMobile] = useState(
@@ -53,10 +52,10 @@ export function DroppableCell({
 		return () => window.removeEventListener('resize', checkMobile);
 	}, []);
 
-	// Handle delete with confirmation
+	// Handle delete directly without confirmation
 	const handleDelete = (e) => {
 		e.stopPropagation();
-		setShowDeleteConfirm(true);
+		onRemove(id);
 	};
 
 	// Handle cell click
@@ -91,35 +90,6 @@ export function DroppableCell({
 				// Employee is assigned - show the employee
 				<>
 					<span className='text-center truncate px-1 w-full'>{employee.name}</span>
-
-					{/* Delete confirmation dialog */}
-					<AlertDialog
-						open={showDeleteConfirm}
-						onOpenChange={setShowDeleteConfirm}>
-						<AlertDialogContent className='sm:max-w-[425px]'>
-							<AlertDialogHeader>
-								<AlertDialogTitle className='text-right'>הסרת עובד</AlertDialogTitle>
-								<AlertDialogDescription className='text-right'>
-									האם אתה בטוח שברצונך להסיר את {employee.name} מהמשמרת?
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter className='flex sm:justify-end justify-between'>
-								<AlertDialogCancel
-									onClick={() => setShowDeleteConfirm(false)}
-									className='mb-2 sm:mb-0'>
-									ביטול
-								</AlertDialogCancel>
-								<AlertDialogAction
-									className='bg-red-600 hover:bg-red-700'
-									onClick={() => {
-										onRemove(id);
-										setShowDeleteConfirm(false);
-									}}>
-									הסר
-								</AlertDialogAction>
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
 
 					{/* Don't show controls if we're in select employee mode */}
 					{!selectedEmployee && (
