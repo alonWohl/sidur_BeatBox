@@ -15,7 +15,22 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import React from 'react';
-import {Trash, PlusCircle, Search, UserPlus, Filter, Check} from 'lucide-react';
+import {
+	Trash,
+	PlusCircle,
+	Search,
+	UserPlus,
+	Filter,
+	Check,
+	X,
+	Info,
+	Building2,
+	Palette,
+	ClipboardList,
+	User,
+	ShieldAlert,
+	AlertCircle,
+} from 'lucide-react';
 import {Loader} from '@/components/Loader';
 import {useUserStore} from '@/stores/useUserStore';
 import {useEmployeeStore} from '@/stores/useEmployeeStore';
@@ -69,6 +84,7 @@ const ColorPickerPopover = ({value, onChange}) => {
 							className='w-6 h-6 rounded-md border shadow-sm transition-transform duration-200'
 							style={{backgroundColor: value}}
 						/>
+						<Palette className='h-4 w-4 text-gray-500 mr-1' />
 						<span className='text-gray-600 text-sm'>בחר צבע</span>
 					</button>
 				</PopoverTrigger>
@@ -250,7 +266,7 @@ export function EmployeesPage() {
 
 				<div className='flex flex-col md:flex-row gap-3 items-center justify-between w-full bg-white p-4 rounded-xl shadow-sm border'>
 					<div className='flex items-center gap-2 text-xl font-bold text-gray-800'>
-						<UserPlus className='h-6 w-6' />
+						<UserPlus className='h-6 w-6 text-[#BE202E]' />
 						<h1>ניהול עובדים</h1>
 					</div>
 
@@ -267,7 +283,7 @@ export function EmployeesPage() {
 
 						{user.isAdmin && (
 							<div className='flex items-center gap-2'>
-								<Filter className='h-4 w-4 text-gray-600' />
+								<Building2 className='h-4 w-4 text-gray-600' />
 								<Select
 									onValueChange={handleBranchChange}
 									value={filterBy?.name}
@@ -290,7 +306,7 @@ export function EmployeesPage() {
 
 						<Button
 							onClick={() => setShowAddForm(!showAddForm)}
-							className='gap-1'>
+							className='gap-1 bg-[#BE202E] hover:bg-[#BE202E]/90'>
 							<PlusCircle className='h-4 w-4' />
 							<span>{showAddForm ? 'סגור טופס' : 'הוסף עובד'}</span>
 						</Button>
@@ -301,12 +317,16 @@ export function EmployeesPage() {
 					<form
 						onSubmit={handleAddEmployee}
 						className='bg-white p-6 rounded-xl shadow-md space-y-4 border animate-in fade-in duration-300'>
-						<h2 className='text-xl font-bold text-gray-800 mb-4'>הוספת עובד חדש</h2>
+						<h2 className='text-xl font-bold text-gray-800 mb-4 flex items-center gap-2'>
+							<UserPlus className='h-5 w-5 text-[#BE202E]' />
+							הוספת עובד חדש
+						</h2>
 						<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 							<div className='space-y-2'>
 								<label
 									htmlFor='name'
-									className='text-sm font-medium text-gray-700 block'>
+									className='text-sm font-medium text-gray-700 block flex items-center gap-1'>
+									<User className='h-4 w-4 text-gray-500' />
 									שם העובד
 								</label>
 								<Input
@@ -321,7 +341,10 @@ export function EmployeesPage() {
 							</div>
 
 							<div className='space-y-2'>
-								<label className='text-sm font-medium text-gray-700 block'>צבע עובד</label>
+								<label className='text-sm font-medium text-gray-700 block flex items-center gap-1'>
+									<Palette className='h-4 w-4 text-gray-500' />
+									צבע עובד
+								</label>
 								<ColorPickerPopover
 									value={employeeToEdit.color}
 									onChange={handleChange}
@@ -331,7 +354,10 @@ export function EmployeesPage() {
 							{/* Department selection - only show for non-Moked branches */}
 							{employeeToEdit.branch !== 'מוקד' && (
 								<div className='space-y-2 md:col-span-2'>
-									<label className='text-sm font-medium text-gray-700 block'>מחלקות</label>
+									<label className='text-sm font-medium text-gray-700 block flex items-center gap-1'>
+										<ClipboardList className='h-4 w-4 text-gray-500' />
+										מחלקות
+									</label>
 									<div className='flex flex-wrap gap-3 p-3 border rounded-md bg-gray-50'>
 										{DEPARTMENTS.map((deptId) => (
 											<div
@@ -350,24 +376,34 @@ export function EmployeesPage() {
 											</div>
 										))}
 									</div>
-									<p className='text-xs text-gray-500'>יש לבחור לפחות מחלקה אחת</p>
+									<p className='text-xs text-gray-500 flex items-center gap-1'>
+										<Info className='h-3 w-3 text-gray-400' />
+										יש לבחור לפחות מחלקה אחת
+									</p>
 								</div>
 							)}
 						</div>
 
-						<div className='flex justify-end space-x-2 space-x-reverse'>
+						<div className='flex justify-end space-x-2 space-x-reverse mt-4'>
 							<Button
 								type='button'
 								variant='outline'
-								onClick={() => setShowAddForm(false)}>
+								onClick={() => setShowAddForm(false)}
+								className='flex items-center gap-1'>
+								<X className='h-4 w-4' />
 								ביטול
 							</Button>
-							<Button type='submit'>הוסף עובד</Button>
+							<Button
+								type='submit'
+								className='bg-[#BE202E] hover:bg-[#BE202E]/90 flex items-center gap-1'>
+								<Check className='h-4 w-4' />
+								הוסף עובד
+							</Button>
 						</div>
 					</form>
 				)}
 
-				{filteredEmployees.length === 0 ? (
+				{filteredEmployees.length === 0 && searchQuery === '' && !isLoading ? (
 					<div className='flex flex-col items-center justify-center bg-gray-50 p-12 rounded-lg text-center space-y-4'>
 						<div className='text-gray-400 p-6 rounded-full bg-gray-100'>
 							<UserPlus className='h-12 w-12' />
@@ -376,8 +412,22 @@ export function EmployeesPage() {
 						<p className='text-gray-500'>התחל להוסיף עובדים חדשים או שנה את פילטר החיפוש</p>
 						<Button
 							onClick={() => setShowAddForm(true)}
-							className='mt-4'>
+							className='mt-4 bg-[#BE202E] hover:bg-[#BE202E]/90'>
 							הוסף עובד ראשון
+						</Button>
+					</div>
+				) : filteredEmployees.length === 0 && searchQuery !== '' ? (
+					<div className='flex flex-col items-center justify-center bg-gray-50 p-12 rounded-lg text-center space-y-4'>
+						<div className='text-gray-400 p-6 rounded-full bg-gray-100'>
+							<Search className='h-12 w-12' />
+						</div>
+						<h3 className='text-xl font-medium text-gray-700'>אין תוצאות חיפוש</h3>
+						<p className='text-gray-500'>לא נמצאו עובדים התואמים את החיפוש שלך</p>
+						<Button
+							onClick={() => setSearchQuery('')}
+							variant='outline'
+							className='mt-4'>
+							נקה חיפוש
 						</Button>
 					</div>
 				) : (
@@ -385,11 +435,11 @@ export function EmployeesPage() {
 						{filteredEmployees.map((employee) => (
 							<div
 								key={employee.id}
-								className='bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all'>
+								className='bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all group'>
 								<div className='p-4 flex justify-between items-start'>
 									<div className='flex items-center gap-3'>
 										<div
-											className='h-10 w-10 rounded-full flex items-center justify-center'
+											className='h-10 w-10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform'
 											style={{backgroundColor: employee.color}}>
 											<span className='text-white font-bold text-lg'>
 												{employee.name.charAt(0)}
@@ -402,44 +452,30 @@ export function EmployeesPage() {
 												{employee.departments?.map((deptId) => (
 													<span
 														key={deptId}
-														className='text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full'>
+														className='text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex items-center gap-0.5'>
+														<span className='inline-block h-1.5 w-1.5 rounded-full bg-gray-400'></span>
 														{DEPARTMENT_NAMES[deptId]}
 													</span>
 												))}
+												{employee.departments?.length === 0 && (
+													<span className='text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full flex items-center gap-0.5'>
+														<Building2 className='h-3 w-3' />
+														מוקד
+													</span>
+												)}
 											</div>
 										</div>
 									</div>
 									<Button
 										variant='ghost'
 										size='icon'
-										className='text-red-500 hover:text-red-600 hover:bg-red-50'
+										className='text-red-500 hover:text-red-600 hover:bg-red-50 opacity-70 group-hover:opacity-100'
 										onClick={() => confirmDeleteEmployee(employee)}>
 										<Trash className='h-4 w-4' />
 									</Button>
 								</div>
 							</div>
 						))}
-
-						{/* Empty state */}
-						{filteredEmployees.length === 0 && !isLoading && (
-							<div className='col-span-full p-8 text-center bg-gray-50 rounded-xl border border-dashed'>
-								<div className='flex flex-col items-center justify-center space-y-3'>
-									<div className='bg-primary-50 p-3 rounded-full'>
-										<UserPlus className='h-6 w-6 text-primary-500' />
-									</div>
-									<h3 className='text-lg font-medium text-gray-800'>אין עובדים</h3>
-									<p className='text-gray-500 text-sm max-w-md'>
-										הוסף עובדים חדשים כדי שתוכל לשבץ אותם בלוח המשמרות.
-									</p>
-									<Button
-										onClick={() => setShowAddForm(true)}
-										className='mt-2'>
-										<PlusCircle className='h-4 w-4 mr-2' />
-										הוסף עובד
-									</Button>
-								</div>
-							</div>
-						)}
 					</div>
 				)}
 			</div>
@@ -449,7 +485,10 @@ export function EmployeesPage() {
 				onOpenChange={setShowDeleteDialog}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>האם אתה בטוח שברצונך למחוק את העובד?</AlertDialogTitle>
+						<AlertDialogTitle className='flex items-center gap-2'>
+							<AlertCircle className='h-5 w-5 text-red-500' />
+							האם אתה בטוח שברצונך למחוק את העובד?
+						</AlertDialogTitle>
 						<AlertDialogDescription>
 							{employeeToDelete &&
 								`עובד "${employeeToDelete.name}" יימחק לצמיתות. פעולה זו אינה ניתנת לביטול.`}
@@ -459,7 +498,8 @@ export function EmployeesPage() {
 						<AlertDialogCancel>ביטול</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={handleRemoveEmployee}
-							className='bg-red-500 hover:bg-red-600'>
+							className='bg-red-500 hover:bg-red-600 flex items-center gap-1'>
+							<Trash className='h-4 w-4' />
 							מחק
 						</AlertDialogAction>
 					</AlertDialogFooter>
