@@ -166,11 +166,11 @@ export function SchedulePage() {
   }
 
   return (
-    <div className="flex flex-col h-full w-full animate-in fade-in duration-300 space-y-3 max-w-[1900px] mx-auto overflow-hidden">
+    <div className="h-full w-full animate-in fade-in duration-300 max-w-[1900px] mx-auto flex flex-col overflow-hidden">
       {isLoading && <Loader />}
 
       {/* Enhanced header with subtle gradient background */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-white to-gray-50 border-b border-gray-200 shadow-sm">
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-white to-gray-50 border-b border-gray-200 shadow-sm flex-shrink-0">
         <div className="flex flex-col px-4 xl:px-6 2xl:px-0 sm:flex-row items-start sm:items-center justify-between py-3 max-w-[1900px] mx-auto gap-3">
           {/* Left side: Brand and title */}
           <div className="flex pr-1  items-center gap-3">
@@ -239,18 +239,21 @@ export function SchedulePage() {
         </div>
       </div>
 
-      <ScheduleTable
-        type={filterBy.name}
-        currentSchedule={currentSchedule}
-        getAssignedEmployee={getAssignedEmployee}
-        handleRemoveEmployee={handleRemoveEmployee}
-        handleUpdateSchedule={handleUpdateSchedule}
-        employees={employees}
-        isSharing={isSharing}
-        onClearSchedule={handleClearBoard}
-        weekMode={filterBy.week}
-        setIsSharing={handleSetSharing}
-      />
+      {/* The ScheduleTable will now take the rest of the available height */}
+      <div className="flex-grow overflow-hidden min-h-0 flex flex-col" style={{ height: 'calc(100% - 70px)' }}>
+        <ScheduleTable
+          type={filterBy.name}
+          currentSchedule={currentSchedule}
+          getAssignedEmployee={getAssignedEmployee}
+          handleRemoveEmployee={handleRemoveEmployee}
+          handleUpdateSchedule={handleUpdateSchedule}
+          employees={employees}
+          isSharing={isSharing}
+          onClearSchedule={handleClearBoard}
+          weekMode={filterBy.week}
+          setIsSharing={handleSetSharing}
+        />
+      </div>
     </div>
   )
 }

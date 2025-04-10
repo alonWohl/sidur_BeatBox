@@ -595,9 +595,9 @@ export const ScheduleTable = React.memo(
     }
 
     return (
-      <div className="px-4 xl:px-6 2xl:px-0 pb-4">
+      <div className="h-full flex flex-col overflow-hidden">
         {/* Employee selection with departments */}
-        <div className="bg-gray-50 rounded-lg px-4 border border-gray-200 mb-4 w-full">
+        <div className="px-4 xl:px-6 2xl:px-0 bg-gray-50 rounded-lg px-4 border border-gray-200 mb-4 w-full flex-shrink-0">
           <div className="flex items-center gap-2 py-3">
             <Users className="h-4 w-4 text-gray-500" />
             <div className="text-sm font-medium text-gray-700">עובדים:</div>
@@ -673,7 +673,7 @@ export const ScheduleTable = React.memo(
         </div>
 
         {/* Table container with horizontal scroll */}
-        <div className="bg-white py-3 border-b border-gray-200 flex flex-wrap md:flex-nowrap justify-between items-center gap-3">
+        <div className="px-4 xl:px-6 2xl:px-0 bg-white py-3 border-b border-gray-200 flex flex-wrap md:flex-nowrap justify-between items-center gap-3 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-md bg-[#BE202E]/10 flex items-center justify-center">
               <LayoutGrid className="h-4 w-4 text-[#BE202E]" />
@@ -718,33 +718,39 @@ export const ScheduleTable = React.memo(
             </div>
           </div>
         </div>
-        <div className="w-full overflow-x-auto scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <div id="schedule-table-for-share" className="bg-white rounded-lg shadow-md border border-gray-200 min-w-[640px] ">
-            <Table className="overflow-x-auto w-full table-fixed">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-center font-medium bg-gray-100 text-zinc-900 border-b-2 border-b-gray-200 py-3">משמרת</TableHead>
-                  {getWeekDates().map(({ name, date }) => (
-                    <TableHead
-                      key={name}
-                      className={`text-center font-medium text-sm whitespace-nowrap p-2 border-x transition-colors
-											${highlightedDay === name ? 'bg-yellow-50' : ''}
-											${
-                        isToday(name)
-                          ? 'bg-[#BE202E]/5 text-[#BE202E] font-bold border-t-2 border-t-[#BE202E] border-b-0'
-                          : 'font-medium bg-gray-50 border-b-2 border-b-gray-200'
-                      }`}
-                      onMouseEnter={() => setHighlightedDay(name)}
-                      onMouseLeave={() => setHighlightedDay(null)}>
-                      <div className="text-center font-bold text-base mb-1">{name}</div>
-                      <div className={`text-sm ${isToday(name) ? 'text-[#BE202E]/80 font-medium' : 'text-gray-500'}`}>{date}</div>
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
 
-              {isMoked ? renderMokedLayout() : renderBranchLayout()}
-            </Table>
+        {/* Table with vertical scroll */}
+        <div className="px-4 xl:px-6 2xl:px-0 flex-grow overflow-hidden min-h-0">
+          <div className="h-full overflow-y-auto overflow-x-auto scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div id="schedule-table-for-share" className="bg-white rounded-lg shadow-md border border-gray-200 min-w-[640px]">
+              <Table className="w-full table-fixed">
+                <TableHeader className="sticky top-0 z-10">
+                  <TableRow>
+                    <TableHead className="text-center font-medium bg-gray-100 text-zinc-900 border-b-2 border-b-gray-200 py-3 sticky left-0 z-20">
+                      משמרת
+                    </TableHead>
+                    {getWeekDates().map(({ name, date }) => (
+                      <TableHead
+                        key={name}
+                        className={`text-center font-medium text-sm whitespace-nowrap p-2 border-x transition-colors
+                          ${highlightedDay === name ? 'bg-yellow-50' : ''}
+                          ${
+                            isToday(name)
+                              ? 'bg-[#BE202E]/5 text-[#BE202E] font-bold border-t-2 border-t-[#BE202E] border-b-0'
+                              : 'font-medium bg-gray-50 border-b-2 border-b-gray-200'
+                          }`}
+                        onMouseEnter={() => setHighlightedDay(name)}
+                        onMouseLeave={() => setHighlightedDay(null)}>
+                        <div className="text-center font-bold text-base mb-1">{name}</div>
+                        <div className={`text-sm ${isToday(name) ? 'text-[#BE202E]/80 font-medium' : 'text-gray-500'}`}>{date}</div>
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+
+                {isMoked ? renderMokedLayout() : renderBranchLayout()}
+              </Table>
+            </div>
           </div>
         </div>
       </div>
