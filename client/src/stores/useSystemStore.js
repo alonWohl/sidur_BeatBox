@@ -4,8 +4,8 @@ import { userService } from '../services/branch'
 // Helper function to get default filter
 function getDefaultFilterBy() {
   return {
-    name: userService.getLoggedinUser()?.name || '',
-    username: userService.getLoggedinUser()?.username || '',
+    name: userService.getLoggedinUser()?.name,
+    username: userService.getLoggedinUser()?.username,
     week: 'current'
   }
 }
