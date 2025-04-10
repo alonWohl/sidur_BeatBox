@@ -166,7 +166,7 @@ export function SchedulePage() {
   }
 
   return (
-    <div className="h-full w-full animate-in fade-in duration-300 max-w-[1900px] mx-auto flex flex-col overflow-hidden">
+    <div className="h-full w-full animate-in fade-in duration-300 max-w-[1900px] mx-auto flex flex-col">
       {isLoading && <Loader />}
 
       {/* Enhanced header with subtle gradient background */}
@@ -240,7 +240,7 @@ export function SchedulePage() {
       </div>
 
       {/* The ScheduleTable will now take the rest of the available height */}
-      <div className="flex-grow overflow-hidden min-h-0 flex flex-col" style={{ height: 'calc(100% - 70px)' }}>
+      <div className="flex-grow overflow-hidden min-h-1/2 flex flex-col">
         <ScheduleTable
           type={filterBy.name}
           currentSchedule={currentSchedule}
