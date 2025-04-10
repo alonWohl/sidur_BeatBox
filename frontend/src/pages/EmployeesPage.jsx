@@ -329,97 +329,6 @@ export function EmployeesPage() {
           </div>
         </div>
 
-        {/* Form section - also fixed */}
-        {showAddForm && (
-          <form
-            onSubmit={isEditing ? handleUpdateEmployee : handleAddEmployee}
-            className="bg-white p-6 rounded-xl shadow-md space-y-4 border animate-in fade-in duration-300 mt-4">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-[#BE202E]" />
-              {isEditing ? 'עריכת עובד' : 'הוספת עובד חדש'}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                  <User className="h-4 w-4 text-gray-500" />
-                  שם העובד
-                </label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={employeeToEdit.name}
-                  onChange={handleChange}
-                  className="w-full"
-                  placeholder="הכנס שם עובד"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                  <Palette className="h-4 w-4 text-gray-500" />
-                  צבע עובד
-                </label>
-                <ColorPickerPopover value={employeeToEdit.color} onChange={handleChange} />
-              </div>
-
-              {/* Department selection - only show for non-Moked branches */}
-              {employeeToEdit.branch !== 'מוקד' && (
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                    <ClipboardList className="h-4 w-4 text-gray-500" />
-                    מחלקות
-                  </label>
-                  <div className="flex flex-wrap gap-3 p-3 border rounded-md bg-gray-50">
-                    {DEPARTMENTS.map((deptId) => (
-                      <div key={deptId} className="flex items-center space-x-2 space-x-reverse">
-                        <Checkbox
-                          id={`dept-${deptId}`}
-                          checked={employeeToEdit.departments?.includes(deptId)}
-                          onCheckedChange={() => handleDepartmentChange(deptId)}
-                        />
-                        <label
-                          htmlFor={`dept-${deptId}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
-                          {DEPARTMENT_NAMES[deptId]}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-500 flex items-center gap-1">
-                    <Info className="h-3 w-3 text-gray-400" />
-                    יש לבחור לפחות מחלקה אחת
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-2 space-x-reverse mt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setShowAddForm(false)
-                  setIsEditing(false)
-                  setEmployeeToEdit({
-                    name: '',
-                    color: colorOptions[0],
-                    branch: user?.name || '',
-                    departments: []
-                  })
-                }}
-                className="flex items-center gap-1">
-                <X className="h-4 w-4" />
-                ביטול
-              </Button>
-              <Button type="submit" className="bg-[#BE202E] hover:bg-[#BE202E]/90 flex items-center gap-1">
-                <Check className="h-4 w-4" />
-                {isEditing ? 'עדכן עובד' : 'הוסף עובד'}
-              </Button>
-            </div>
-          </form>
-        )}
-
         {/* Loading indicator - fixed */}
         {isLoading && (
           <div className="mt-4 flex justify-center">
@@ -428,9 +337,100 @@ export function EmployeesPage() {
         )}
       </div>
 
-      {/* Scrollable content area */}
+      {/* Scrollable content area with form and employee list */}
       <div className="flex-grow overflow-hidden min-h-0 p-4 pt-0">
         <div className="h-full overflow-y-auto pr-1 overscroll-contain scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          {/* Form section - NOT fixed, scrolls with content */}
+          {showAddForm && (
+            <form
+              onSubmit={isEditing ? handleUpdateEmployee : handleAddEmployee}
+              className="bg-white p-6 rounded-xl shadow-md space-y-4 border animate-in fade-in duration-300 mb-4 max-w-3xl mx-auto">
+              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <UserPlus className="h-5 w-5 text-[#BE202E]" />
+                {isEditing ? 'עריכת עובד' : 'הוספת עובד חדש'}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    <User className="h-4 w-4 text-gray-500" />
+                    שם העובד
+                  </label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={employeeToEdit.name}
+                    onChange={handleChange}
+                    className="w-full"
+                    placeholder="הכנס שם עובד"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    <Palette className="h-4 w-4 text-gray-500" />
+                    צבע עובד
+                  </label>
+                  <ColorPickerPopover value={employeeToEdit.color} onChange={handleChange} />
+                </div>
+
+                {/* Department selection - only show for non-Moked branches */}
+                {employeeToEdit.branch !== 'מוקד' && (
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                      <ClipboardList className="h-4 w-4 text-gray-500" />
+                      מחלקות
+                    </label>
+                    <div className="flex flex-wrap gap-3 p-3 border rounded-md bg-gray-50">
+                      {DEPARTMENTS.map((deptId) => (
+                        <div key={deptId} className="flex items-center space-x-2 space-x-reverse">
+                          <Checkbox
+                            id={`dept-${deptId}`}
+                            checked={employeeToEdit.departments?.includes(deptId)}
+                            onCheckedChange={() => handleDepartmentChange(deptId)}
+                          />
+                          <label
+                            htmlFor={`dept-${deptId}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                            {DEPARTMENT_NAMES[deptId]}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <Info className="h-3 w-3 text-gray-400" />
+                      יש לבחור לפחות מחלקה אחת
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 space-x-reverse mt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddForm(false)
+                    setIsEditing(false)
+                    setEmployeeToEdit({
+                      name: '',
+                      color: colorOptions[0],
+                      branch: user?.name || '',
+                      departments: []
+                    })
+                  }}
+                  className="flex items-center gap-1">
+                  <X className="h-4 w-4" />
+                  ביטול
+                </Button>
+                <Button type="submit" className="bg-[#BE202E] hover:bg-[#BE202E]/90 flex items-center gap-1">
+                  <Check className="h-4 w-4" />
+                  {isEditing ? 'עדכן עובד' : 'הוסף עובד'}
+                </Button>
+              </div>
+            </form>
+          )}
+
           {filteredEmployees.length === 0 && searchQuery === '' && !isLoading ? (
             <div className="flex flex-col items-center justify-center bg-gray-50 p-12 rounded-lg text-center space-y-4">
               <div className="text-gray-400 p-6 rounded-full bg-gray-100">
