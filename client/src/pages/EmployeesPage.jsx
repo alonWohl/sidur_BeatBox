@@ -289,10 +289,9 @@ export function EmployeesPage() {
   }
 
   return (
-    <div className="w-full min-h-screen pb-24 overflow-y-auto overscroll-contain">
-      <div className="flex flex-col w-full animate-in fade-in duration-300 p-4 space-y-6 max-w-[1900px] mx-auto">
-        {isLoading && <Loader />}
-
+    <div className="h-full w-full flex flex-col overflow-hidden">
+      {/* Header section - fixed */}
+      <div className="flex-shrink-0 p-4">
         <div className="flex flex-col md:flex-row gap-3 items-center justify-between w-full bg-white p-4 rounded-xl shadow-sm border">
           <div className="flex items-center gap-2 text-xl font-bold text-gray-800">
             <UserPlus className="h-6 w-6 text-[#BE202E]" />
@@ -330,10 +329,11 @@ export function EmployeesPage() {
           </div>
         </div>
 
+        {/* Form section - also fixed */}
         {showAddForm && (
           <form
             onSubmit={isEditing ? handleUpdateEmployee : handleAddEmployee}
-            className="bg-white p-6 rounded-xl shadow-md space-y-4 border animate-in fade-in duration-300">
+            className="bg-white p-6 rounded-xl shadow-md space-y-4 border animate-in fade-in duration-300 mt-4">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-[#BE202E]" />
               {isEditing ? 'עריכת עובד' : 'הוספת עובד חדש'}
@@ -420,79 +420,91 @@ export function EmployeesPage() {
           </form>
         )}
 
-        {filteredEmployees.length === 0 && searchQuery === '' && !isLoading ? (
-          <div className="flex flex-col items-center justify-center bg-gray-50 p-12 rounded-lg text-center space-y-4">
-            <div className="text-gray-400 p-6 rounded-full bg-gray-100">
-              <UserPlus className="h-12 w-12" />
-            </div>
-            <h3 className="text-xl font-medium text-gray-700">אין עובדים להצגה</h3>
-            <p className="text-gray-500">התחל להוסיף עובדים חדשים או שנה את פילטר החיפוש</p>
-            <Button onClick={() => setShowAddForm(true)} className="mt-4 bg-[#BE202E] hover:bg-[#BE202E]/90">
-              הוסף עובד ראשון
-            </Button>
-          </div>
-        ) : filteredEmployees.length === 0 && searchQuery !== '' ? (
-          <div className="flex flex-col items-center justify-center bg-gray-50 p-12 rounded-lg text-center space-y-4">
-            <div className="text-gray-400 p-6 rounded-full bg-gray-100">
-              <Search className="h-12 w-12" />
-            </div>
-            <h3 className="text-xl font-medium text-gray-700">אין תוצאות חיפוש</h3>
-            <p className="text-gray-500">לא נמצאו עובדים התואמים את החיפוש שלך</p>
-            <Button onClick={() => setSearchQuery('')} variant="outline" className="mt-4">
-              נקה חיפוש
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in duration-500">
-            {filteredEmployees.map((employee) => (
-              <div key={employee.id} className="bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all group">
-                <div className="p-4 flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="h-10 w-10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
-                      style={{ backgroundColor: employee.color }}>
-                      <span className="text-white font-bold text-lg">{employee.name.charAt(0)}</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800">{employee.name}</h3>
-                      {/* Display departments */}
-                      <div className="flex gap-1 mt-1 flex-wrap">
-                        {employee.departments?.map((deptId) => (
-                          <span key={deptId} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400"></span>
-                            {DEPARTMENT_NAMES[deptId]}
-                          </span>
-                        ))}
-                        {employee.departments?.length === 0 && (
-                          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                            <Building2 className="h-3 w-3" />
-                            מוקד
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 opacity-70 group-hover:opacity-100"
-                      onClick={() => handleEditEmployee(employee)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50 opacity-70 group-hover:opacity-100"
-                      onClick={() => confirmDeleteEmployee(employee)}>
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
+        {/* Loading indicator - fixed */}
+        {isLoading && (
+          <div className="mt-4 flex justify-center">
+            <Loader />
           </div>
         )}
+      </div>
+
+      {/* Scrollable content area */}
+      <div className="flex-grow overflow-hidden min-h-0 p-4 pt-0">
+        <div className="h-full overflow-y-auto pr-1 overscroll-contain scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          {filteredEmployees.length === 0 && searchQuery === '' && !isLoading ? (
+            <div className="flex flex-col items-center justify-center bg-gray-50 p-12 rounded-lg text-center space-y-4">
+              <div className="text-gray-400 p-6 rounded-full bg-gray-100">
+                <UserPlus className="h-12 w-12" />
+              </div>
+              <h3 className="text-xl font-medium text-gray-700">אין עובדים להצגה</h3>
+              <p className="text-gray-500">התחל להוסיף עובדים חדשים או שנה את פילטר החיפוש</p>
+              <Button onClick={() => setShowAddForm(true)} className="mt-4 bg-[#BE202E] hover:bg-[#BE202E]/90">
+                הוסף עובד ראשון
+              </Button>
+            </div>
+          ) : filteredEmployees.length === 0 && searchQuery !== '' ? (
+            <div className="flex flex-col items-center justify-center bg-gray-50 p-12 rounded-lg text-center space-y-4">
+              <div className="text-gray-400 p-6 rounded-full bg-gray-100">
+                <Search className="h-12 w-12" />
+              </div>
+              <h3 className="text-xl font-medium text-gray-700">אין תוצאות חיפוש</h3>
+              <p className="text-gray-500">לא נמצאו עובדים התואמים את החיפוש שלך</p>
+              <Button onClick={() => setSearchQuery('')} variant="outline" className="mt-4">
+                נקה חיפוש
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in duration-300 pb-4">
+              {filteredEmployees.map((employee) => (
+                <div key={employee.id} className="bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all group">
+                  <div className="p-4 flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="h-10 w-10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
+                        style={{ backgroundColor: employee.color }}>
+                        <span className="text-white font-bold text-lg">{employee.name.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-800">{employee.name}</h3>
+                        {/* Display departments */}
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {employee.departments?.map((deptId) => (
+                            <span key={deptId} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                              <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-400"></span>
+                              {DEPARTMENT_NAMES[deptId]}
+                            </span>
+                          ))}
+                          {employee.departments?.length === 0 && (
+                            <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                              <Building2 className="h-3 w-3" />
+                              מוקד
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 opacity-70 group-hover:opacity-100"
+                        onClick={() => handleEditEmployee(employee)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 opacity-70 group-hover:opacity-100"
+                        onClick={() => confirmDeleteEmployee(employee)}>
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
