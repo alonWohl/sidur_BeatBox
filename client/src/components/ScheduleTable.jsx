@@ -180,14 +180,16 @@ export const ScheduleTable = React.memo(
             return (
               <TableRow key={`${shift}-${position}`} className="transition-colors">
                 <TableCell
-                  className={`text-center font-medium text-sm transition-all h-10
+                  className={`text-center font-medium text-sm transition-all h-7 sm:h-9
                                 ${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold drop-shadow-sm' : 'border-t-0 bg-gray-100/50'}`}>
-                  {position === 1 ? <div className="py-1">{SHIFT_NAMES[shift]}</div> : ''}
+                  {position === 1 ? <div className="py-0.5 sm:py-1 text-xs sm:text-sm">{SHIFT_NAMES[shift]}</div> : ''}
                 </TableCell>
                 {DAYS.map((day) => (
                   <TableCell
                     key={`${day}-${shift}-${position}`}
-                    className={`p-0 w-[80px] border h-10 ${isToday(day) ? 'bg-blue-50/40' : ''} ${highlightedDay === day ? 'bg-yellow-50' : ''} 
+                    className={`p-0 w-[60px] sm:w-[80px] border h-7 sm:h-9 ${isToday(day) ? 'bg-blue-50/40' : ''} ${
+                      highlightedDay === day ? 'bg-yellow-50' : ''
+                    } 
 										${position === 1 ? '' : ''} transition-colors`}
                     onMouseEnter={() => setHighlightedDay(day)}
                     onMouseLeave={() => setHighlightedDay(null)}>
@@ -207,16 +209,16 @@ export const ScheduleTable = React.memo(
           Array.from({ length: config.positions }, (_, index) => {
             const position = index + 1
             return (
-              <TableRow key={`${role}-${position}`} className="h-10 transition-colors hover:bg-gray-50/30">
+              <TableRow key={`${role}-${position}`} className="h-7 sm:h-9 transition-colors hover:bg-gray-50/30">
                 <TableCell
-                  className={`text-center font-medium border-l border text-sm transition-all
+                  className={`text-center font-medium border-l border text-xs sm:text-sm transition-all
                       ${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-2 border-t-[#BE202E]' : 'border-t-0 bg-gray-100/50'}`}>
-                  {position === 1 ? <div className="py-1 font-bold">{config.name}</div> : ''}
+                  {position === 1 ? <div className="py-0.5 sm:py-1 font-bold text-xs sm:text-sm">{config.name}</div> : ''}
                 </TableCell>
                 {DAYS.map((day) => (
                   <TableCell
                     key={`${day}-${role}-${position}`}
-                    className={`border p-0 transition-colors h-10 ${isToday(day) ? 'bg-blue-50/40' : ''} ${
+                    className={`border p-0 transition-colors h-7 sm:h-9 ${isToday(day) ? 'bg-blue-50/40' : ''} ${
                       highlightedDay === day ? 'bg-yellow-50' : ''
                     } 
 										${position === 1 ? '' : 'border-t-0'}`}
@@ -597,23 +599,23 @@ export const ScheduleTable = React.memo(
     return (
       <div className="h-full flex flex-col overflow-hidden">
         {/* Employee selection with departments */}
-        <div className="px-4 xl:px-6 2xl:px-0 bg-gray-50 rounded-lg px-4 border border-gray-200 mb-4 w-full flex-shrink-0">
-          <div className="flex items-center gap-2 py-3">
-            <Users className="h-4 w-4 text-gray-500" />
-            <div className="text-sm font-medium text-gray-700">עובדים:</div>
+        <div className="px-2 sm:px-4 xl:px-6 2xl:px-0 bg-gray-50 rounded-lg px-4 border border-gray-200 mb-2 sm:mb-4 w-full flex-shrink-0">
+          <div className="flex items-center gap-2 py-2 sm:py-3">
+            <Users className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+            <div className="text-xs sm:text-sm font-medium text-gray-700">עובדים:</div>
           </div>
 
           {/* Show departments only for branches, not for Moked */}
           {isMoked ? (
             // Original employee selection for Moked
             <div
-              className="pb-3 grid grid-cols-5 md:grid-cols-7 gap-0.5 max-w-76 md:max-w-full w-full -mt-1 overflow-x-auto  whitespace-nowrap"
+              className="pb-2 sm:pb-3 grid grid-cols-6 sm:grid-cols-7 gap-0.5 max-w-76 md:max-w-full w-full -mt-1 overflow-x-auto whitespace-nowrap"
               style={{ scrollbarWidth: 'none' }}>
               {employees?.map((emp) => (
                 <button
                   key={emp.id}
-                  className={`inline-flex px-2 py-1 rounded-sm md:text-sm text-xs w-full transition-all justify-center items-center gap-1 text-white truncate
-										${selectedEmployee?.id === emp.id ? 'ring-2 ring-white shadow-sm' : 'hover:shadow-sm'}`}
+                  className={`inline-flex px-1 sm:px-2 py-0.5 sm:py-1 rounded-sm text-[10px] sm:text-xs w-full transition-all justify-center items-center gap-0.5 sm:gap-1 text-white truncate
+                ${selectedEmployee?.id === emp.id ? 'ring-2 ring-white shadow-sm' : 'hover:shadow-sm'}`}
                   style={{ backgroundColor: emp.color }}
                   onClick={() => {
                     if (selectedEmployee?.id === emp.id) {
@@ -622,14 +624,14 @@ export const ScheduleTable = React.memo(
                       setSelectedEmployee(emp)
                     }
                   }}>
-                  {selectedEmployee?.id === emp.id && <Check className="h-3 w-3 flex-shrink-0 text-white" />}
+                  {selectedEmployee?.id === emp.id && <Check className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0 text-white" />}
                   <span className="truncate">{emp.name}</span>
                 </button>
               ))}
             </div>
           ) : (
             // Department-based employee selection for branches
-            <div className="pb-4 space-y-3">
+            <div className="pb-2 sm:pb-4 space-y-2 sm:space-y-3">
               {/* Group employees by department */}
               {DEPARTMENTS.map((departmentId) => {
                 // Get employees for this department
@@ -673,7 +675,7 @@ export const ScheduleTable = React.memo(
         </div>
 
         {/* Table container with horizontal scroll */}
-        <div className="px-4 xl:px-6 2xl:px-0 bg-white py-3 border-b border-gray-200 flex flex-wrap md:flex-nowrap justify-between items-center gap-3 flex-shrink-0">
+        <div className="px-2 sm:px-4 xl:px-6 2xl:px-0 bg-white py-2 sm:py-3 border-b border-gray-200 flex flex-wrap md:flex-nowrap justify-between items-center gap-2 sm:gap-3 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-md bg-[#BE202E]/10 flex items-center justify-center">
               <LayoutGrid className="h-4 w-4 text-[#BE202E]" />
@@ -720,37 +722,37 @@ export const ScheduleTable = React.memo(
         </div>
 
         {/* Table with vertical scroll */}
-        <div className="px-4 xl:px-6 2xl:px-0 flex-grow overflow-hidden min-h-0">
-          <div className="h-full overflow-y-auto overflow-x-auto scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <div id="schedule-table-for-share" className="bg-white rounded-lg shadow-md border border-gray-200 min-w-[640px]">
-              <Table className="w-full table-fixed">
-                <TableHeader className="sticky top-0 z-10">
-                  <TableRow>
-                    <TableHead className="text-center font-medium bg-gray-100 text-zinc-900 border-b-2 border-b-gray-200 py-3 sticky left-0 z-20">
-                      משמרת
-                    </TableHead>
-                    {getWeekDates().map(({ name, date }) => (
-                      <TableHead
-                        key={name}
-                        className={`text-center font-medium text-sm whitespace-nowrap p-2 border-x transition-colors
+        <div className="px-2 sm:px-4 xl:px-6 2xl:px-0 flex-grow overflow-hidden min-h-0">
+          <div
+            className="h-full overflow-y-auto overflow-x-auto scrollbar-thin max-h-[calc(100vh-240px)] sm:max-h-[calc(100vh-260px)] md:max-h-none"
+            style={{ WebkitOverflowScrolling: 'touch' }}>
+            <Table className="w-full table-fixed h-full pb-8">
+              <TableHeader className="sticky top-0 z-10">
+                <TableRow>
+                  <TableHead className="text-center font-medium bg-gray-100 text-zinc-900 border-b-2 border-b-gray-200 py-2 sm:py-3 text-xs sm:text-sm sticky left-0 z-20">
+                    משמרת
+                  </TableHead>
+                  {getWeekDates().map(({ name, date }) => (
+                    <TableHead
+                      key={name}
+                      className={`text-center font-medium text-xs sm:text-sm whitespace-nowrap p-1 sm:p-2 border-x transition-colors
                           ${highlightedDay === name ? 'bg-yellow-50' : ''}
                           ${
                             isToday(name)
                               ? 'bg-[#BE202E]/5 text-[#BE202E] font-bold border-t-2 border-t-[#BE202E] border-b-0'
                               : 'font-medium bg-gray-50 border-b-2 border-b-gray-200'
                           }`}
-                        onMouseEnter={() => setHighlightedDay(name)}
-                        onMouseLeave={() => setHighlightedDay(null)}>
-                        <div className="text-center font-bold text-base mb-1">{name}</div>
-                        <div className={`text-sm ${isToday(name) ? 'text-[#BE202E]/80 font-medium' : 'text-gray-500'}`}>{date}</div>
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
+                      onMouseEnter={() => setHighlightedDay(name)}
+                      onMouseLeave={() => setHighlightedDay(null)}>
+                      <div className="text-center font-bold text-[11px] sm:text-base mb-0.5 sm:mb-1">{name}</div>
+                      <div className={`text-[10px] sm:text-sm ${isToday(name) ? 'text-[#BE202E]/80 font-medium' : 'text-gray-500'}`}>{date}</div>
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
 
-                {isMoked ? renderMokedLayout() : renderBranchLayout()}
-              </Table>
-            </div>
+              {isMoked ? renderMokedLayout() : renderBranchLayout()}
+            </Table>
           </div>
         </div>
       </div>

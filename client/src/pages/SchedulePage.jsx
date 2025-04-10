@@ -240,7 +240,7 @@ export function SchedulePage() {
       </div>
 
       {/* The ScheduleTable will now take the rest of the available height */}
-      <div className="flex-grow overflow-hidden min-h-1/2 flex flex-col">
+      <div className="flex-grow overflow-hidden min-h-0 flex flex-col pb-2">
         <ScheduleTable
           type={filterBy.name}
           currentSchedule={currentSchedule}

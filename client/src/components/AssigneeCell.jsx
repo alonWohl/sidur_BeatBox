@@ -55,29 +55,30 @@ export function AssigneeCell({
   return (
     <div
       className={`h-full w-full relative 
-        flex items-center justify-center text-white truncate px-1
+        flex items-center justify-center text-white truncate px-0.5
         ${highlightedDay ? 'bg-yellow-50/20' : ''}
         ${selectedEmployee ? 'cursor-pointer hover:ring-2 hover:ring-blue-400 hover:bg-blue-50/50' : ''}
         ${employee ? '' : 'bg-gray-50 hover:bg-gray-100'}`}
       style={{
-        backgroundColor: employee?.color || 'transparent'
+        backgroundColor: employee?.color || 'transparent',
+        minHeight: isMobile ? '28px' : '36px'
       }}
       onClick={handleClick}>
       {employee ? (
         // Employee is assigned - show the employee
         <>
-          <span className="text-center truncate px-1 w-full">{employee.name}</span>
+          <span className="text-center truncate w-full text-[10px] sm:text-xs font-medium leading-tight">{employee.name}</span>
 
           {/* Don't show controls if we're in select employee mode */}
           {!selectedEmployee && (
             <>
               {/* Mobile buttons - always visible but faint */}
               {isMobile ? (
-                <div className="absolute inset-0 bg-black/10 flex items-center justify-end pr-1">
+                <div className="absolute inset-0 bg-black/5 flex items-center justify-end pr-0.5">
                   <button
-                    className="h-7 w-7 rounded-full bg-white/40 hover:bg-white/80 flex items-center justify-center text-red-500"
+                    className="h-5 w-5 rounded-full bg-white/40 hover:bg-white/80 flex items-center justify-center text-red-500"
                     onClick={handleDelete}>
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-3 w-3" />
                   </button>
                 </div>
               ) : (
@@ -96,12 +97,12 @@ export function AssigneeCell({
       selectedEmployee ? (
         <div className="w-full h-full flex items-center justify-center">
           {isValidDepartment ? (
-            <div className="w-5 h-5 rounded-full bg-zinc-100 flex items-center justify-center">
-              <Plus className="h-3 w-3 text-zinc-800" />
+            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-zinc-100 flex items-center justify-center">
+              <Plus className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-zinc-800" />
             </div>
           ) : (
-            <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
-              <AlertTriangle className="h-3 w-3 text-red-500" />
+            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertTriangle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-red-500" />
             </div>
           )}
         </div>
@@ -115,8 +116,8 @@ export function AssigneeCell({
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="absolute inset-0 bg-blue-50/20"></div>
           {employee && (
-            <div className="bg-white/80 px-2 py-0.5 rounded shadow-sm text-xs text-blue-700">
-              <RefreshCcw className="h-3 w-3" />
+            <div className="bg-white/80 px-1 py-0.5 rounded shadow-sm text-[8px] sm:text-xs text-blue-700">
+              <RefreshCcw className="h-2 w-2 sm:h-3 sm:w-3" />
             </div>
           )}
         </div>
