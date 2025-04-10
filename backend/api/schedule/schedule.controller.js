@@ -1,23 +1,35 @@
-import {logger} from '../../services/logger.service.js';
-import {scheduleService} from './schedule.service.js';
+import { logger } from '../../services/logger.service.js'
+import { scheduleService } from './schedule.service.js'
 
 export async function getSchedules(req, res) {
-	const {loggedinUser} = req;
+  const { loggedinUser } = req
 
-	try {
-		const filterBy = {
-			name: loggedinUser.isAdmin ? req.query.name || loggedinUser.name : loggedinUser.name,
-			week: req.query.week || 'current',
-		};
+  try {
+    const filterBy = {
+      name: loggedinUser.isAdmin ? req.query.name || loggedinUser.name : loggedinUser.name,
+      week: req.query.week || 'current'
+    }
 
-		console.log('Getting schedules with week mode:', filterBy.week);
-		const schedules = await scheduleService.query(filterBy);
+    console.log('Getting schedules with week mode:', filterBy.week)
+    const schedules = await scheduleService.query(filterBy)
 
-		res.json(schedules);
-	} catch (err) {
-		logger.error('Failed to get schedules', err);
-		res.status(400).send({err: err.message});
-	}
+    res.json(schedules)
+  } catch (err) {
+    logger.error('Failed to get schedules', err)
+    res.status(400).send({ err: err.message })
+  }
+}
+
+export async function getScheduleByBranchName(req, res) {
+  const { branch } = req.params
+
+  try {
+    const schedule = await scheduleService.getScheduleByBranchName(branch)
+    res.json(schedule)
+  } catch (err) {
+    logger.error('Failed to get schedule', err)
+    res.status(400).send({ err: err.message })
+  }
 }
 
 // export async function getScheduleByBranchId(req, res) {
@@ -58,29 +70,29 @@ export async function getSchedules(req, res) {
 // }
 
 export async function updateSchedule(req, res) {
-	const {id} = req.params;
+  const { id } = req.params
 
-	const {body: schedule} = req;
+  const { body: schedule } = req
 
-	try {
-		const updatedSchedule = await scheduleService.update(id, schedule);
-		res.json(updatedSchedule);
-	} catch (err) {
-		logger.error('Failed to update schedule', err);
-		res.status(400).send({err: 'Failed to update schedule'});
-	}
+  try {
+    const updatedSchedule = await scheduleService.update(id, schedule)
+    res.json(updatedSchedule)
+  } catch (err) {
+    logger.error('Failed to update schedule', err)
+    res.status(400).send({ err: 'Failed to update schedule' })
+  }
 }
 
 export async function addSchedule(req, res) {
-	const {body: schedule} = req;
+  const { body: schedule } = req
 
-	try {
-		const addedSchedule = await scheduleService.add(schedule);
-		res.json(addedSchedule);
-	} catch (err) {
-		logger.error('Failed to add schedule', err);
-		res.status(400).send({err: 'Failed to add schedule'});
-	}
+  try {
+    const addedSchedule = await scheduleService.add(schedule)
+    res.json(addedSchedule)
+  } catch (err) {
+    logger.error('Failed to add schedule', err)
+    res.status(400).send({ err: 'Failed to add schedule' })
+  }
 }
 
 // export async function removeSchedule(req, res) {

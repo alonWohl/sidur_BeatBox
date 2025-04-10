@@ -5,7 +5,8 @@ import { userService } from '../services/branch'
 function getDefaultFilterBy() {
   return {
     name: userService.getLoggedinUser()?.name || '',
-    username: userService.getLoggedinUser()?.username || ''
+    username: userService.getLoggedinUser()?.username || '',
+    week: 'current'
   }
 }
 

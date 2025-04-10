@@ -4,8 +4,6 @@
 ![Employee Management](https://res.cloudinary.com/dqfhbqcwv/image/upload/v1743504054/Screenshot_2025-04-01_at_13.39.05_zldlke.png)
 ![Login Portal](https://res.cloudinary.com/dqfhbqcwv/image/upload/v1743504055/Screenshot_2025-04-01_at_13.12.30_y0ssiz.png)
 
-
-
 ## Overview
 
 BeatBox-sidur is a drag-and-drop scheduling application for karaoke venues. It enables efficient room and staff management with independent scheduling for multiple branches.
