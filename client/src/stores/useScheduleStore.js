@@ -14,11 +14,9 @@ export const useScheduleStore = create((set, get) => ({
 
   // Actions
   setSchedules: (schedules) => {
-    console.log('Setting schedules:', schedules)
     set({ schedules: Array.isArray(schedules) ? schedules : [schedules].filter(Boolean) })
   },
   setSchedule: (schedule) => {
-    console.log('Setting single schedule:', schedule)
     set({ schedule })
   },
   setError: (error) => set({ error }),
@@ -28,10 +26,7 @@ export const useScheduleStore = create((set, get) => ({
     const { startLoading, stopLoading } = useSystemStore.getState()
     try {
       startLoading()
-      console.log('Loading schedules with filter:', filterBy)
       const schedules = await scheduleService.query({ ...filterBy })
-      console.log('Loaded schedules:', schedules)
-      // Ensure schedules is always an array
       set({ schedules: Array.isArray(schedules) ? schedules : [schedules].filter(Boolean) })
     } catch (err) {
       console.error('Cannot load schedules', err)

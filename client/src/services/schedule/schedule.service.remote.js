@@ -10,9 +10,7 @@ export const scheduleService = {
 }
 
 async function query(filterBy = { username: '', sortField: '', sortDir: '' }) {
-  console.log('Querying schedules with filter:', filterBy)
   const response = await httpService.get(`schedule`, filterBy)
-  console.log('Query response:', response)
   return response
 }
 
@@ -32,22 +30,16 @@ async function update(schedule) {
 }
 
 async function save(schedule) {
-  // Ensure week parameter is properly sent
   const scheduleToSave = {
     ...schedule,
-    week: schedule.week || 'current' // Ensure week is explicitly set
+    week: schedule.week || 'current'
   }
-
-  console.log('Saving schedule:', scheduleToSave)
 
   var savedSchedule
   if (scheduleToSave.branchId) {
-    console.log('Updating existing schedule')
     savedSchedule = await httpService.put(`schedule/${scheduleToSave.branchId}`, scheduleToSave)
   } else {
-    console.log('Creating new schedule')
     savedSchedule = await httpService.post('schedule', scheduleToSave)
   }
-  console.log('Save response:', savedSchedule)
   return savedSchedule
 }
