@@ -599,7 +599,7 @@ export const ScheduleTable = React.memo(
     return (
       <div className="h-full flex flex-col overflow-hidden">
         {/* Employee selection with departments */}
-        <div className="px-2 sm:px-4 xl:px-6 2xl:px-0 bg-gray-50 rounded-lg px-4 border border-gray-200 mb-2 sm:mb-4 w-full flex-shrink-0">
+        <div className="sm:px-4 xl:px-6 2xl:px-0 bg-gray-50 rounded-lg px-4 border border-gray-200 mb-2 sm:mb-4 w-full flex-shrink-0">
           <div className="flex items-center gap-2 py-2 sm:py-3">
             <Users className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
             <div className="text-xs sm:text-sm font-medium text-gray-700">עובדים:</div>
