@@ -15,43 +15,13 @@ const SHIFT_NAMES = {
 	evening: 'ערב'
 }
 
-const BRANCH_ROLES = {
-	manager: { name: 'אחמ"ש', positions: 1 },
-	waiters: { name: 'מלצרים', positions: 5 },
-	cooks: { name: 'טבחים', positions: 6 }
-}
-
-// Array of department IDs for easy access
-const DEPARTMENTS = Object.keys(BRANCH_ROLES)
-
 // Helper Components
 const EmployeeSelection = React.memo(({ employees, selectedEmployee, setSelectedEmployee, isMoked }) => {
-	if (isMoked) {
-		return (
-			<div className="pb-2 sm:pb-3 grid grid-cols-6 sm:grid-cols-7 gap-0.5 max-w-76 md:max-w-full w-full -mt-1 overflow-x-auto whitespace-nowrap">
-				{employees?.map(emp => (
-					<EmployeeButton key={emp.id} employee={emp} selectedEmployee={selectedEmployee} setSelectedEmployee={setSelectedEmployee} />
-				))}
-			</div>
-		)
-	}
-
 	return (
-		<div className="pb-2 sm:pb-4 space-y-2 sm:space-y-3">
-			{DEPARTMENTS.map(departmentId => {
-				const departmentEmployees = employees?.filter(emp => emp.departments?.includes(departmentId))
-				if (!departmentEmployees?.length) return null
-
-				return (
-					<DepartmentGroup
-						key={departmentId}
-						departmentId={departmentId}
-						employees={departmentEmployees}
-						selectedEmployee={selectedEmployee}
-						setSelectedEmployee={setSelectedEmployee}
-					/>
-				)
-			})}
+		<div className="pb-2 sm:pb-3 grid grid-cols-6 sm:grid-cols-7 gap-0.5 max-w-76 md:max-w-full w-full -mt-1 overflow-x-auto whitespace-nowrap">
+			{employees?.map(emp => (
+				<EmployeeButton key={emp.id} employee={emp} selectedEmployee={selectedEmployee} setSelectedEmployee={setSelectedEmployee} />
+			))}
 		</div>
 	)
 })
@@ -66,20 +36,6 @@ const EmployeeButton = React.memo(({ employee, selectedEmployee, setSelectedEmpl
 		{selectedEmployee?.id === employee.id && <Check className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0 text-white" />}
 		<span className="truncate">{employee.name}</span>
 	</button>
-))
-
-const DepartmentGroup = React.memo(({ departmentId, employees, selectedEmployee, setSelectedEmployee }) => (
-	<div className="space-y-1">
-		<div className="text-xs font-medium px-1 text-gray-600 flex items-center gap-1">
-			{BRANCH_ROLES[departmentId]?.name || departmentId}
-			<span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">{employees.length}</span>
-		</div>
-		<div className="grid grid-cols-5 md:grid-cols-7 gap-0.5 max-w-76 md:max-w-full w-full overflow-x-auto whitespace-nowrap">
-			{employees.map(emp => (
-				<EmployeeButton key={emp.id} employee={emp} selectedEmployee={selectedEmployee} setSelectedEmployee={setSelectedEmployee} />
-			))}
-		</div>
-	</div>
 ))
 
 const ScheduleTableHeader = React.memo(({ weekDates, highlightedDay, setHighlightedDay, isToday }) => (
@@ -166,36 +122,44 @@ const MokedLayout = React.memo(({ SHIFTS, DAYS, renderCell, isToday, highlighted
 	</TableBody>
 ))
 
-const BranchLayout = React.memo(({ BRANCH_ROLES, DAYS, renderCell, isToday, highlightedDay, setHighlightedDay }) => (
-	<TableBody>
-		{Object.entries(BRANCH_ROLES).flatMap(([role, config]) =>
-			Array.from({ length: config.positions }, (_, index) => {
-				const position = index + 1
-				return (
-					<TableRow key={`${role}-${position}`} className="h-7 sm:h-9 transition-colors hover:bg-gray-50/30">
-						<TableCell
-							className={`text-center font-medium border-l border text-xs sm:text-sm transition-all
-								${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-2 border-t-[#BE202E]' : 'border-t-0 bg-gray-100/50'}`}
-						>
-							{position === 1 ? <div className="py-0.5 sm:py-1 font-bold text-xs sm:text-sm">{config.name}</div> : ''}
-						</TableCell>
-						{DAYS.map(day => (
+const BranchLayout = React.memo(({ DAYS, renderCell, isToday, highlightedDay, setHighlightedDay }) => {
+	const roles = [
+		{ name: 'אחמ"ש', positions: 1 },
+		{ name: 'מלצרים', positions: 5 },
+		{ name: 'טבחים', positions: 5 }
+	]
+
+	return (
+		<TableBody>
+			{roles.flatMap((role, roleIndex) =>
+				Array.from({ length: role.positions }, (_, positionIndex) => {
+					const position = positionIndex + 1
+					return (
+						<TableRow key={`${role.name}-${position}`} className="h-7 sm:h-9 transition-colors hover:bg-gray-50/30">
 							<TableCell
-								key={`${day}-${role}-${position}`}
-								className={`border p-0 transition-colors h-7 sm:h-9 ${isToday(day) ? 'bg-blue-50/40' : ''} ${highlightedDay === day ? 'bg-yellow-50' : ''} 
-								${position === 1 ? '' : 'border-t-0'}`}
-								onMouseEnter={() => setHighlightedDay(day)}
-								onMouseLeave={() => setHighlightedDay(null)}
+								className={`text-center font-medium border-l border text-xs sm:text-sm transition-all
+									${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-2 border-t-[#BE202E]' : 'border-t-0 bg-gray-100/50'}`}
 							>
-								{renderCell(day, role, position)}
+								{position === 1 ? <div className="py-0.5 sm:py-1 font-bold text-xs sm:text-sm">{role.name}</div> : ''}
 							</TableCell>
-						))}
-					</TableRow>
-				)
-			})
-		)}
-	</TableBody>
-))
+							{DAYS.map(day => (
+								<TableCell
+									key={`${day}-${role.name}-${position}`}
+									className={`border p-0 transition-colors h-7 sm:h-9 ${isToday(day) ? 'bg-blue-50/40' : ''} ${highlightedDay === day ? 'bg-yellow-50' : ''} 
+									${position === 1 ? '' : 'border-t-0'}`}
+									onMouseEnter={() => setHighlightedDay(day)}
+									onMouseLeave={() => setHighlightedDay(null)}
+								>
+									{renderCell(day, role.name, position)}
+								</TableCell>
+							))}
+						</TableRow>
+					)
+				})
+			)}
+		</TableBody>
+	)
+})
 
 // Main Component
 export const ScheduleTable = React.memo(
@@ -218,11 +182,10 @@ export const ScheduleTable = React.memo(
 						}
 					})
 				} else {
-					Object.entries(BRANCH_ROLES).forEach(([role, config]) => {
-						for (let i = 1; i <= config.positions; i++) {
-							cells.push(`${day}-${role}-${i}`)
-						}
-					})
+					// Branch layout - simple 12 positions
+					for (let i = 1; i <= 12; i++) {
+						cells.push(`${day}-position-${i}`)
+					}
 				}
 			})
 			setAllCells(cells)
@@ -267,12 +230,6 @@ export const ScheduleTable = React.memo(
 		const handleCellClick = useCallback(
 			(day, role, position, currentEmployee) => {
 				if (selectedEmployee) {
-					// Check if employee can be assigned to this department
-					if (!isMoked && !selectedEmployee.departments?.includes(role)) {
-						toast.error(`${selectedEmployee.name} אינו שייך למחלקת ${BRANCH_ROLES[role]?.name || role}`)
-						return
-					}
-
 					if (currentEmployee) {
 						handleRemoveEmployee(currentSchedule, day, role, position)
 					}
@@ -282,7 +239,7 @@ export const ScheduleTable = React.memo(
 					// Employee remains selected for multiple placements
 				}
 			},
-			[selectedEmployee, handleRemoveEmployee, currentSchedule, addEmployee, isMoked]
+			[selectedEmployee, handleRemoveEmployee, currentSchedule, addEmployee]
 		)
 
 		const renderCell = useCallback(
@@ -336,7 +293,6 @@ export const ScheduleTable = React.memo(
 				setIsSharing(true)
 
 				// Create a completely new element for sharing
-				// This avoids any inherited styles that might contain problematic color formats
 				const container = document.createElement('div')
 				container.style.position = 'absolute'
 				container.style.left = '-9999px'
@@ -353,11 +309,11 @@ export const ScheduleTable = React.memo(
 				const title = document.createElement('h1')
 				title.textContent = `סידור עבודה שבועי - ${type}`
 				title.style.textAlign = 'center'
-				title.style.fontSize = '32px' // LARGER title font
+				title.style.fontSize = '32px'
 				title.style.fontWeight = 'bold'
 				title.style.padding = '15px'
 				title.style.margin = '0 0 25px 0'
-				title.style.backgroundColor = '#BE202E' // Keep the original red
+				title.style.backgroundColor = '#BE202E'
 				title.style.color = '#ffffff'
 				title.style.borderRadius = '4px'
 				title.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)'
@@ -380,14 +336,14 @@ export const ScheduleTable = React.memo(
 				// First cell - shifts column
 				const shiftHeader = document.createElement('th')
 				shiftHeader.textContent = 'משמרת'
-				shiftHeader.style.padding = '15px' // More padding
-				shiftHeader.style.backgroundColor = '#f0f0f0' // Light gray for header
-				shiftHeader.style.color = '#333333' // Dark text
+				shiftHeader.style.padding = '15px'
+				shiftHeader.style.backgroundColor = '#f0f0f0'
+				shiftHeader.style.color = '#333333'
 				shiftHeader.style.border = '1px solid #dddddd'
 				shiftHeader.style.fontWeight = 'bold'
-				shiftHeader.style.fontSize = '20px' // LARGER header font
-				shiftHeader.style.width = '80px' // Control width of first column
-				shiftHeader.style.maxWidth = '80px' // Enforce maximum width
+				shiftHeader.style.fontSize = '20px'
+				shiftHeader.style.width = '80px'
+				shiftHeader.style.maxWidth = '80px'
 				headerRow.appendChild(shiftHeader)
 
 				// Day headers
@@ -396,31 +352,30 @@ export const ScheduleTable = React.memo(
 
 					const dayName = document.createElement('div')
 					dayName.textContent = name
-					dayName.style.fontSize = '24px' // LARGER day names font
+					dayName.style.fontSize = '24px'
 					dayName.style.fontWeight = 'bold'
 
 					const dayDate = document.createElement('div')
 					dayDate.textContent = date
-					dayDate.style.fontSize = '18px' // LARGER date font
+					dayDate.style.fontSize = '18px'
 					dayDate.style.color = 'rgba(0,0,0,0.7)'
 					dayDate.style.marginTop = '5px'
 
 					dayHeader.appendChild(dayName)
 					dayHeader.appendChild(dayDate)
 
-					dayHeader.style.padding = '15px' // More padding
+					dayHeader.style.padding = '15px'
 					dayHeader.style.border = '1px solid #dddddd'
 					dayHeader.style.textAlign = 'center'
-					dayHeader.style.width = '100px' // Fixed width for day columns
+					dayHeader.style.width = '100px'
 
-					// Highlight today
 					if (isToday(name)) {
-						dayHeader.style.backgroundColor = '#fff0f0' // Lighter, more refined red
-						dayHeader.style.color = '#BE202E' // Original red color for text
+						dayHeader.style.backgroundColor = '#fff0f0'
+						dayHeader.style.color = '#BE202E'
 						dayHeader.style.borderTop = '3px solid #BE202E'
 					} else {
-						dayHeader.style.backgroundColor = '#f0f0f0' // Light gray for header
-						dayHeader.style.color = '#333333' // Dark text
+						dayHeader.style.backgroundColor = '#f0f0f0'
+						dayHeader.style.color = '#333333'
 					}
 
 					headerRow.appendChild(dayHeader)
@@ -448,12 +403,9 @@ export const ScheduleTable = React.memo(
 
 				// Helper to get a vibrant color for employees
 				const getVibrantColor = (originalColor, index) => {
-					// If the original color is a simple hex and not too light, use it
 					if (originalColor && !originalColor.includes('oklch') && !originalColor.includes('oklab') && !originalColor.includes('var(') && !originalColor.includes('hsl')) {
 						return originalColor
 					}
-
-					// Otherwise use from our vibrant palette
 					return colorPalette[index % colorPalette.length]
 				}
 
@@ -472,20 +424,19 @@ export const ScheduleTable = React.memo(
 							// Shift cell
 							const shiftCell = document.createElement('td')
 							if (position === 1) {
-								// Only show shift name on first position
 								shiftCell.textContent = SHIFT_NAMES[shift]
 								shiftCell.style.fontWeight = 'bold'
-								shiftCell.style.backgroundColor = '#fff0f0' // Light refined red background
-								shiftCell.style.color = '#BE202E' // Original red color for text
-								shiftCell.style.fontSize = '18px' // LARGER shift font
+								shiftCell.style.backgroundColor = '#fff0f0'
+								shiftCell.style.color = '#BE202E'
+								shiftCell.style.fontSize = '18px'
 							} else {
-								shiftCell.style.backgroundColor = '#f9f9f9' // Very light gray
+								shiftCell.style.backgroundColor = '#f9f9f9'
 							}
-							shiftCell.style.padding = '5px 8px' // Less padding
+							shiftCell.style.padding = '5px 8px'
 							shiftCell.style.border = '1px solid #dddddd'
 							shiftCell.style.textAlign = 'center'
-							shiftCell.style.width = '80px' // Fixed narrow width
-							shiftCell.style.maxWidth = '80px' // Enforce maximum width
+							shiftCell.style.width = '80px'
+							shiftCell.style.maxWidth = '80px'
 							row.appendChild(shiftCell)
 
 							// Day cells
@@ -494,30 +445,26 @@ export const ScheduleTable = React.memo(
 								cell.style.padding = '10px'
 								cell.style.border = '1px solid #dddddd'
 								cell.style.textAlign = 'center'
-								cell.style.height = '75px' // TALLER cells to fit larger text
-								cell.style.width = '120px' // WIDER cells to fit larger text
-								cell.style.backgroundColor = '#ffffff' // White background
+								cell.style.height = '75px'
+								cell.style.width = '120px'
+								cell.style.backgroundColor = '#ffffff'
 
-								// Highlight today's column
 								if (isToday(day)) {
-									cell.style.backgroundColor = '#fafafa' // Very light gray for today
+									cell.style.backgroundColor = '#fafafa'
 								}
 
-								// Add employee if exists
 								const employee = getAssignedEmployee(currentSchedule, day, shift, position)
 								if (employee) {
-									// Make the cell more vibrant and text larger
 									const employeeIndex = employees.findIndex(e => e.id === employee.id)
 									const vibrantColor = getVibrantColor(employee.color, employeeIndex)
 
-									// Create a styled container for employee name
 									const nameSpan = document.createElement('div')
 									nameSpan.textContent = employee.name
-									nameSpan.style.fontSize = '32px' // MUCH LARGER employee name font
+									nameSpan.style.fontSize = '32px'
 									nameSpan.style.fontWeight = 'bold'
 									nameSpan.style.padding = '8px'
 									nameSpan.style.color = '#ffffff'
-									nameSpan.style.textShadow = '0 1px 2px rgba(0,0,0,0.2)' // Subtle text shadow
+									nameSpan.style.textShadow = '0 1px 2px rgba(0,0,0,0.2)'
 									nameSpan.style.width = '100%'
 									nameSpan.style.height = '100%'
 									nameSpan.style.display = 'flex'
@@ -525,7 +472,7 @@ export const ScheduleTable = React.memo(
 									nameSpan.style.alignItems = 'center'
 
 									cell.style.backgroundColor = vibrantColor
-									cell.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.3)' // Subtle inner highlight
+									cell.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.3)'
 									cell.appendChild(nameSpan)
 								}
 
@@ -536,77 +483,70 @@ export const ScheduleTable = React.memo(
 						}
 					})
 				} else {
-					// Branch layout
-					Object.entries(BRANCH_ROLES).forEach(([role, config]) => {
-						for (let position = 1; position <= config.positions; position++) {
-							const row = document.createElement('tr')
+					// Branch layout - simple 12 positions
+					for (let position = 1; position <= 12; position++) {
+						const row = document.createElement('tr')
 
-							// Role cell
-							const roleCell = document.createElement('td')
-							if (position === 1) {
-								// Only show role name on first position
-								roleCell.textContent = config.name
-								roleCell.style.fontWeight = 'bold'
-								roleCell.style.backgroundColor = '#fff0f0' // Light refined red background
-								roleCell.style.color = '#BE202E' // Original red color for text
-								roleCell.style.fontSize = '18px' // LARGER role font
-							} else {
-								roleCell.style.backgroundColor = '#f9f9f9' // Very light gray
-							}
-							roleCell.style.padding = '5px 8px' // Less padding
-							roleCell.style.border = '1px solid #dddddd'
-							roleCell.style.textAlign = 'center'
-							roleCell.style.width = '80px' // Fixed narrow width
-							roleCell.style.maxWidth = '80px' // Enforce maximum width
-							row.appendChild(roleCell)
-
-							// Day cells
-							DAYS.forEach(day => {
-								const cell = document.createElement('td')
-								cell.style.padding = '10px'
-								cell.style.border = '1px solid #dddddd'
-								cell.style.textAlign = 'center'
-								cell.style.height = '75px' // TALLER cells to fit larger text
-								cell.style.width = '120px' // WIDER cells to fit larger text
-								cell.style.backgroundColor = '#ffffff' // White background
-
-								// Highlight today's column
-								if (isToday(day)) {
-									cell.style.backgroundColor = '#fafafa' // Very light gray for today
-								}
-
-								// Add employee if exists
-								const employee = getAssignedEmployee(currentSchedule, day, role, position)
-								if (employee) {
-									// Make the cell more vibrant and text larger
-									const employeeIndex = employees.findIndex(e => e.id === employee.id)
-									const vibrantColor = getVibrantColor(employee.color, employeeIndex)
-
-									// Create a styled container for employee name
-									const nameSpan = document.createElement('div')
-									nameSpan.textContent = employee.name
-									nameSpan.style.fontSize = '32px' // MUCH LARGER employee name font
-									nameSpan.style.fontWeight = 'bold'
-									nameSpan.style.padding = '8px'
-									nameSpan.style.color = '#ffffff'
-									nameSpan.style.textShadow = '0 1px 2px rgba(0,0,0,0.2)' // Subtle text shadow
-									nameSpan.style.width = '100%'
-									nameSpan.style.height = '100%'
-									nameSpan.style.display = 'flex'
-									nameSpan.style.justifyContent = 'center'
-									nameSpan.style.alignItems = 'center'
-
-									cell.style.backgroundColor = vibrantColor
-									cell.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.3)' // Subtle inner highlight
-									cell.appendChild(nameSpan)
-								}
-
-								row.appendChild(cell)
-							})
-
-							tbody.appendChild(row)
+						// Position cell
+						const positionCell = document.createElement('td')
+						if (position === 1) {
+							positionCell.textContent = 'תפקיד'
+							positionCell.style.fontWeight = 'bold'
+							positionCell.style.backgroundColor = '#fff0f0'
+							positionCell.style.color = '#BE202E'
+							positionCell.style.fontSize = '18px'
+						} else {
+							positionCell.style.backgroundColor = '#f9f9f9'
 						}
-					})
+						positionCell.style.padding = '5px 8px'
+						positionCell.style.border = '1px solid #dddddd'
+						positionCell.style.textAlign = 'center'
+						positionCell.style.width = '80px'
+						positionCell.style.maxWidth = '80px'
+						row.appendChild(positionCell)
+
+						// Day cells
+						DAYS.forEach(day => {
+							const cell = document.createElement('td')
+							cell.style.padding = '10px'
+							cell.style.border = '1px solid #dddddd'
+							cell.style.textAlign = 'center'
+							cell.style.height = '75px'
+							cell.style.width = '120px'
+							cell.style.backgroundColor = '#ffffff'
+
+							if (isToday(day)) {
+								cell.style.backgroundColor = '#fafafa'
+							}
+
+							const employee = getAssignedEmployee(currentSchedule, day, 'position', position)
+							if (employee) {
+								const employeeIndex = employees.findIndex(e => e.id === employee.id)
+								const vibrantColor = getVibrantColor(employee.color, employeeIndex)
+
+								const nameSpan = document.createElement('div')
+								nameSpan.textContent = employee.name
+								nameSpan.style.fontSize = '32px'
+								nameSpan.style.fontWeight = 'bold'
+								nameSpan.style.padding = '8px'
+								nameSpan.style.color = '#ffffff'
+								nameSpan.style.textShadow = '0 1px 2px rgba(0,0,0,0.2)'
+								nameSpan.style.width = '100%'
+								nameSpan.style.height = '100%'
+								nameSpan.style.display = 'flex'
+								nameSpan.style.justifyContent = 'center'
+								nameSpan.style.alignItems = 'center'
+
+								cell.style.backgroundColor = vibrantColor
+								cell.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.3)'
+								cell.appendChild(nameSpan)
+							}
+
+							row.appendChild(cell)
+						})
+
+						tbody.appendChild(row)
+					}
 				}
 
 				table.appendChild(tbody)
@@ -722,14 +662,7 @@ export const ScheduleTable = React.memo(
 							{isMoked ? (
 								<MokedLayout SHIFTS={SHIFTS} DAYS={DAYS} renderCell={renderCell} isToday={isToday} highlightedDay={highlightedDay} setHighlightedDay={setHighlightedDay} />
 							) : (
-								<BranchLayout
-									BRANCH_ROLES={BRANCH_ROLES}
-									DAYS={DAYS}
-									renderCell={renderCell}
-									isToday={isToday}
-									highlightedDay={highlightedDay}
-									setHighlightedDay={setHighlightedDay}
-								/>
+								<BranchLayout DAYS={DAYS} renderCell={renderCell} isToday={isToday} highlightedDay={highlightedDay} setHighlightedDay={setHighlightedDay} />
 							)}
 						</Table>
 					</div>
