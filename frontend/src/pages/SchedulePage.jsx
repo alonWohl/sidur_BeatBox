@@ -249,7 +249,7 @@ export function SchedulePage() {
 			</div>
 
 			{/* The ScheduleTable will now take the rest of the available height */}
-			<div className="flex flex-1 flex-col px-4 xl:px-6 2xl:px-0 sm:flex-row items-start sm:items-center justify-between py-3 max-w-[1900px] mx-auto gap-3">
+			<div className="flex flex-1 flex-col px-4 xl:px-6 2xl:px-0 sm:flex-row items-start sm:items-center justify-between py-3 max-w-[1900px] mx-auto gap-3 overflow-y-auto scrollbar-thin">
 				<ScheduleTable
 					type={filterBy.name}
 					currentSchedule={currentSchedule}
