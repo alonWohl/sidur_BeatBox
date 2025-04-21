@@ -3,7 +3,7 @@ import express from 'express'
 import { requireAuth } from '../../middlewares/requireAuth.middleware.js'
 import { log } from '../../middlewares/logger.middleware.js'
 
-import { getSchedules, updateSchedule, getScheduleByBranchName } from './schedule.controller.js'
+import { getSchedules, updateSchedule, getScheduleByBranchName, triggerWeeklyTransition } from './schedule.controller.js'
 
 const router = express.Router()
 
@@ -13,6 +13,7 @@ const router = express.Router()
 router.get('/', log, requireAuth, getSchedules)
 router.get('/:branch', log, requireAuth, getScheduleByBranchName)
 router.put('/:id', requireAuth, updateSchedule)
+router.post('/transition/:branchName', requireAuth, triggerWeeklyTransition)
 // router.get('/:branch', log, requireAuth, getScheduleByBranchName)
 // router.post('/', log, requireAuth, addSchedule)
 // router.delete('/:id', requireAuth, removeSchedule)

@@ -15,6 +15,7 @@ export function SchedulePage() {
 	const filterBy = useSystemStore(state => state.filterBy)
 	const isLoading = useSystemStore(state => state.isLoading)
 	const setFilterBy = useSystemStore(state => state.setFilterBy)
+	const resetFilterByUser = useSystemStore(state => state.resetFilterByUser)
 
 	const loadSchedules = useScheduleStore(state => state.loadSchedules)
 	const updateSchedule = useScheduleStore(state => state.updateSchedule)
@@ -27,25 +28,17 @@ export function SchedulePage() {
 	const [isSharing, setIsSharing] = useState(false)
 	const [currentSchedule, setCurrentSchedule] = useState(null)
 
-	// Load initial data
+	// Reset filter whenever user changes
 	useEffect(() => {
-		const loadInitialData = async () => {
-			try {
-				await Promise.all([loadSchedules(filterBy), loadEmployees(filterBy)])
-			} catch (error) {
-				console.error('Error loading initial data:', error)
-				toast.error('שגיאה בטעינת הנתונים')
-			}
+		if (user) {
+			resetFilterByUser()
 		}
-		loadInitialData()
-	}, [filterBy, loadSchedules, loadEmployees])
+	}, [user, resetFilterByUser])
 
-	// Update current schedule when schedules change
 	useEffect(() => {
-		if (schedules?.length > 0) {
-			setCurrentSchedule(schedules[0])
-		}
-	}, [schedules])
+		loadSchedules(filterBy)
+		loadEmployees(filterBy)
+	}, [filterBy])
 
 	const handleUpdateSchedule = async (schedule, employeeId, day, role, position) => {
 		if (!schedule?.id) return
