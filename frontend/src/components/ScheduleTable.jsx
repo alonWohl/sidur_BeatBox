@@ -1,10 +1,10 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 import { format, startOfWeek, addDays } from 'date-fns'
 import { he } from 'date-fns/locale' // Hebrew locale
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import { AssigneeCell } from './AssigneeCell'
 import { toast } from 'react-hot-toast'
-import { Check, X, Share2, Trash2, LayoutGrid, Users } from 'lucide-react'
+import { Check, X, Share2, Trash2, LayoutGrid, Users, AlertCircle } from 'lucide-react'
 import { Button } from './ui/button'
 
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
@@ -16,27 +16,90 @@ const SHIFT_NAMES = {
 }
 
 // Helper Components
-const EmployeeSelection = React.memo(({ employees, selectedEmployee, setSelectedEmployee, isMoked }) => {
+const EmployeeSelection = React.memo(({ employees, selectedEmployee, setSelectedEmployee, isMoked, currentRole, checkEmployeeEligibility }) => {
+	const [selectedDepartment, setSelectedDepartment] = useState(null)
+
+	// Create department tabs for branch view (not for Moked)
+	const departmentTabs = !isMoked
+		? [
+				{ id: null, name: 'הכל' },
+				{ id: 'manager', name: 'אחמ"ש' },
+				{ id: 'waiters', name: 'מלצרים' },
+				{ id: 'cooks', name: 'טבחים' }
+		  ]
+		: []
+
+	// Filter employees by department if a department is selected
+	const filteredEmployees = useMemo(() => {
+		if (isMoked || !selectedDepartment) return employees
+		return employees.filter(emp => emp.departments && emp.departments.includes(selectedDepartment))
+	}, [employees, selectedDepartment, isMoked])
+
 	return (
-		<div className="pb-2 sm:pb-3 grid grid-cols-6 sm:grid-cols-7 gap-0.5 max-w-76 md:max-w-full w-full -mt-1 overflow-x-auto whitespace-nowrap">
-			{employees?.map(emp => (
-				<EmployeeButton key={emp.id} employee={emp} selectedEmployee={selectedEmployee} setSelectedEmployee={setSelectedEmployee} />
-			))}
+		<div className="w-full">
+			{/* Department tabs for branch view */}
+			{!isMoked && (
+				<div className="flex gap-1 mb-2 border-b border-gray-200 pb-1 overflow-x-auto">
+					{departmentTabs.map(dept => (
+						<button
+							key={dept.id}
+							className={`px-3 py-1 text-xs rounded-t-md transition-colors ${
+								selectedDepartment === dept.id ? 'bg-[#BE202E]/10 text-[#BE202E] font-medium border-b-2 border-[#BE202E]' : 'text-gray-600 hover:bg-gray-100'
+							}`}
+							onClick={() => setSelectedDepartment(dept.id)}
+						>
+							{dept.name}
+						</button>
+					))}
+				</div>
+			)}
+
+			{/* Current role indicator */}
+			{currentRole && !isMoked && (
+				<div className="px-2 py-1 mb-2 bg-blue-50 border border-blue-100 rounded-md text-xs text-blue-700">
+					<span className="font-medium">הצגת תפקיד: </span>
+					<span>{currentRole}</span>
+				</div>
+			)}
+
+			{/* Employee buttons grid */}
+			<div className="pb-2 sm:pb-3 grid grid-cols-6 sm:grid-cols-7 gap-0.5 max-w-76 md:max-w-full w-full -mt-1 overflow-x-auto whitespace-nowrap">
+				{filteredEmployees.length > 0 ? (
+					filteredEmployees.map(emp => (
+						<EmployeeButton
+							key={emp.id}
+							employee={emp}
+							selectedEmployee={selectedEmployee}
+							setSelectedEmployee={setSelectedEmployee}
+							eligibleForCurrentRole={currentRole ? checkEmployeeEligibility(emp) : null}
+						/>
+					))
+				) : (
+					<div className="col-span-6 text-center text-gray-500 text-xs py-2">אין עובדים במחלקה זו</div>
+				)}
+			</div>
 		</div>
 	)
 })
 
-const EmployeeButton = React.memo(({ employee, selectedEmployee, setSelectedEmployee }) => (
-	<button
-		className={`inline-flex px-1 sm:px-2 py-0.5 sm:py-1 rounded-sm text-[10px] sm:text-xs w-full transition-all justify-center items-center gap-0.5 sm:gap-1 text-white truncate
-				${selectedEmployee?.id === employee.id ? 'ring-2 ring-white shadow-sm' : 'hover:shadow-sm'}`}
-		style={{ backgroundColor: employee.color }}
-		onClick={() => setSelectedEmployee(selectedEmployee?.id === employee.id ? null : employee)}
-	>
-		{selectedEmployee?.id === employee.id && <Check className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0 text-white" />}
-		<span className="truncate">{employee.name}</span>
-	</button>
-))
+const EmployeeButton = React.memo(({ employee, selectedEmployee, setSelectedEmployee, eligibleForCurrentRole }) => {
+	// Add visual indicator if employee is eligible for the currently selected role
+	const isEligible = eligibleForCurrentRole === null || eligibleForCurrentRole === true
+
+	return (
+		<button
+			className={`inline-flex px-1 sm:px-2 py-0.5 sm:py-1 rounded-sm text-[10px] sm:text-xs w-full transition-all justify-center items-center gap-0.5 sm:gap-1 text-white truncate
+					${selectedEmployee?.id === employee.id ? 'ring-2 ring-white shadow-sm' : 'hover:shadow-sm'}
+					${!isEligible ? 'opacity-60 ring-1 ring-amber-400' : ''}`}
+			style={{ backgroundColor: employee.color }}
+			onClick={() => setSelectedEmployee(selectedEmployee?.id === employee.id ? null : employee)}
+		>
+			{selectedEmployee?.id === employee.id && <Check className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0 text-white" />}
+			<span className="truncate">{employee.name}</span>
+			{!isEligible && <AlertCircle className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0 text-amber-200" />}
+		</button>
+	)
+})
 
 const ScheduleTableHeader = React.memo(({ weekDates, highlightedDay, setHighlightedDay, isToday }) => (
 	<TableHeader className="sticky top-0 z-10">
@@ -73,7 +136,11 @@ const TableActions = React.memo(({ selectedEmployee, setSelectedEmployee, handle
 				)}
 			</Button>
 			<Button
-				onClick={() => onClearSchedule && onClearSchedule(currentSchedule)}
+				onClick={() => {
+					if (onClearSchedule) {
+						onClearSchedule(currentSchedule)
+					}
+				}}
 				className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 h-8 px-3 rounded-md"
 				variant="outline"
 				size="sm"
@@ -86,48 +153,69 @@ const TableActions = React.memo(({ selectedEmployee, setSelectedEmployee, handle
 ))
 
 // Table Layout Components
-const MokedLayout = React.memo(({ SHIFTS, DAYS, renderCell, isToday, highlightedDay, setHighlightedDay }) => (
-	<TableBody>
-		{SHIFTS.flatMap(shift => {
-			let shiftPositions = 0
-			if (shift === 'morning') shiftPositions = 3
-			else if (shift === 'noon') shiftPositions = 2
-			else if (shift === 'evening') shiftPositions = 3
+const MokedLayout = React.memo(({ SHIFTS, DAYS, renderCell, isToday, highlightedDay, setHighlightedDay, currentRole, setCurrentRole }) => {
+	// Update the current role when hovering over cells
+	const handleRoleHover = useCallback(
+		shift => {
+			setCurrentRole && setCurrentRole(shift)
+		},
+		[setCurrentRole]
+	)
 
-			return Array.from({ length: shiftPositions }, (_, index) => {
-				const position = index + 1
-				return (
-					<TableRow key={`${shift}-${position}`} className="transition-colors">
-						<TableCell
-							className={`text-center font-medium text-sm transition-all h-7 sm:h-9
-								${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold drop-shadow-sm' : 'border-t-0 bg-gray-100/50'}`}
-						>
-							{position === 1 ? <div className="py-0.5 sm:py-1 text-xs sm:text-sm">{SHIFT_NAMES[shift]}</div> : ''}
-						</TableCell>
-						{DAYS.map(day => (
+	return (
+		<TableBody>
+			{SHIFTS.flatMap(shift => {
+				let shiftPositions = 0
+				if (shift === 'morning') shiftPositions = 3
+				else if (shift === 'noon') shiftPositions = 2
+				else if (shift === 'evening') shiftPositions = 3
+
+				return Array.from({ length: shiftPositions }, (_, index) => {
+					const position = index + 1
+					return (
+						<TableRow key={`${shift}-${position}`} className="transition-colors">
 							<TableCell
-								key={`${day}-${shift}-${position}`}
-								className={`p-0 w-[60px] sm:w-[80px] border h-7 sm:h-9 ${isToday(day) ? 'bg-blue-50/40' : ''} ${highlightedDay === day ? 'bg-yellow-50' : ''} 
-								${position === 1 ? '' : ''} transition-colors`}
-								onMouseEnter={() => setHighlightedDay(day)}
-								onMouseLeave={() => setHighlightedDay(null)}
+								className={`text-center font-medium text-sm transition-all h-7 sm:h-9
+									${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold drop-shadow-sm' : 'border-t-0 bg-gray-100/50'}`}
 							>
-								{renderCell(day, shift, position)}
+								{position === 1 ? <div className="py-0.5 sm:py-1 text-xs sm:text-sm">{SHIFT_NAMES[shift]}</div> : ''}
 							</TableCell>
-						))}
-					</TableRow>
-				)
-			})
-		})}
-	</TableBody>
-))
+							{DAYS.map(day => (
+								<TableCell
+									key={`${day}-${shift}-${position}`}
+									className={`p-0 w-[60px] sm:w-[80px] border h-7 sm:h-9 ${isToday(day) ? 'bg-blue-50/40' : ''} ${highlightedDay === day ? 'bg-yellow-50' : ''} 
+									${position === 1 ? '' : ''} transition-colors`}
+									onMouseEnter={() => {
+										setHighlightedDay(day)
+										handleRoleHover(shift)
+									}}
+									onMouseLeave={() => setHighlightedDay(null)}
+								>
+									{renderCell(day, shift, position)}
+								</TableCell>
+							))}
+						</TableRow>
+					)
+				})
+			})}
+		</TableBody>
+	)
+})
 
-const BranchLayout = React.memo(({ DAYS, renderCell, isToday, highlightedDay, setHighlightedDay }) => {
+const BranchLayout = React.memo(({ DAYS, renderCell, isToday, highlightedDay, setHighlightedDay, currentRole, setCurrentRole }) => {
 	const roles = [
 		{ name: 'אחמ"ש', positions: 1 },
 		{ name: 'מלצרים', positions: 5 },
 		{ name: 'טבחים', positions: 5 }
 	]
+
+	// Update the current role when hovering over cells
+	const handleRoleHover = useCallback(
+		role => {
+			setCurrentRole && setCurrentRole(role)
+		},
+		[setCurrentRole]
+	)
 
 	return (
 		<TableBody>
@@ -147,7 +235,10 @@ const BranchLayout = React.memo(({ DAYS, renderCell, isToday, highlightedDay, se
 									key={`${day}-${role.name}-${position}`}
 									className={`border p-0 transition-colors h-7 sm:h-9 ${isToday(day) ? 'bg-blue-50/40' : ''} ${highlightedDay === day ? 'bg-yellow-50' : ''} 
 									${position === 1 ? '' : 'border-t-0'}`}
-									onMouseEnter={() => setHighlightedDay(day)}
+									onMouseEnter={() => {
+										setHighlightedDay(day)
+										handleRoleHover(role.name)
+									}}
 									onMouseLeave={() => setHighlightedDay(null)}
 								>
 									{renderCell(day, role.name, position)}
@@ -170,6 +261,36 @@ export const ScheduleTable = React.memo(
 		const [allCells, setAllCells] = useState([])
 		const [highlightedDay, setHighlightedDay] = useState(null)
 		const [selectedEmployee, setSelectedEmployee] = useState(null)
+		const [currentRole, setCurrentRole] = useState(null)
+
+		// Department mapping for roles in schedule
+		const DEPARTMENT_ROLE_MAP = {
+			'אחמ"ש': 'manager',
+			מלצרים: 'waiters',
+			טבחים: 'cooks',
+			// For Moked, allow any role
+			morning: null,
+			noon: null,
+			evening: null
+		}
+
+		// Check if employee is eligible for given role
+		const isEligibleForRole = useCallback(
+			(employee, role) => {
+				// For Moked branch, all employees can be assigned anywhere
+				if (type === 'מוקד') return true
+
+				// Get the department that corresponds to this role
+				const requiredDepartment = DEPARTMENT_ROLE_MAP[role]
+
+				// If no department mapping exists, allow assignment
+				if (!requiredDepartment) return true
+
+				// Check if employee belongs to the required department
+				return employee.departments && employee.departments.includes(requiredDepartment)
+			},
+			[type, DEPARTMENT_ROLE_MAP]
+		)
 
 		useEffect(() => {
 			const cells = []
@@ -217,7 +338,6 @@ export const ScheduleTable = React.memo(
 		}
 
 		const isMoked = type === 'מוקד'
-		const POSITIONS_PER_SHIFT = isMoked ? 3 : null
 
 		// Helper function to add an employee to a cell
 		const addEmployee = useCallback(
@@ -280,6 +400,15 @@ export const ScheduleTable = React.memo(
 				selectedEmployee,
 				handleCellClick
 			]
+		)
+
+		// Helper function to check if an employee is eligible for the current role
+		const checkEmployeeEligibility = useCallback(
+			employee => {
+				if (!currentRole || !employee) return null
+				return isEligibleForRole(employee, currentRole)
+			},
+			[currentRole, isEligibleForRole]
 		)
 
 		// Handle WhatsApp sharing
@@ -614,7 +743,6 @@ export const ScheduleTable = React.memo(
 				toast.dismiss()
 				toast.success('התמונה נוצרה בהצלחה')
 			} catch (error) {
-				console.error('Share error:', error)
 				toast.error('שגיאה בשיתוף')
 			} finally {
 				setIsSharing(false)
@@ -629,7 +757,14 @@ export const ScheduleTable = React.memo(
 						<Users className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
 						<div className="text-xs sm:text-sm font-medium text-gray-700">עובדים:</div>
 					</div>
-					<EmployeeSelection employees={employees} selectedEmployee={selectedEmployee} setSelectedEmployee={setSelectedEmployee} isMoked={isMoked} />
+					<EmployeeSelection
+						employees={employees}
+						selectedEmployee={selectedEmployee}
+						setSelectedEmployee={setSelectedEmployee}
+						isMoked={isMoked}
+						currentRole={currentRole}
+						checkEmployeeEligibility={checkEmployeeEligibility}
+					/>
 				</div>
 
 				{/* Table container with horizontal scroll */}
@@ -660,9 +795,26 @@ export const ScheduleTable = React.memo(
 						<Table className="w-full table-fixed h-full pb-8">
 							<ScheduleTableHeader weekDates={getWeekDates()} highlightedDay={highlightedDay} setHighlightedDay={setHighlightedDay} isToday={isToday} />
 							{isMoked ? (
-								<MokedLayout SHIFTS={SHIFTS} DAYS={DAYS} renderCell={renderCell} isToday={isToday} highlightedDay={highlightedDay} setHighlightedDay={setHighlightedDay} />
+								<MokedLayout
+									SHIFTS={SHIFTS}
+									DAYS={DAYS}
+									renderCell={renderCell}
+									isToday={isToday}
+									highlightedDay={highlightedDay}
+									setHighlightedDay={setHighlightedDay}
+									currentRole={currentRole}
+									setCurrentRole={setCurrentRole}
+								/>
 							) : (
-								<BranchLayout DAYS={DAYS} renderCell={renderCell} isToday={isToday} highlightedDay={highlightedDay} setHighlightedDay={setHighlightedDay} />
+								<BranchLayout
+									DAYS={DAYS}
+									renderCell={renderCell}
+									isToday={isToday}
+									highlightedDay={highlightedDay}
+									setHighlightedDay={setHighlightedDay}
+									currentRole={currentRole}
+									setCurrentRole={setCurrentRole}
+								/>
 							)}
 						</Table>
 					</div>
@@ -671,12 +823,21 @@ export const ScheduleTable = React.memo(
 		)
 	},
 	(prevProps, nextProps) => {
+		// Special handling when currentSchedule is an array
+		const prevSchedule = Array.isArray(prevProps.currentSchedule) ? prevProps.currentSchedule[0] || {} : prevProps.currentSchedule
+
+		const nextSchedule = Array.isArray(nextProps.currentSchedule) ? nextProps.currentSchedule[0] || {} : nextProps.currentSchedule
+
+		// Include more checks for changes to ensure proper rerendering
 		const shouldUpdate =
 			prevProps.type !== nextProps.type ||
 			prevProps.currentSchedule !== nextProps.currentSchedule ||
-			JSON.stringify(prevProps.currentSchedule?.days) !== JSON.stringify(nextProps.currentSchedule?.days) ||
+			prevProps.weekMode !== nextProps.weekMode ||
+			prevSchedule?.id !== nextSchedule?.id ||
+			JSON.stringify(prevSchedule?.days) !== JSON.stringify(nextSchedule?.days) ||
 			prevProps.employees !== nextProps.employees
 
+		// Return true to update component, false to prevent update
 		return !shouldUpdate
 	}
 )
