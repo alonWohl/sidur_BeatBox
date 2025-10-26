@@ -411,32 +411,35 @@ export const ScheduleTable = React.memo(
 			[currentRole, isEligibleForRole]
 		)
 
-		// Handle WhatsApp sharing
-		const handleShareToWhatsApp = async () => {
-			try {
-				if (!currentSchedule) {
-					toast.error('אין נתונים לשיתוף')
-					return
-				}
+	// Handle WhatsApp sharing
+	const handleShareToWhatsApp = async () => {
+		try {
+			if (!currentSchedule) {
+				toast.error('אין נתונים לשיתוף')
+				return
+			}
 
-				setIsSharing(true)
+			// Get the branch name from the current schedule or type prop
+			const branchName = type || currentSchedule?.branchName || currentSchedule?.branch || 'סניף'
 
-				// Create a completely new element for sharing
-				const container = document.createElement('div')
-				container.style.position = 'absolute'
-				container.style.left = '-9999px'
-				container.style.top = '-9999px'
-				container.style.width = '2000px'
-				container.style.background = '#ffffff'
-				container.style.padding = '20px'
-				container.style.fontFamily = 'Arial, sans-serif'
-				container.style.direction = 'rtl'
-				container.style.border = '2px solid #cccccc'
-				container.style.borderRadius = '8px'
+			setIsSharing(true)
 
-				// Add title
-				const title = document.createElement('h1')
-				title.textContent = `סידור עבודה שבועי - ${type}`
+			// Create a completely new element for sharing
+			const container = document.createElement('div')
+			container.style.position = 'absolute'
+			container.style.left = '-9999px'
+			container.style.top = '-9999px'
+			container.style.width = '2000px'
+			container.style.background = '#ffffff'
+			container.style.padding = '20px'
+			container.style.fontFamily = 'Arial, sans-serif'
+			container.style.direction = 'rtl'
+			container.style.border = '2px solid #cccccc'
+			container.style.borderRadius = '8px'
+
+			// Add title
+			const title = document.createElement('h1')
+			title.textContent = `סידור עבודה שבועי - ${branchName}`
 				title.style.textAlign = 'center'
 				title.style.fontSize = '32px'
 				title.style.fontWeight = 'bold'
@@ -538,10 +541,10 @@ export const ScheduleTable = React.memo(
 					return colorPalette[index % colorPalette.length]
 				}
 
-				// Create rows based on type (מוקד or branch)
-				if (type === 'מוקד') {
-					// Moked layout
-					SHIFTS.forEach(shift => {
+			// Create rows based on type (מוקד or branch)
+			if (branchName === 'מוקד') {
+				// Moked layout
+				SHIFTS.forEach(shift => {
 						let positions = 0
 						if (shift === 'morning') positions = 3
 						else if (shift === 'noon') positions = 1
@@ -611,28 +614,35 @@ export const ScheduleTable = React.memo(
 							tbody.appendChild(row)
 						}
 					})
-				} else {
-					// Branch layout - simple 12 positions
-					for (let position = 1; position <= 12; position++) {
+			} else {
+				// Branch layout with roles
+				const roles = [
+					{ name: 'אחמ"ש', positions: 1 },
+					{ name: 'מלצרים', positions: 5 },
+					{ name: 'טבחים', positions: 5 }
+				]
+
+				roles.forEach(role => {
+					for (let position = 1; position <= role.positions; position++) {
 						const row = document.createElement('tr')
 
-						// Position cell
-						const positionCell = document.createElement('td')
+						// Role cell
+						const roleCell = document.createElement('td')
 						if (position === 1) {
-							positionCell.textContent = 'תפקיד'
-							positionCell.style.fontWeight = 'bold'
-							positionCell.style.backgroundColor = '#fff0f0'
-							positionCell.style.color = '#BE202E'
-							positionCell.style.fontSize = '18px'
+							roleCell.textContent = role.name
+							roleCell.style.fontWeight = 'bold'
+							roleCell.style.backgroundColor = '#fff0f0'
+							roleCell.style.color = '#BE202E'
+							roleCell.style.fontSize = '18px'
 						} else {
-							positionCell.style.backgroundColor = '#f9f9f9'
+							roleCell.style.backgroundColor = '#f9f9f9'
 						}
-						positionCell.style.padding = '5px 8px'
-						positionCell.style.border = '1px solid #dddddd'
-						positionCell.style.textAlign = 'center'
-						positionCell.style.width = '80px'
-						positionCell.style.maxWidth = '80px'
-						row.appendChild(positionCell)
+						roleCell.style.padding = '5px 8px'
+						roleCell.style.border = '1px solid #dddddd'
+						roleCell.style.textAlign = 'center'
+						roleCell.style.width = '80px'
+						roleCell.style.maxWidth = '80px'
+						row.appendChild(roleCell)
 
 						// Day cells
 						DAYS.forEach(day => {
@@ -648,7 +658,7 @@ export const ScheduleTable = React.memo(
 								cell.style.backgroundColor = '#fafafa'
 							}
 
-							const employee = getAssignedEmployee(currentSchedule, day, 'position', position)
+							const employee = getAssignedEmployee(currentSchedule, day, role.name, position)
 							if (employee) {
 								const employeeIndex = employees.findIndex(e => e.id === employee.id)
 								const vibrantColor = getVibrantColor(employee.color, employeeIndex)
@@ -676,7 +686,8 @@ export const ScheduleTable = React.memo(
 
 						tbody.appendChild(row)
 					}
-				}
+				})
+			}
 
 				table.appendChild(tbody)
 				container.appendChild(table)
@@ -700,13 +711,13 @@ export const ScheduleTable = React.memo(
 				// Remove the temporary container
 				document.body.removeChild(container)
 
-				// Convert to image
-				const dataUrl = canvas.toDataURL('image/png', 1.0)
+			// Convert to image
+			const dataUrl = canvas.toDataURL('image/png', 1.0)
 
-				// Create sharing data
-				const message = `סידור עבודה שבועי - ${type}`
-				const blob = await (await fetch(dataUrl)).blob()
-				const file = new File([blob], `schedule-${type}.png`, { type: 'image/png' })
+			// Create sharing data
+			const message = `סידור עבודה שבועי - ${branchName}`
+			const blob = await (await fetch(dataUrl)).blob()
+			const file = new File([blob], `schedule-${branchName}.png`, { type: 'image/png' })
 
 				// Share or download
 				if (navigator.share) {
@@ -718,26 +729,26 @@ export const ScheduleTable = React.memo(
 				} else {
 					const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
-					if (isMobile) {
-						// Create a temporary download link
-						const link = document.createElement('a')
-						link.href = dataUrl
-						link.download = `schedule-${type}.png`
-						document.body.appendChild(link)
-						link.click()
-						document.body.removeChild(link)
+				if (isMobile) {
+					// Create a temporary download link
+					const link = document.createElement('a')
+					link.href = dataUrl
+					link.download = `schedule-${branchName}.png`
+					document.body.appendChild(link)
+					link.click()
+					document.body.removeChild(link)
 
 						// Open WhatsApp with text prompt
 						setTimeout(() => {
 							window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
 						}, 500)
-					} else {
-						// Desktop fallback - just download the image
-						const link = document.createElement('a')
-						link.href = dataUrl
-						link.download = `schedule-${type}.png`
-						link.click()
-					}
+				} else {
+					// Desktop fallback - just download the image
+					const link = document.createElement('a')
+					link.href = dataUrl
+					link.download = `schedule-${branchName}.png`
+					link.click()
+				}
 				}
 
 				toast.dismiss()

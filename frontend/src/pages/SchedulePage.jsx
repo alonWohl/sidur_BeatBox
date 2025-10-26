@@ -67,7 +67,7 @@ export function SchedulePage() {
 	// Set current schedule based on filter
 	useEffect(() => {
 		if (schedules && schedules.length > 0) {
-			let filteredSchedule = schedules.find(schedule => schedule.week === filterBy.week && (filterBy.name ? schedule.branch === filterBy.name : true))
+			let filteredSchedule = schedules.find(schedule => schedule.week === filterBy.week && (filterBy.name ? (schedule.branch === filterBy.name || schedule.branchName === filterBy.name) : true))
 
 			// If no schedule is found matching the criteria, use the first schedule
 			if (!filteredSchedule && schedules.length > 0) {
@@ -123,7 +123,7 @@ export function SchedulePage() {
 		// Handle case where schedule is an array (select the filtered one)
 		if (Array.isArray(schedule)) {
 			// Try to find a schedule matching the current filter
-			const filteredSchedule = schedule.find(s => s.week === filterBy.week && (filterBy.name ? s.branch === filterBy.name : true))
+			const filteredSchedule = schedule.find(s => s.week === filterBy.week && (filterBy.name ? (s.branch === filterBy.name || s.branchName === filterBy.name) : true))
 			schedule = filteredSchedule || (schedule.length > 0 ? schedule[0] : null)
 		}
 
@@ -202,7 +202,7 @@ export function SchedulePage() {
 		// Handle case where schedule is an array (select the filtered one)
 		if (Array.isArray(schedule)) {
 			// Try to find a schedule matching the current filter
-			const filteredSchedule = schedule.find(s => s.week === filterBy.week && (filterBy.name ? s.branch === filterBy.name : true))
+			const filteredSchedule = schedule.find(s => s.week === filterBy.week && (filterBy.name ? (s.branch === filterBy.name || s.branchName === filterBy.name) : true))
 			schedule = filteredSchedule || (schedule.length > 0 ? schedule[0] : null)
 		}
 
@@ -272,7 +272,7 @@ export function SchedulePage() {
 		// Handle case where schedule is an array (select the filtered one)
 		if (Array.isArray(schedule)) {
 			// Try to find a schedule matching the current filter
-			const filteredSchedule = schedule.find(s => s.week === filterBy.week && (filterBy.name ? s.branch === filterBy.name : true))
+			const filteredSchedule = schedule.find(s => s.week === filterBy.week && (filterBy.name ? (s.branch === filterBy.name || s.branchName === filterBy.name) : true))
 			schedule = filteredSchedule || (schedule.length > 0 ? schedule[0] : null)
 		}
 
@@ -322,7 +322,7 @@ export function SchedulePage() {
 		// Handle case where schedule is an array (select the filtered one)
 		if (Array.isArray(schedule)) {
 			// Try to find a schedule matching the current filter
-			const filteredSchedule = schedule.find(s => s.week === filterBy.week && (filterBy.name ? s.branch === filterBy.name : true))
+			const filteredSchedule = schedule.find(s => s.week === filterBy.week && (filterBy.name ? (s.branch === filterBy.name || s.branchName === filterBy.name) : true))
 			schedule = filteredSchedule || (schedule.length > 0 ? schedule[0] : null)
 		}
 
@@ -487,21 +487,21 @@ export function SchedulePage() {
 				</div>
 			</div>
 
-			{/* The ScheduleTable will now take the rest of the available height */}
-			<div className="flex flex-1 flex-col px-4 xl:px-6 2xl:px-0 sm:flex-row items-start sm:items-center justify-between py-3 max-w-[1900px] mx-auto gap-3 overflow-y-auto scrollbar-thin bg-white">
-				<ScheduleTable
-					type={filterBy.name}
-					currentSchedule={schedules}
-					getAssignedEmployee={getAssignedEmployee}
-					handleRemoveEmployee={handleRemoveEmployee}
-					handleUpdateSchedule={handleUpdateSchedule}
-					employees={employees}
-					isSharing={isSharing}
-					onClearSchedule={handleClearBoard}
-					weekMode={filterBy.week}
-					setIsSharing={handleSetSharing}
-				/>
-			</div>
+		{/* The ScheduleTable will now take the rest of the available height */}
+		<div className="flex flex-1 flex-col px-4 xl:px-6 2xl:px-0 sm:flex-row items-start sm:items-center justify-between py-3 max-w-[1900px] mx-auto gap-3 overflow-y-auto scrollbar-thin bg-white">
+			<ScheduleTable
+				type={filterBy.name || currentSchedule?.branchName || currentSchedule?.branch}
+				currentSchedule={schedules}
+				getAssignedEmployee={getAssignedEmployee}
+				handleRemoveEmployee={handleRemoveEmployee}
+				handleUpdateSchedule={handleUpdateSchedule}
+				employees={employees}
+				isSharing={isSharing}
+				onClearSchedule={handleClearBoard}
+				weekMode={filterBy.week}
+				setIsSharing={handleSetSharing}
+			/>
 		</div>
-	)
+	</div>
+)
 }

@@ -7,7 +7,7 @@ export async function getSchedules(req, res) {
 
 	try {
 		const filterBy = {
-			name: loggedinUser.isAdmin ? loggedinUser.name || req.query.name : loggedinUser.name,
+			name: loggedinUser.isAdmin ? (req.query.branch || req.query.name || loggedinUser.name) : loggedinUser.name,
 			week: req.query.week || 'current'
 		}
 
