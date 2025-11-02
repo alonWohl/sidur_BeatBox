@@ -6,6 +6,7 @@
 export const BRANCH_ROLE_NAMES = {
 	'אחמ"ש': 'manager',
 	מלצרים: 'waiters',
+	מתלמדים: 'apprentices',
 	טבחים: 'cooks'
 }
 

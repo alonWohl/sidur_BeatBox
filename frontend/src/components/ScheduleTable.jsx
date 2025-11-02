@@ -205,7 +205,8 @@ const MokedLayout = React.memo(({ SHIFTS, DAYS, renderCell, isToday, highlighted
 const BranchLayout = React.memo(({ DAYS, renderCell, isToday, highlightedDay, setHighlightedDay, currentRole, setCurrentRole }) => {
 	const roles = [
 		{ name: 'אחמ"ש', positions: 1 },
-		{ name: 'מלצרים', positions: 5 },
+		{ name: 'מלצרים', positions: 7 },
+		{ name: 'מתלמדים', positions: 1 },
 		{ name: 'טבחים', positions: 5 }
 	]
 
@@ -222,19 +223,20 @@ const BranchLayout = React.memo(({ DAYS, renderCell, isToday, highlightedDay, se
 			{roles.flatMap((role, roleIndex) =>
 				Array.from({ length: role.positions }, (_, positionIndex) => {
 					const position = positionIndex + 1
+					const isFirstRowOfGroup = position === 1
 					return (
 						<TableRow key={`${role.name}-${position}`} className="h-7 sm:h-9 transition-colors hover:bg-gray-50/30">
 							<TableCell
 								className={`text-center font-medium border-l border text-xs sm:text-sm transition-all
-									${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-2 border-t-[#BE202E]' : 'border-t-0 bg-gray-100/50'}`}
+									${isFirstRowOfGroup ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-2 border-t-black' : 'border-t-0 bg-gray-100/50'}`}
 							>
-								{position === 1 ? <div className="py-0.5 sm:py-1 font-bold text-xs sm:text-sm">{role.name}</div> : ''}
+								{isFirstRowOfGroup ? <div className="py-0.5 sm:py-1 font-bold text-xs sm:text-sm">{role.name}</div> : ''}
 							</TableCell>
 							{DAYS.map(day => (
 								<TableCell
 									key={`${day}-${role.name}-${position}`}
 									className={`border p-0 transition-colors h-7 sm:h-9 ${isToday(day) ? 'bg-blue-50/40' : ''} ${highlightedDay === day ? 'bg-yellow-50' : ''} 
-									${position === 1 ? '' : 'border-t-0'}`}
+									${isFirstRowOfGroup ? 'border-t-2 border-t-black' : 'border-t-0'}`}
 									onMouseEnter={() => {
 										setHighlightedDay(day)
 										handleRoleHover(role.name)
@@ -267,6 +269,7 @@ export const ScheduleTable = React.memo(
 		const DEPARTMENT_ROLE_MAP = {
 			'אחמ"ש': 'manager',
 			מלצרים: 'waiters',
+			מתלמדים: ['waiters', 'cooks'], // Can assign both waiters and cooks
 			טבחים: 'cooks',
 			// For Moked, allow any role
 			morning: null,
@@ -286,6 +289,11 @@ export const ScheduleTable = React.memo(
 				// If no department mapping exists, allow assignment
 				if (!requiredDepartment) return true
 
+				// For מתלמדים role, check if employee belongs to either waiters or cooks
+				if (Array.isArray(requiredDepartment)) {
+					return employee.departments && requiredDepartment.some(dept => employee.departments.includes(dept))
+				}
+
 				// Check if employee belongs to the required department
 				return employee.departments && employee.departments.includes(requiredDepartment)
 			},
@@ -303,8 +311,8 @@ export const ScheduleTable = React.memo(
 						}
 					})
 				} else {
-					// Branch layout - simple 12 positions
-					for (let i = 1; i <= 12; i++) {
+					// Branch layout - 14 positions (1 manager + 7 waiters + 1 apprentices + 5 cooks)
+					for (let i = 1; i <= 14; i++) {
 						cells.push(`${day}-position-${i}`)
 					}
 				}
@@ -484,12 +492,12 @@ export const ScheduleTable = React.memo(
 
 					const dayName = document.createElement('div')
 					dayName.textContent = name
-					dayName.style.fontSize = '24px'
+					dayName.style.fontSize = '32px'
 					dayName.style.fontWeight = 'bold'
 
 					const dayDate = document.createElement('div')
 					dayDate.textContent = date
-					dayDate.style.fontSize = '18px'
+					dayDate.style.fontSize = '24px'
 					dayDate.style.color = 'rgba(0,0,0,0.7)'
 					dayDate.style.marginTop = '5px'
 
@@ -618,22 +626,45 @@ export const ScheduleTable = React.memo(
 				// Branch layout with roles
 				const roles = [
 					{ name: 'אחמ"ש', positions: 1 },
-					{ name: 'מלצרים', positions: 5 },
+					{ name: 'מלצרים', positions: 7 },
+					{ name: 'מתלמדים', positions: 1 },
 					{ name: 'טבחים', positions: 5 }
 				]
 
-				roles.forEach(role => {
+				roles.forEach((role, roleIndex) => {
+					// Add red separator row before each group (except the first one)
+					if (roleIndex > 0) {
+						const spacerRow = document.createElement('tr')
+						spacerRow.style.height = '15px'
+						
+						// Create spacer cells with red background
+						const spacerRoleCell = document.createElement('td')
+						spacerRoleCell.style.backgroundColor = '#BE202E'
+						spacerRoleCell.style.border = 'none'
+						spacerRow.appendChild(spacerRoleCell)
+						
+						DAYS.forEach(() => {
+							const spacerCell = document.createElement('td')
+							spacerCell.style.backgroundColor = '#BE202E'
+							spacerCell.style.border = 'none'
+							spacerRow.appendChild(spacerCell)
+						})
+						
+						tbody.appendChild(spacerRow)
+					}
+
 					for (let position = 1; position <= role.positions; position++) {
 						const row = document.createElement('tr')
+						const isFirstRowOfGroup = position === 1
 
 						// Role cell
 						const roleCell = document.createElement('td')
-						if (position === 1) {
+						if (isFirstRowOfGroup) {
 							roleCell.textContent = role.name
 							roleCell.style.fontWeight = 'bold'
 							roleCell.style.backgroundColor = '#fff0f0'
 							roleCell.style.color = '#BE202E'
-							roleCell.style.fontSize = '18px'
+							roleCell.style.fontSize = '28px'
 						} else {
 							roleCell.style.backgroundColor = '#f9f9f9'
 						}
@@ -647,12 +678,13 @@ export const ScheduleTable = React.memo(
 						// Day cells
 						DAYS.forEach(day => {
 							const cell = document.createElement('td')
-							cell.style.padding = '10px'
 							cell.style.border = '1px solid #dddddd'
-							cell.style.textAlign = 'center'
 							cell.style.height = '75px'
 							cell.style.width = '120px'
 							cell.style.backgroundColor = '#ffffff'
+							cell.style.padding = '0'
+							cell.style.margin = '0'
+							cell.style.position = 'relative'
 
 							if (isToday(day)) {
 								cell.style.backgroundColor = '#fafafa'
@@ -660,25 +692,18 @@ export const ScheduleTable = React.memo(
 
 							const employee = getAssignedEmployee(currentSchedule, day, role.name, position)
 							if (employee) {
-								const employeeIndex = employees.findIndex(e => e.id === employee.id)
-								const vibrantColor = getVibrantColor(employee.color, employeeIndex)
-
-								const nameSpan = document.createElement('div')
-								nameSpan.textContent = employee.name
-								nameSpan.style.fontSize = '32px'
-								nameSpan.style.fontWeight = 'bold'
-								nameSpan.style.padding = '8px'
-								nameSpan.style.color = '#ffffff'
-								nameSpan.style.textShadow = '0 1px 2px rgba(0,0,0,0.2)'
-								nameSpan.style.width = '100%'
-								nameSpan.style.height = '100%'
-								nameSpan.style.display = 'flex'
-								nameSpan.style.justifyContent = 'center'
-								nameSpan.style.alignItems = 'center'
-
-								cell.style.backgroundColor = vibrantColor
-								cell.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.3)'
-								cell.appendChild(nameSpan)
+								const textDiv = document.createElement('div')
+								textDiv.textContent = employee.name
+								textDiv.style.position = 'absolute'
+								textDiv.style.top = '50%'
+								textDiv.style.left = '50%'
+								textDiv.style.transform = 'translate(-50%, -50%)'
+								textDiv.style.fontSize = '36px'
+								textDiv.style.fontWeight = 'bold'
+								textDiv.style.color = '#000000'
+								textDiv.style.width = '100%'
+								textDiv.style.textAlign = 'center'
+								cell.appendChild(textDiv)
 							}
 
 							row.appendChild(cell)

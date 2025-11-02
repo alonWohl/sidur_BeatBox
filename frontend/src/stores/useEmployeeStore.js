@@ -22,6 +22,7 @@ export const useEmployeeStore = create((set, get) => ({
       startLoading()
       const employees = await employeeService.query({ ...filterBy })
       set({ employees })
+      return employees
     } catch (err) {
       console.log('Cannot load employees', err)
       throw err

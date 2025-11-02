@@ -4,7 +4,7 @@ import {employeeService} from './employee.service.js';
 export async function getEmployees(req, res) {
 	const {loggedinUser} = req;
 	const filterBy = {
-		name: loggedinUser.isAdmin ? req.query.name || loggedinUser.name : loggedinUser.name,
+		name: loggedinUser.isAdmin ? (req.query.branch || req.query.name || loggedinUser.name) : loggedinUser.name,
 	};
 	try {
 		const employees = await employeeService.query(filterBy);

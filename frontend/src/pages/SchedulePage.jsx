@@ -25,6 +25,7 @@ import {
 const DEPARTMENT_ROLE_MAP = {
 	'אחמ"ש': 'manager',
 	מלצרים: 'waiters',
+	מתלמדים: ['waiters', 'cooks'], // Apprentices can be both waiters and cooks
 	טבחים: 'cooks',
 	// For Moked, allow any role
 	morning: null,
@@ -51,11 +52,17 @@ export function SchedulePage() {
 					const systemStore = useSystemStore.getState()
 					systemStore.startLoading()
 
-					await Promise.all([loadEmployees({}), loadSchedules({ week: filterBy.week, branch: filterBy.name })])
+				console.log('🔍 Loading data for branch:', filterBy.name, 'week:', filterBy.week)
+				const [employees, schedules] = await Promise.all([
+					loadEmployees({ branch: filterBy.name }), 
+					loadSchedules({ week: filterBy.week, branch: filterBy.name })
+				])
+				console.log('✅ Data loaded successfully:', { employees, schedules })
 
 					systemStore.stopLoading()
 				} catch (err) {
-					console.error('Error loading data:', err)
+					console.error('❌ Error loading data:', err)
+					toast.error(`שגיאה בטעינת נתונים: ${err.message}`)
 					useSystemStore.getState().stopLoading()
 				}
 			}
@@ -66,18 +73,24 @@ export function SchedulePage() {
 
 	// Set current schedule based on filter
 	useEffect(() => {
+		console.log('📅 Setting schedule. schedules:', schedules, 'filterBy:', filterBy)
+		
 		if (schedules && schedules.length > 0) {
 			let filteredSchedule = schedules.find(schedule => schedule.week === filterBy.week && (filterBy.name ? (schedule.branch === filterBy.name || schedule.branchName === filterBy.name) : true))
+
+			console.log('🔎 Found schedule:', filteredSchedule)
 
 			// If no schedule is found matching the criteria, use the first schedule
 			if (!filteredSchedule && schedules.length > 0) {
 				filteredSchedule = schedules[0]
+				console.log('⚠️ No matching schedule found, using first:', filteredSchedule)
 			}
 
 			setCurrentSchedule(filteredSchedule || null)
 		} else {
 			// Create an empty schedule structure as fallback
 			const emptySchedule = createEmptySchedule(filterBy.week, filterBy.name)
+			console.log('🆕 Created empty schedule:', emptySchedule)
 			setCurrentSchedule(emptySchedule)
 		}
 	}, [schedules, filterBy])
@@ -85,7 +98,21 @@ export function SchedulePage() {
 	// Reset filter whenever user changes
 	useEffect(() => {
 		if (user) {
-			setFilterBy({ week: 'current', name: '' })
+			// Set default branch based on user
+			let defaultBranch = ''
+			
+			if (user.name === 'מוקד' || user.username === 'moked') {
+				// If user is מוקד, always default to מוקד
+				defaultBranch = 'מוקד'
+			} else if (user.isAdmin) {
+				// If admin, default to מוקד as well
+				defaultBranch = 'מוקד'
+			} else {
+				// For regular branch users, use their branch name
+				defaultBranch = user.name
+			}
+			
+			setFilterBy({ week: 'current', name: defaultBranch })
 		}
 	}, [user])
 
@@ -114,6 +141,11 @@ export function SchedulePage() {
 
 		// If no department mapping exists, allow assignment
 		if (!requiredDepartment) return true
+
+		// For מתלמדים role, check if employee belongs to either waiters or cooks
+		if (Array.isArray(requiredDepartment)) {
+			return employee.departments && requiredDepartment.some(dept => employee.departments.includes(dept))
+		}
 
 		// Check if employee belongs to the required department
 		return employee.departments && employee.departments.includes(requiredDepartment)
@@ -487,21 +519,22 @@ export function SchedulePage() {
 				</div>
 			</div>
 
-		{/* The ScheduleTable will now take the rest of the available height */}
-		<div className="flex flex-1 flex-col px-4 xl:px-6 2xl:px-0 sm:flex-row items-start sm:items-center justify-between py-3 max-w-[1900px] mx-auto gap-3 overflow-y-auto scrollbar-thin bg-white">
-			<ScheduleTable
-				type={filterBy.name || currentSchedule?.branchName || currentSchedule?.branch}
-				currentSchedule={schedules}
-				getAssignedEmployee={getAssignedEmployee}
-				handleRemoveEmployee={handleRemoveEmployee}
-				handleUpdateSchedule={handleUpdateSchedule}
-				employees={employees}
-				isSharing={isSharing}
-				onClearSchedule={handleClearBoard}
-				weekMode={filterBy.week}
-				setIsSharing={handleSetSharing}
-			/>
-		</div>
+	{/* The ScheduleTable will now take the rest of the available height */}
+	<div className="flex flex-1 flex-col px-4 xl:px-6 2xl:px-0 sm:flex-row items-start sm:items-center justify-between py-3 max-w-[1900px] mx-auto gap-3 overflow-y-auto scrollbar-thin bg-white">
+		{console.log('🎨 Rendering ScheduleTable with:', { type: filterBy.name, currentSchedule, employees: employees?.length })}
+		<ScheduleTable
+			type={filterBy.name || currentSchedule?.branchName || currentSchedule?.branch}
+			currentSchedule={schedules}
+			getAssignedEmployee={getAssignedEmployee}
+			handleRemoveEmployee={handleRemoveEmployee}
+			handleUpdateSchedule={handleUpdateSchedule}
+			employees={employees}
+			isSharing={isSharing}
+			onClearSchedule={handleClearBoard}
+			weekMode={filterBy.week}
+			setIsSharing={handleSetSharing}
+		/>
+	</div>
 	</div>
 )
 }

@@ -33,6 +33,7 @@ const DEPARTMENT_ROLE_MAP = {
 	// Branch roles from the codebase
 	'אחמ"ש': ['manager'],
 	מלצרים: ['waiters'],
+	מתלמדים: ['waiters', 'cooks'], // Apprentices can be both waiters and cooks
 	טבחים: ['cooks'],
 
 	// Moked shift roles

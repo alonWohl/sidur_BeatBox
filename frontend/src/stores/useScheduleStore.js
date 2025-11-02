@@ -28,6 +28,7 @@ export const useScheduleStore = create((set, get) => ({
       startLoading()
       const schedules = await scheduleService.query({ ...filterBy })
       set({ schedules: Array.isArray(schedules) ? schedules : [schedules].filter(Boolean) })
+      return schedules
     } catch (err) {
       console.error('Cannot load schedules', err)
       throw err
