@@ -102,13 +102,13 @@ const EmployeeButton = React.memo(({ employee, selectedEmployee, setSelectedEmpl
 })
 
 const ScheduleTableHeader = React.memo(({ weekDates, highlightedDay, setHighlightedDay, isToday }) => (
-	<TableHeader className="sticky top-0 z-10">
+	<TableHeader className="sticky top-0 z-10 bg-white">
 		<TableRow>
-			<TableHead className="text-center font-medium bg-gray-100 text-zinc-900 border-b-2 border-b-gray-200 py-2 sm:py-3 text-xs sm:text-sm sticky left-0 z-20">משמרת</TableHead>
+			<TableHead className="text-center font-medium bg-gray-100 text-zinc-900 border-b-2 border-b-gray-200 py-2 sm:py-3 text-xs sm:text-sm sticky left-0 z-20 shadow-sm">משמרת</TableHead>
 			{weekDates.map(({ name, date }) => (
 				<TableHead
 					key={name}
-					className={`text-center font-medium text-xs sm:text-sm whitespace-nowrap p-1 sm:p-2 border-x transition-colors
+					className={`text-center font-medium text-xs sm:text-sm whitespace-nowrap p-1 sm:p-2 border-x transition-colors shadow-sm
 						${highlightedDay === name ? 'bg-yellow-50' : ''}
 						${isToday(name) ? 'bg-[#BE202E]/5 text-[#BE202E] font-bold border-t-2 border-t-[#BE202E] border-b-0' : 'font-medium bg-gray-50 border-b-2 border-b-gray-200'}`}
 					onMouseEnter={() => setHighlightedDay(name)}
@@ -175,7 +175,7 @@ const MokedLayout = React.memo(({ SHIFTS, DAYS, renderCell, isToday, highlighted
 					return (
 						<TableRow key={`${shift}-${position}`} className="transition-colors">
 							<TableCell
-								className={`text-center font-medium text-sm transition-all h-7 sm:h-9
+								className={`text-center font-medium text-sm transition-all h-7 sm:h-9 sticky left-0 z-10 shadow-sm
 									${position === 1 ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold drop-shadow-sm' : 'border-t-0 bg-gray-100/50'}`}
 							>
 								{position === 1 ? <div className="py-0.5 sm:py-1 text-xs sm:text-sm">{SHIFT_NAMES[shift]}</div> : ''}
@@ -227,7 +227,7 @@ const BranchLayout = React.memo(({ DAYS, renderCell, isToday, highlightedDay, se
 					return (
 						<TableRow key={`${role.name}-${position}`} className="h-7 sm:h-9 transition-colors hover:bg-gray-50/30">
 							<TableCell
-								className={`text-center font-medium border-l border text-xs sm:text-sm transition-all
+								className={`text-center font-medium border-l border text-xs sm:text-sm transition-all sticky left-0 z-10 shadow-sm
 									${isFirstRowOfGroup ? 'bg-[#BE202E]/10 text-[#BE202E] font-bold border-t-2 border-t-black' : 'border-t-0 bg-gray-100/50'}`}
 							>
 								{isFirstRowOfGroup ? <div className="py-0.5 sm:py-1 font-bold text-xs sm:text-sm">{role.name}</div> : ''}
