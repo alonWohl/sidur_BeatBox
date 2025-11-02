@@ -1,0 +1,56 @@
+{
+	"name": "BeatBox Sidur - סידור עבודה",
+	"short_name": "Sidur",
+	"description": "מערכת סידור עבודה למוקד ולסניפים",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#BE202E",
+	"orientation": "portrait-primary",
+	"icons": [
+		{
+			"src": "/assets/images/android-chrome-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/assets/images/android-chrome-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+		}
+	],
+	"categories": ["productivity", "business"],
+	"dir": "rtl",
+	"lang": "he",
+	"scope": "/",
+	"shortcuts": [
+		{
+			"name": "סידור עבודה",
+			"short_name": "סידור",
+			"description": "פתח את מסך סידור העבודה",
+			"url": "/schedule",
+			"icons": [
+				{
+					"src": "/assets/images/android-chrome-192x192.png",
+					"sizes": "192x192"
+				}
+			]
+		},
+		{
+			"name": "עובדים",
+			"short_name": "עובדים",
+			"description": "נהל עובדים",
+			"url": "/employees",
+			"icons": [
+				{
+					"src": "/assets/images/android-chrome-192x192.png",
+					"sizes": "192x192"
+				}
+			]
+		}
+	]
+}
+
+
