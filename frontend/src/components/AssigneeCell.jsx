@@ -84,7 +84,8 @@ export function AssigneeCell({
 	isSwappable,
 	highlightedDay,
 	selectedEmployee,
-	onCellClick
+	onCellClick,
+	branchType = 'מוקד' // Default to Moked to maintain backward compatibility
 }) {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 	const { employees } = useEmployeeStore()
@@ -178,6 +179,25 @@ export function AssigneeCell({
 		}
 	}
 
+	// Primary red color for all branch employees (non-Moked)
+	const PRIMARY_RED = '#BE202E'
+
+	// Get employee color - single red for branches, custom for Moked
+	const getEmployeeColor = (employeeName, isMoked, employeeColor) => {
+		if (isMoked) {
+			return employeeColor || '#6b7280'
+		}
+		
+		// For branches, use the primary red color for all employees
+		return PRIMARY_RED
+	}
+
+	// Determine if colors should be shown (only for Moked)
+	const isMoked = branchType === 'מוקד'
+	const cellBackgroundColor = employee 
+		? (isMoked ? (employee.color || '#6b7280') : getEmployeeColor(employee.name, isMoked, employee.color))
+		: 'transparent'
+	
 	return (
 		<div
 			className={`h-full w-full relative group overflow-visible
@@ -185,7 +205,7 @@ export function AssigneeCell({
         ${selectedEmployee ? 'cursor-pointer hover:ring-2 hover:ring-blue-400 hover:bg-blue-50/50' : ''}
         ${employee ? '' : 'bg-gray-50 hover:bg-gray-100'}`}
 			style={{
-				backgroundColor: employee ? employee.color || '#6b7280' : 'transparent',
+				backgroundColor: cellBackgroundColor,
 				minHeight: isMobile ? '28px' : '36px'
 			}}
 			onClick={handleClick}
@@ -196,8 +216,8 @@ export function AssigneeCell({
 					<span
 						className="text-center truncate w-full text-[10px] sm:text-xs font-medium leading-tight"
 						style={{
-							color: getContrastColor(employee?.color || '#ffffff'),
-							textShadow: '0px 0px 1px rgba(0,0,0,0.2)'
+							color: '#ffffff', // White text for better contrast on colored backgrounds
+							textShadow: '0px 0px 2px rgba(0,0,0,0.3)' // Better text shadow for readability
 						}}
 					>
 						{employee.name}

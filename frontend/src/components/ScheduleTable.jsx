@@ -16,7 +16,7 @@ const SHIFT_NAMES = {
 }
 
 // Helper Components
-const EmployeeSelection = React.memo(({ employees, selectedEmployee, setSelectedEmployee, isMoked, currentRole, checkEmployeeEligibility }) => {
+const EmployeeSelection = React.memo(({ employees, selectedEmployee, setSelectedEmployee, isMoked, currentRole, checkEmployeeEligibility, branchType }) => {
 	const [selectedDepartment, setSelectedDepartment] = useState(null)
 
 	// Create department tabs for branch view (not for Moked)
@@ -72,6 +72,7 @@ const EmployeeSelection = React.memo(({ employees, selectedEmployee, setSelected
 							selectedEmployee={selectedEmployee}
 							setSelectedEmployee={setSelectedEmployee}
 							eligibleForCurrentRole={currentRole ? checkEmployeeEligibility(emp) : null}
+							branchType={branchType}
 						/>
 					))
 				) : (
@@ -82,21 +83,39 @@ const EmployeeSelection = React.memo(({ employees, selectedEmployee, setSelected
 	)
 })
 
-const EmployeeButton = React.memo(({ employee, selectedEmployee, setSelectedEmployee, eligibleForCurrentRole }) => {
+// Primary red color for all branch employees (non-Moked)
+const PRIMARY_RED = '#BE202E'
+
+// Get employee color - single red for branches, custom for Moked
+const getEmployeeColor = (employeeName, isMoked, employeeColor) => {
+	if (isMoked) {
+		return employeeColor || '#6b7280'
+	}
+	
+	// For branches, use the primary red color for all employees
+	return PRIMARY_RED
+}
+
+const EmployeeButton = React.memo(({ employee, selectedEmployee, setSelectedEmployee, eligibleForCurrentRole, branchType = 'מוקד' }) => {
 	// Add visual indicator if employee is eligible for the currently selected role
 	const isEligible = eligibleForCurrentRole === null || eligibleForCurrentRole === true
+	const isMoked = branchType === 'מוקד'
+	const buttonColor = getEmployeeColor(employee.name, isMoked, employee.color)
+	const textColor = isMoked ? '#ffffff' : '#ffffff' // White text for better contrast on colored backgrounds
 
 	return (
 		<button
-			className={`inline-flex px-1 sm:px-2 py-0.5 sm:py-1 rounded-sm text-[10px] sm:text-xs w-full transition-all justify-center items-center gap-0.5 sm:gap-1 text-white truncate
-					${selectedEmployee?.id === employee.id ? 'ring-2 ring-white shadow-sm' : 'hover:shadow-sm'}
-					${!isEligible ? 'opacity-60 ring-1 ring-amber-400' : ''}`}
-			style={{ backgroundColor: employee.color }}
+			className={`inline-flex px-1 sm:px-2 py-0.5 sm:py-1 rounded-sm text-[10px] sm:text-xs w-full transition-all justify-center items-center gap-0.5 sm:gap-1 truncate
+					${selectedEmployee?.id === employee.id ? 'ring-2 ring-white shadow-lg scale-105' : 'hover:shadow-md hover:scale-[1.02]'}`}
+			style={{ 
+				backgroundColor: buttonColor, 
+				color: textColor,
+				boxShadow: selectedEmployee?.id === employee.id ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+			}}
 			onClick={() => setSelectedEmployee(selectedEmployee?.id === employee.id ? null : employee)}
 		>
 			{selectedEmployee?.id === employee.id && <Check className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0 text-white" />}
-			<span className="truncate">{employee.name}</span>
-			{!isEligible && <AlertCircle className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0 text-amber-200" />}
+			<span className="truncate font-medium">{employee.name}</span>
 		</button>
 	)
 })
@@ -206,7 +225,7 @@ const BranchLayout = React.memo(({ DAYS, renderCell, isToday, highlightedDay, se
 	const roles = [
 		{ name: 'אחמ"ש', positions: 1 },
 		{ name: 'מלצרים', positions: 7 },
-		{ name: 'מתלמדים', positions: 1 },
+		{ name: 'מתלמדים', positions: 2 },
 		{ name: 'טבחים', positions: 5 }
 	]
 
@@ -311,8 +330,8 @@ export const ScheduleTable = React.memo(
 						}
 					})
 				} else {
-					// Branch layout - 14 positions (1 manager + 7 waiters + 1 apprentices + 5 cooks)
-					for (let i = 1; i <= 14; i++) {
+					// Branch layout - 15 positions (1 manager + 7 waiters + 2 apprentices + 5 cooks)
+					for (let i = 1; i <= 15; i++) {
 						cells.push(`${day}-position-${i}`)
 					}
 				}
@@ -392,6 +411,7 @@ export const ScheduleTable = React.memo(
 						highlightedDay={highlightedDay === day}
 						selectedEmployee={selectedEmployee}
 						onCellClick={() => handleCellClick(day, role, position, employee)}
+						branchType={type}
 					/>
 				)
 			},
@@ -595,25 +615,44 @@ export const ScheduleTable = React.memo(
 
 								const employee = getAssignedEmployee(currentSchedule, day, shift, position)
 								if (employee) {
-									const employeeIndex = employees.findIndex(e => e.id === employee.id)
-									const vibrantColor = getVibrantColor(employee.color, employeeIndex)
+									// For Moked, use colors; for branches, no colors
+									const isMoked = type === 'מוקד'
+									
+									if (isMoked) {
+										const employeeIndex = employees.findIndex(e => e.id === employee.id)
+										const vibrantColor = getVibrantColor(employee.color, employeeIndex)
 
-									const nameSpan = document.createElement('div')
-									nameSpan.textContent = employee.name
-									nameSpan.style.fontSize = '32px'
-									nameSpan.style.fontWeight = 'bold'
-									nameSpan.style.padding = '8px'
-									nameSpan.style.color = '#ffffff'
-									nameSpan.style.textShadow = '0 1px 2px rgba(0,0,0,0.2)'
-									nameSpan.style.width = '100%'
-									nameSpan.style.height = '100%'
-									nameSpan.style.display = 'flex'
-									nameSpan.style.justifyContent = 'center'
-									nameSpan.style.alignItems = 'center'
+										const nameSpan = document.createElement('div')
+										nameSpan.textContent = employee.name
+										nameSpan.style.fontSize = '32px'
+										nameSpan.style.fontWeight = 'bold'
+										nameSpan.style.padding = '8px'
+										nameSpan.style.color = '#ffffff'
+										nameSpan.style.textShadow = '0 1px 2px rgba(0,0,0,0.2)'
+										nameSpan.style.width = '100%'
+										nameSpan.style.height = '100%'
+										nameSpan.style.display = 'flex'
+										nameSpan.style.justifyContent = 'center'
+										nameSpan.style.alignItems = 'center'
 
-									cell.style.backgroundColor = vibrantColor
-									cell.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.3)'
-									cell.appendChild(nameSpan)
+										cell.style.backgroundColor = vibrantColor
+										cell.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.3)'
+										cell.appendChild(nameSpan)
+									} else {
+										// Branches - no color, just text
+										const textDiv = document.createElement('div')
+										textDiv.textContent = employee.name
+										textDiv.style.position = 'absolute'
+										textDiv.style.top = '50%'
+										textDiv.style.left = '50%'
+										textDiv.style.transform = 'translate(-50%, -50%)'
+										textDiv.style.fontSize = '32px'
+										textDiv.style.fontWeight = 'bold'
+										textDiv.style.color = '#000000'
+										textDiv.style.width = '100%'
+										textDiv.style.textAlign = 'center'
+										cell.appendChild(textDiv)
+									}
 								}
 
 								row.appendChild(cell)
@@ -627,7 +666,7 @@ export const ScheduleTable = React.memo(
 				const roles = [
 					{ name: 'אחמ"ש', positions: 1 },
 					{ name: 'מלצרים', positions: 7 },
-					{ name: 'מתלמדים', positions: 1 },
+					{ name: 'מתלמדים', positions: 2 },
 					{ name: 'טבחים', positions: 5 }
 				]
 
@@ -800,6 +839,7 @@ export const ScheduleTable = React.memo(
 						isMoked={isMoked}
 						currentRole={currentRole}
 						checkEmployeeEligibility={checkEmployeeEligibility}
+						branchType={type}
 					/>
 				</div>
 

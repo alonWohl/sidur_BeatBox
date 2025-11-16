@@ -55,6 +55,7 @@ const DEPARTMENT_NAMES = {
 
 const ColorPickerPopover = ({ value, onChange }) => {
   const [open, setOpen] = useState(false)
+  const displayColor = value || colorOptions[0] // Default to first color if undefined
 
   return (
     <div className="flex flex-col gap-2">
@@ -63,7 +64,7 @@ const ColorPickerPopover = ({ value, onChange }) => {
           <button
             type="button"
             className="flex items-center gap-2 p-2 border rounded-md hover:bg-gray-50 w-full transition-all duration-200 focus:ring-2 focus:ring-offset-1 focus:ring-primary">
-            <div className="w-6 h-6 rounded-md border shadow-sm transition-transform duration-200" style={{ backgroundColor: value }} />
+            <div className="w-6 h-6 rounded-md border shadow-sm transition-transform duration-200" style={{ backgroundColor: displayColor }} />
             <Palette className="h-4 w-4 text-gray-500 mr-1" />
             <span className="text-gray-600 text-sm">בחר צבע</span>
           </button>
@@ -74,7 +75,7 @@ const ColorPickerPopover = ({ value, onChange }) => {
               <button
                 key={color}
                 className={`w-10 h-10 rounded-md shadow-sm transition-all hover:scale-110 active:scale-95 hover:shadow-md ${
-                  value === color ? 'ring-2 ring-primary ring-offset-2' : ''
+                  (value || colorOptions[0]) === color ? 'ring-2 ring-primary ring-offset-2' : ''
                 }`}
                 onClick={() => {
                   onChange({ target: { name: 'color', value: color } })
@@ -105,7 +106,7 @@ export function EmployeesPage() {
 
   const [employeeToEdit, setEmployeeToEdit] = useState({
     name: '',
-    color: colorOptions[0], // Default to first color
+    color: colorOptions[0], // Default to first color (only used for Moked)
     branch: user?.name || '',
     departments: [] // Start with no departments selected
   })
@@ -145,6 +146,11 @@ export function EmployeesPage() {
       if (isMoked) {
         employeeData.departments = [] // Empty departments for Moked employees
       }
+      // Only include color for Moked employees
+      if (!isMoked) {
+        // Remove color field completely for non-Moked branches
+        delete employeeData.color
+      }
       await addEmployee(employeeData)
       setEmployeeToEdit({
         name: '',
@@ -163,9 +169,12 @@ export function EmployeesPage() {
   }
 
   const handleEditEmployee = (employee) => {
+    const isMoked = employee.branch === 'מוקד'
     setEmployeeToEdit({
       ...employee,
-      departments: employee.departments || []
+      departments: employee.departments || [],
+      // Only keep color for Moked employees, remove it for branches
+      color: isMoked ? (employee.color || colorOptions[0]) : undefined
     })
     setIsEditing(true)
     setShowAddForm(true)
@@ -195,6 +204,9 @@ export function EmployeesPage() {
       const employeeData = { ...employeeToEdit }
       if (isMoked) {
         employeeData.departments = [] // Empty departments for Moked employees
+      } else {
+        // Remove color field completely for non-Moked branches
+        delete employeeData.color
       }
       await updateEmployee(employeeData)
       setEmployeeToEdit({
@@ -366,13 +378,16 @@ export function EmployeesPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                    <Palette className="h-4 w-4 text-gray-500" />
-                    צבע עובד
-                  </label>
-                  <ColorPickerPopover value={employeeToEdit.color} onChange={handleChange} />
-                </div>
+                {/* Color picker - only for Moked */}
+                {employeeToEdit.branch === 'מוקד' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                      <Palette className="h-4 w-4 text-gray-500" />
+                      צבע עובד
+                    </label>
+                    <ColorPickerPopover value={employeeToEdit.color} onChange={handleChange} />
+                  </div>
+                )}
 
                 {/* Department selection - only show for non-Moked branches */}
                 {employeeToEdit.branch !== 'מוקד' && (
@@ -460,9 +475,9 @@ export function EmployeesPage() {
                   <div className="p-4 flex justify-between items-start">
                     <div className="flex items-center gap-3">
                       <div
-                        className="h-10 w-10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
-                        style={{ backgroundColor: employee.color }}>
-                        <span className="text-white font-bold text-lg">{employee.name.charAt(0)}</span>
+                        className="h-10 w-10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform bg-gray-200"
+                        style={employee.branch === 'מוקד' && employee.color ? { backgroundColor: employee.color } : {}}>
+                        <span className={`font-bold text-lg ${employee.branch === 'מוקד' && employee.color ? 'text-white' : 'text-gray-700'}`}>{employee.name.charAt(0)}</span>
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-800">{employee.name}</h3>

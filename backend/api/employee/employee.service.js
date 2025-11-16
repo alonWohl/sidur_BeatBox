@@ -53,10 +53,14 @@ async function add(employee) {
 		const employeeToAdd = {
 			id: makeId(),
 			name: employee.name,
-			color: employee.color,
 			branch: employee.branch,
 			departments: isMoked ? [] : employee.departments || ['waiters'], // No default departments for Moked
 		};
+		
+		// Only include color for Moked employees
+		if (isMoked && employee.color) {
+			employeeToAdd.color = employee.color;
+		}
 
 		const collection = await dbService.getCollection('branch');
 
@@ -90,25 +94,68 @@ async function update(employee) {
 	try {
 		const isMoked = employee.branch === 'מוקד';
 
+		// Get existing employee first to preserve values if not provided
+		const existingEmployee = await getById(employee.id);
+		
+		if (!existingEmployee) {
+			throw new Error('העובד לא נמצא');
+		}
+		
+		logger.info(`Existing employee: ${JSON.stringify(existingEmployee)}`);
+		logger.info(`Employee to update (input): ${JSON.stringify(employee)}`);
+		
 		const employeeToUpdate = {
 			id: employee.id,
 			name: employee.name,
-			color: employee.color,
 			branch: employee.branch,
-			departments: isMoked ? [] : employee.departments || ['waiters'], // No default departments for Moked
 		};
+		
+			// Handle departments - use existing if not provided or empty
+		if (isMoked) {
+			employeeToUpdate.departments = [];
+		} else if (employee.departments !== undefined && Array.isArray(employee.departments) && employee.departments.length > 0) {
+			// Use provided departments if they exist and are valid (non-empty)
+			employeeToUpdate.departments = employee.departments;
+		} else {
+			// Use existing departments if provided ones are missing/invalid/empty
+			// This ensures we always have valid departments for validation
+			if (existingEmployee.departments && Array.isArray(existingEmployee.departments) && existingEmployee.departments.length > 0) {
+				employeeToUpdate.departments = existingEmployee.departments;
+			} else {
+				// Last resort: default (shouldn't happen if employee was created correctly)
+				employeeToUpdate.departments = ['waiters'];
+			}
+		}
+		
+		// Only include color for Moked employees
+		if (isMoked && employee.color) {
+			employeeToUpdate.color = employee.color;
+		}
+
+		logger.info(`Employee to update (final): ${JSON.stringify(employeeToUpdate)}`);
 
 		await validateEmployee(collection, loggedinUser, employeeToUpdate, true);
-
+		
+		// Build update object conditionally
+		const updateFields = {
+			'employees.$.name': employeeToUpdate.name,
+			'employees.$.departments': employeeToUpdate.departments,
+		};
+		
+		// Build update operation
+		const updateOperation = { $set: updateFields };
+		
+		// Only update color for Moked employees
+		if (isMoked && employeeToUpdate.color) {
+			updateFields['employees.$.color'] = employeeToUpdate.color;
+		} else if (!isMoked && existingEmployee && existingEmployee.color) {
+			// Remove color for non-Moked branches only if they had a color
+			updateOperation.$unset = { 'employees.$.color': '' };
+		}
+		
 		const updatedEmployee = await collection.updateOne(
 			{username: loggedinUser.username, 'employees.id': employeeToUpdate.id},
-			{
-				$set: {
-					'employees.$.name': employeeToUpdate.name,
-					'employees.$.color': employeeToUpdate.color,
-					'employees.$.departments': employeeToUpdate.departments,
-				},
-			}
+			updateOperation
 		);
 		return employeeToUpdate;
 	} catch (err) {
@@ -185,32 +232,39 @@ async function validateEmployee(collection, loggedinUser, employee, isUpdate = f
 		throw new Error('שם העובד כבר קיים');
 	}
 
-	const colorExists = await isColorExists(
-		collection,
-		loggedinUser.username,
-		employee.color,
-		isUpdate ? employee.id : null
-	);
-	if (colorExists) {
-		throw new Error('צבע זה כבר קיים במערכת');
-	}
-
-	if (!employee.color) {
-		throw new Error('אנא בחר צבע');
-	}
-
 	// Check for departments only if not a Moked employee
 	const isMoked = employee.branch === 'מוקד';
+	
+	// Color validation - only required for Moked employees
+	if (isMoked) {
+		const colorExists = await isColorExists(
+			collection,
+			loggedinUser.username,
+			employee.color,
+			isUpdate ? employee.id : null
+		);
+		if (colorExists) {
+			throw new Error('צבע זה כבר קיים במערכת');
+		}
+
+		if (!employee.color) {
+			throw new Error('אנא בחר צבע');
+		}
+
+		if (isColorTooLight(employee.color)) {
+			throw new Error('הצבע בהיר מדי');
+		}
+	}
+	
 	if (!isMoked && (!employee.departments || employee.departments.length === 0)) {
 		throw new Error('עובד חייב להיות שייך למחלקה אחת לפחות');
-	}
-
-	if (isColorTooLight(employee.color)) {
-		throw new Error('הצבע בהיר מדי');
 	}
 }
 
 async function isColorExists(collection, username, color, excludeEmployeeId = null) {
+	// If color is undefined or null, it doesn't exist
+	if (!color) return false;
+	
 	const branch = await collection.findOne({username});
 	if (!branch || !branch.employees) return false;
 
